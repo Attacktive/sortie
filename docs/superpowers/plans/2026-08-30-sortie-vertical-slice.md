@@ -66,12 +66,14 @@ Two points the spec left underspecified. These are decisions, not open questions
 Nothing else can be trusted until a test can fail for the right reason. This task's deliverable is a green headless run of a deliberately trivial test.
 
 **Files:**
+
 - Create: `project.godot`
 - Create: `addons/gut/` (vendored, from the pinned release)
 - Create: `test/test_harness.gd`
 - Modify: `.gitignore`
 
 **Interfaces:**
+
 - Consumes: nothing
 - Produces: the test command every later task uses —
   `godot --headless -s addons/gut/gut_cmdln.gd -gdir=res://test -gexit`
@@ -169,11 +171,13 @@ Co-authored-by: Claude Opus 5 <noreply@anthropic.com>"
 ### Task 2: Terrain, UnitData, BattleUnit
 
 **Files:**
+
 - Create: `core/terrain.gd`, `core/unit_data.gd`, `core/battle_unit.gd`
 - Create: `test/test_terrain.gd`, `test/test_battle_unit.gd`
 - Delete: `test/test_harness.gd` (its job is done)
 
 **Interfaces:**
+
 - Consumes: nothing
 - Produces:
   - `Terrain.Type` — enum `{ PLAIN, FOREST, WALL }`
@@ -367,10 +371,12 @@ Co-authored-by: Claude Opus 5 <noreply@anthropic.com>"
 The ASCII builder is not a convenience — every movement, combat, and AI test in this plan declares its scenario as a picture. It is the single highest-leverage thing in the codebase for test readability.
 
 **Files:**
+
 - Create: `core/battle_grid.gd`
 - Create: `test/test_battle_grid.gd`
 
 **Interfaces:**
+
 - Consumes: `Terrain`, `BattleUnit`, `UnitData` (Task 2)
 - Produces:
   - `BattleGrid.from_ascii(rows: PackedStringArray) -> BattleGrid` — `.` plain, `F` forest, `#` wall
@@ -547,10 +553,12 @@ Co-authored-by: Claude Opus 5 <noreply@anthropic.com>"
 ### Task 4: Movement flood fill and pathing
 
 **Files:**
+
 - Create: `core/movement_field.gd`, `core/movement.gd`
 - Create: `test/test_movement.gd`
 
 **Interfaces:**
+
 - Consumes: `BattleGrid`, `BattleUnit`, `Terrain` (Tasks 2-3)
 - Produces:
   - `Movement.field(grid: BattleGrid, unit: BattleUnit) -> MovementField`
@@ -868,10 +876,12 @@ Co-authored-by: Claude Opus 5 <noreply@anthropic.com>"
 ### Task 5: The RollSource family
 
 **Files:**
+
 - Create: `core/roll_source.gd`, `core/real_roll_source.gd`, `core/scripted_roll_source.gd`
 - Create: `test/test_roll_source.gd`
 
 **Interfaces:**
+
 - Consumes: nothing
 - Produces:
   - `RollSource.roll_unit() -> float` — contract, returns a value in `[0.0, 1.0)`
@@ -1006,10 +1016,12 @@ Co-authored-by: Claude Opus 5 <noreply@anthropic.com>"
 The forecast is what the player reads before committing. It must be honest, and it must never consume randomness — otherwise merely looking at a target would change the battle.
 
 **Files:**
+
 - Create: `core/attack_forecast.gd`, `core/combat.gd`
 - Create: `test/test_forecast.gd`
 
 **Interfaces:**
+
 - Consumes: `BattleGrid`, `BattleUnit`, `Terrain` (Tasks 2-3)
 - Produces:
   - `Combat.CRIT_MULTIPLIER` = `3`, `Combat.DAMAGE_VARIANCE` = `0.1`
@@ -1202,11 +1214,13 @@ Co-authored-by: Claude Opus 5 <noreply@anthropic.com>"
 ### Task 7: Combat resolution (hit, crit, variance)
 
 **Files:**
+
 - Create: `core/attack_result.gd`
 - Modify: `core/combat.gd` (add `resolve`)
 - Create: `test/test_combat.gd`
 
 **Interfaces:**
+
 - Consumes: `Combat.forecast` (Task 6), `RollSource` family (Task 5)
 - Produces:
   - `Combat.resolve(grid, attacker, defender, rolls: RollSource) -> AttackResult`
@@ -1419,11 +1433,13 @@ Co-authored-by: Claude Opus 5 <noreply@anthropic.com>"
 ### Task 8: The counterattack exchange
 
 **Files:**
+
 - Create: `core/combat_exchange.gd`
 - Modify: `core/combat.gd` (add `exchange`)
 - Create: `test/test_exchange.gd`
 
 **Interfaces:**
+
 - Consumes: `Combat.resolve` (Task 7), `Movement.manhattan` (Task 4)
 - Produces:
   - `Combat.exchange(grid, attacker, defender, rolls) -> CombatExchange`
@@ -1573,10 +1589,12 @@ Co-authored-by: Claude Opus 5 <noreply@anthropic.com>"
 ### Task 9: Turn order and victory detection
 
 **Files:**
+
 - Create: `core/turn_order.gd`
 - Create: `test/test_turn_order.gd`
 
 **Interfaces:**
+
 - Consumes: `BattleGrid`, `BattleUnit`, `UnitData` (Tasks 2-3)
 - Produces:
   - `TurnOrder.Phase` — enum `{ PLAYER_TURN, ENEMY_TURN, VICTORY, DEFEAT }`
@@ -1783,10 +1801,12 @@ Co-authored-by: Claude Opus 5 <noreply@anthropic.com>"
 ### Task 10: Enemy AI
 
 **Files:**
+
 - Create: `core/ai_decision.gd`, `core/enemy_ai.gd`
 - Create: `test/test_enemy_ai.gd`
 
 **Interfaces:**
+
 - Consumes: `Movement` (Task 4), `Combat.forecast` (Task 6), `BattleGrid` (Task 3)
 - Produces:
   - `EnemyAI.KILL_BONUS` = `1000.0`
@@ -2099,12 +2119,14 @@ Presentation begins here. **No `.tscn` files are hand-authored beyond one nearly
 Placeholder art means `draw_rect`, not sprites or a `TileSet`. That skips authoring `.tres` resources entirely.
 
 **Files:**
+
 - Create: `scenes/grid_geometry.gd`, `scenes/grid_view.gd`, `scenes/cursor.gd`
 - Create: `scenes/battle.tscn`, `scenes/battle.gd` (skeleton only)
 - Create: `test/test_grid_geometry.gd`
 - Modify: `project.godot` (add `run/main_scene` and input actions)
 
 **Interfaces:**
+
 - Consumes: `BattleGrid`, `Terrain` (Tasks 2-3)
 - Produces:
   - `GridGeometry.CELL_SIZE` = `48`
@@ -2354,10 +2376,12 @@ Co-authored-by: Claude Opus 5 <noreply@anthropic.com>"
 ### Task 12: Unit views and movement animation
 
 **Files:**
+
 - Create: `scenes/unit_view.gd`
 - Modify: `scenes/battle.gd`
 
 **Interfaces:**
+
 - Consumes: `BattleUnit` (Task 2), `GridGeometry` (Task 11)
 - Produces:
   - `UnitView.setup(unit: BattleUnit) -> void`
@@ -2489,10 +2513,12 @@ Co-authored-by: Claude Opus 5 <noreply@anthropic.com>"
 The formatting is pure and therefore tested; the widgets that display it are not.
 
 **Files:**
+
 - Create: `ui/forecast_format.gd`, `ui/action_menu.gd`, `ui/forecast_panel.gd`
 - Create: `test/test_forecast_format.gd`
 
 **Interfaces:**
+
 - Consumes: `AttackForecast` (Task 6)
 - Produces:
   - `ForecastFormat.percent(value: float) -> String`
@@ -2644,10 +2670,12 @@ Co-authored-by: Claude Opus 5 <noreply@anthropic.com>"
 The bridge. This is the one script allowed to know about both layers, and its job is to be a state machine that translates input into core calls and core answers into view calls.
 
 **Files:**
+
 - Create: `ui/result_screen.gd`
 - Rewrite: `scenes/battle.gd`
 
 **Interfaces:**
+
 - Consumes: everything from Tasks 2-13
 - Produces: a playable battle
 
@@ -2982,11 +3010,13 @@ Co-authored-by: Claude Opus 5 <noreply@anthropic.com>"
 The last task supplies the actual battle and confirms the whole thing is a game.
 
 **Files:**
+
 - Create: `core/scenario.gd`
 - Create: `test/test_scenario.gd`
 - Modify: `docs/superpowers/specs/2026-08-30-sortie-design.md` (mark implemented)
 
 **Interfaces:**
+
 - Consumes: everything
 - Produces:
   - `Scenario.build_grid() -> BattleGrid`
@@ -3138,6 +3168,7 @@ Expected: PASS across all eleven test files.
 Run: `godot`
 
 Walk through the whole loop and confirm each of these by eye:
+
 1. Three blue units bottom-left, three red top-right, forest and wall tiles visible.
 2. Selecting a player unit highlights its reachable tiles in blue, and forest tiles cost more.
 3. Moving animates tile by tile and routes around walls.

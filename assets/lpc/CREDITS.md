@@ -9,9 +9,11 @@ Both sources are dual-licensed **CC-BY-SA 3.0** and **GPL 3.0**.
 
 - **CC-BY-SA 3.0** requires attribution *and* is **share-alike**: modified art must
   stay under a compatible licence.
+
 - The tile atlas ships its own attribution manifest, reproduced verbatim as
   `ATTRIBUTION-tile-atlas.txt`. It lists every contributor whose work went into
   the atlas. Do not delete it.
+
 - The project's **source code remains MIT**. The share-alike obligation attaches to
   the artwork and to derivatives of the artwork, not to the program that draws it.
 

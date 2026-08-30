@@ -213,6 +213,7 @@ For each enemy unit, in fixed order:
 	```
 	where `avg_damage` is the variance midpoint, which is simply the unmodified `raw` damage.
 	A `KILL_BONUS` is added when maximum damage would meet or exceed the target's current HP.
+
 3. Take the highest-scoring pair, breaking ties by lowest cell coordinate so behavior is reproducible.
 4. When nothing is reachable, path toward the nearest player unit with `AStarGrid2D` and advance as far along that path as `move_range` allows.
 

@@ -52,6 +52,7 @@ If either produces output, something has leaked across the boundary.
 ## Done
 
 ### Rules engine (`core/`, no Node in sight)
+
 - **Terrain** — plain / forest (+2 defence, +0.20 evasion) / wall, as a lookup table.
 - **`BattleGrid`** with `from_ascii()`, so every test declares its board as a picture. Highest-leverage thing in the codebase for test readability.
 - **Movement** — Dijkstra flood fill, not BFS, because forest costs 2 and a plain detour can beat crossing it. One pass yields the reachable set *and* the path to every cell in it. Enemies block; allies are passable but not landable.
@@ -63,12 +64,14 @@ If either produces output, something has leaked across the boundary.
 - **Scenario** — the 10×8 map and six-unit roster.
 
 ### Presentation
+
 - Textured terrain with three grass variants picked by a hash of cell coordinates, so the field varies without a visible repeat and looks identical on every run.
 - Directional sprite animation: 9-frame walk and 6-frame slash, four facings each, driven from LPC sheets.
 - Damage numbers (crits gold and larger, misses grey), hit flash, death fade, turn banner.
 - Damage forecast panel, action menu, movement and attack overlays, enemy threat overlay.
 
 ### Verification
+
 - 108 tests. The rules engine is covered exhaustively; the view state machine has its own suite (`test_battle_flow.gd`).
 - A headless auto-battle harness plays the real scenario to completion with both sides on autopilot: **30 victories / 10 defeats / 0 unresolved across 40 seeds**, averaging 9.3 team-turns. Proves both endings are reachable and that seeds replay identically.
 
