@@ -792,6 +792,8 @@ Verified by mutation, four for four: solid tiles all drawing as walls, a runtime
 
 The frame-advance loop is deliberately not shared with `UnitView`; see the spec's "On sharing the sprite animation".
 
+**Done.** Eight tests rather than six, and the wall test had to be rebuilt — the writeup at the end of the task says why.
+
 - [ ] **Step 1: Write the failing test**
 
 Create `test/test_field_player.gd`:
@@ -799,8 +801,10 @@ Create `test/test_field_player.gd`:
 ```gdscript
 extends GutTest
 
-## Real input events, pushed through the viewport, the same way test_input.gd covers the battle.
-## The rules underneath are covered by test_field_body.gd; this covers the wiring, which is the layer this project's bugs have actually lived in.
+## Real input, driven through Input rather than the viewport: Input.get_vector reads held action state and only parse_input_event updates it.
+## push_input delivers a one-shot, which would leave get_vector reading zero on the very next frame.
+##
+## The collision rules underneath are covered exhaustively by test_field_body.gd. What is covered here is the wiring, which is the layer this project's bugs have actually lived in.
 
 const ROOM := [
 	"......",
@@ -808,6 +812,16 @@ const ROOM := [
 	"......",
 	"......",
 ]
+
+## A wall down column 2, so walking east from the left edge meets it whatever row you are standing in.
+const CORRIDOR := [
+	"..#...",
+	"..#...",
+	"..#...",
+	"..#...",
+]
+
+const ARROWS := [KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN]
 
 var _player: FieldPlayer
 
@@ -819,24 +833,25 @@ func before_each() -> void:
 	add_child_autofree(_player)
 	await get_tree().process_frame
 
-## Holding a key means the action stays pressed across frames, which is what continuous movement reads.
-func _hold(keycode: Key) -> void:
+## Held keys are global device state, so a test that ended without releasing one would walk the next test's character into a wall.
+func after_each() -> void:
+	for keycode in ARROWS:
+		_release(keycode)
+
+func _key(keycode: Key, pressed: bool) -> void:
 	var event := InputEventKey.new()
 	event.keycode = keycode
 	event.physical_keycode = keycode
-	event.pressed = true
+	event.pressed = pressed
 
 	Input.parse_input_event(event)
 	Input.flush_buffered_events()
+
+func _hold(keycode: Key) -> void:
+	_key(keycode, true)
 
 func _release(keycode: Key) -> void:
-	var event := InputEventKey.new()
-	event.keycode = keycode
-	event.physical_keycode = keycode
-	event.pressed = false
-
-	Input.parse_input_event(event)
-	Input.flush_buffered_events()
+	_key(keycode, false)
 
 func _hold_for_frames(keycode: Key, frames: int) -> void:
 	_hold(keycode)
@@ -847,18 +862,40 @@ func _hold_for_frames(keycode: Key, frames: int) -> void:
 	_release(keycode)
 	await get_tree().process_frame
 
+## Walks until the character stops making progress, however many frames that takes, and reports how many it took.
+## A fixed frame count would be a bet on how fast the machine running the test is: 120 frames covers 81 px here and the wall below is 80 px away, so a machine one percent faster would never reach it and the assertion would pass without ever touching a wall.
+func _walk_until_settled(keycode: Key) -> int:
+	const BUDGET := 1200
+
+	_hold(keycode)
+
+	var frames := BUDGET
+
+	for i in BUDGET:
+		var before := _player.position
+		await get_tree().process_frame
+
+		if _player.position == before:
+			frames = i + 1
+			break
+
+	_release(keycode)
+	await get_tree().process_frame
+
+	return frames
+
 func test_holding_right_moves_the_character_east() -> void:
 	var before := _player.position.x
 	await _hold_for_frames(KEY_RIGHT, 10)
 
 	assert_gt(_player.position.x, before, "holding a direction has to actually move you")
-	assert_eq(_player.facing, Facing.Direction.RIGHT, "and turn you to face it")
+	assert_eq(_player.facing, Facing.Direction.RIGHT, "and turn you to face the way you are going")
 
 func test_holding_up_moves_the_character_north() -> void:
 	var before := _player.position.y
 	await _hold_for_frames(KEY_UP, 10)
 
-	assert_lt(_player.position.y, before)
+	assert_lt(_player.position.y, before, "up the screen is negative y")
 	assert_eq(_player.facing, Facing.Direction.UP)
 
 func test_releasing_everything_stops_the_character() -> void:
@@ -870,20 +907,47 @@ func test_releasing_everything_stops_the_character() -> void:
 
 	assert_eq(_player.position, settled, "a released key must not leave you coasting")
 
-func test_a_wall_stops_the_character() -> void:
-	_player.map = FieldMap.from_ascii(PackedStringArray(["..#...", "..#...", "..#...", "..#..."]))
+## Letting go is not a change of mind. A character who snaps back to facing the camera the instant you stop reads as a twitch.
+func test_letting_go_does_not_turn_you_around() -> void:
+	await _hold_for_frames(KEY_RIGHT, 10)
+
+	assert_eq(_player.facing, Facing.Direction.RIGHT, "you go on facing the way you were walking")
+
+## Exact, not merely "did not pass through", because the exact number is the one that proves the sprite-to-box conversion was applied.
+## Feed FieldBody the sprite position instead of the collision box and the character still stops at the wall, just sixteen pixels into it.
+func test_a_wall_stops_the_character_with_its_feet_against_it() -> void:
+	_player.map = FieldMap.from_ascii(PackedStringArray(CORRIDOR))
 	_player.position = Vector2(0, 100)
 
-	await _hold_for_frames(KEY_RIGHT, 120)
+	var frames := await _walk_until_settled(KEY_RIGHT)
+	var flush := 2.0 * GridGeometry.CELL_SIZE - FieldBody.BOX_SIZE.x - FieldBody.BOX_OFFSET.x
 
-	assert_lt(_player.position.x, 128.0, "walking into a wall for two seconds must not put you through it")
+	assert_almost_eq(_player.position.x, flush, 0.001, "walking east into a wall has to settle with the feet touching it; this settled after %d frames" % frames)
 
-func test_standing_still_holds_the_idle_frame() -> void:
-	assert_eq(_player._frame, 0, "frame 0 of an LPC walk sheet is the idle pose")
-
-func test_walking_advances_past_the_idle_frame() -> void:
+func test_stopping_returns_to_the_idle_frame() -> void:
 	await _hold_for_frames(KEY_RIGHT, 20)
-	assert_gt(_player._frame, 0, "a walk cycle that never leaves frame 0 is not animating")
+
+	assert_eq(_player._frame, 0, "frame 0 of an LPC walk sheet is the idle pose, and standing still rests on it")
+
+## Read while still walking, because _hold_for_frames lets go at the end and letting go is what puts the idle frame back.
+func test_walking_advances_past_the_idle_frame() -> void:
+	_hold(KEY_RIGHT)
+	await get_tree().process_frame
+	await get_tree().process_frame
+
+	var walking := _player._frame
+	_release(KEY_RIGHT)
+
+	assert_gt(walking, 0, "a walk cycle that never leaves frame 0 is not animating")
+
+## Task 7 builds the player and hands it a map on separate lines, so there is at least one frame where it has none.
+func test_a_player_without_a_map_stands_still() -> void:
+	_player.map = null
+	var before := _player.position
+
+	await _hold_for_frames(KEY_RIGHT, 10)
+
+	assert_eq(_player.position, before, "a player waiting for its map has to stand still rather than fall through the world")
 ```
 
 - [ ] **Step 2: Run it and watch it fail**
@@ -892,7 +956,7 @@ func test_walking_advances_past_the_idle_frame() -> void:
 godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_field_player.gd -gexit
 ```
 
-Expected: failure — `FieldPlayer` is not a known identifier.
+Expected: failure — `FieldPlayer` is not a known identifier, so the script does not parse and GUT reports that nothing ran.
 
 - [ ] **Step 3: Write `scenes/field_player.gd`**
 
@@ -902,9 +966,10 @@ extends Node2D
 
 ## The character you walk around the field.
 ##
-## Holds no movement logic: it turns input into a velocity, asks FieldBody where that lands, and puts itself there. Everything about how collision behaves lives in core/ and is tested headless.
+## Holds no movement logic of its own: it turns held input into a velocity, asks FieldBody where that lands, and puts itself there.
+## Everything about how collision behaves lives in core/ and is tested there against the rules rather than against a running game.
 
-## Frame 0 of an LPC walk sheet is the idle pose, so a walk cycle loops from 1 and standing still rests on 0.
+## Frame 0 of an LPC walk sheet is the idle pose, so the walk cycle loops from 1 and standing still rests on 0.
 const WALK_LOOP_FIRST := 1
 
 var map: FieldMap = null
@@ -914,18 +979,19 @@ var _sheet: Texture2D = null
 var _frame: int = 0
 var _elapsed: float = 0.0
 
-func setup(sheet_path: String) -> void:
-	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	_sheet = load(sheet_path)
-	queue_redraw()
-
 func _ready() -> void:
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 
+func setup(sheet_path: String) -> void:
+	_sheet = load(sheet_path)
+	queue_redraw()
+
+## No map means no world to collide against, which happens for the frame between building the player and handing it one.
 func _process(delta: float) -> void:
 	if map == null:
 		return
 
+	## Normalized, so a diagonal is not faster than an axis — and so an exact diagonal ties in Facing.from_motion, which is the tie it is written to keep the current facing through.
 	var direction := Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
 
 	_step(direction, delta)
@@ -939,16 +1005,20 @@ func _step(direction: Vector2, delta: float) -> void:
 	var moved := FieldBody.move(box, direction * FieldBody.SPEED, delta, map)
 
 	position = FieldBody.sprite_position_for(moved)
-	facing = Facing.from_motion(direction, facing)
+	_face(Facing.from_motion(direction, facing))
+
+## Turning has to invalidate the sprite the moment it happens.
+## Leaving it to the next walk frame would draw you facing the old way for up to a full frame of the walk cycle, which at 11 fps is long enough to see every time you round a corner.
+func _face(turned: Facing.Direction) -> void:
+	if turned == facing:
+		return
+
+	facing = turned
+	queue_redraw()
 
 func _animate(direction: Vector2, delta: float) -> void:
 	if direction == Vector2.ZERO:
-		_elapsed = 0.0
-
-		if _frame != 0:
-			_frame = 0
-			queue_redraw()
-
+		_rest()
 		return
 
 	_elapsed += delta
@@ -959,6 +1029,16 @@ func _animate(direction: Vector2, delta: float) -> void:
 		return
 
 	_frame = frame
+	queue_redraw()
+
+## Standing still is the idle pose, and the cycle starts over from the beginning next time rather than resuming mid-stride.
+func _rest() -> void:
+	_elapsed = 0.0
+
+	if _frame == 0:
+		return
+
+	_frame = 0
 	queue_redraw()
 
 func _draw() -> void:
@@ -980,19 +1060,22 @@ godot --headless --import
 godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_field_player.gd -gexit
 ```
 
-Expected: 6 tests passing.
+Expected: 8 tests passing. Whole suite: 171.
 
-`Input.parse_input_event()` is used here rather than `get_viewport().push_input()` because `Input.get_vector()` reads held action state, which only `parse_input_event` updates. `push_input` delivers a one-shot event and would leave `get_vector()` returning zero.
+`Input.parse_input_event()` is used here rather than `get_viewport().push_input()` because `Input.get_vector()` reads held action state, which only `parse_input_event` updates. `push_input` delivers a one-shot event and would leave `get_vector()` returning zero on the very next frame.
 
-- [ ] **Step 5: Prove the wall test bites**
+- [ ] **Step 5: Prove the tests bite**
 
-In `_step()`, temporarily bypass collision:
+Six mutations, each reverted after running:
 
-```gdscript
-	position += direction * FieldBody.SPEED * delta
-```
-
-Run the file. Expected: `test_a_wall_stops_the_character` fails. **Revert the change.**
+| Mutation | Result |
+|---|---|
+| Collision bypassed — `position += direction * FieldBody.SPEED * delta` | 1 failure |
+| The sprite position passed to `FieldBody` as the collision box | 1 failure |
+| Input ignored — `Input.get_vector(...)` replaced with `Vector2.RIGHT` | 3 failures |
+| `_rest()` never restores frame 0 | 1 failure |
+| The walk cycle written without `WALK_LOOP_FIRST +`, so it includes the idle frame | 1 failure |
+| The `map == null` guard deleted | 1 failure |
 
 - [ ] **Step 6: Commit**
 
@@ -1003,6 +1086,26 @@ git commit
 ```
 
 Message: `feat: walk a character around the field`
+
+#### What changed from the plan as written, and why
+
+**The wall test counted frames, and the count was a bet on how fast the machine is.** As planned it held east for 120 frames and asserted the character had not passed x=128. Measured in this harness, 120 frames is 0.844 s of summed delta — about 7 ms a frame — which at 96 px/s carries the character **81 px**. The wall is **80 px** away. A machine one percent faster never reaches the wall at all, and the assertion passes having tested nothing; and since travel is summed delta rather than frames, every machine gives a different answer.
+
+It now holds east until the character stops making progress, however many frames that takes, with a 1200-frame budget as a stop rather than a schedule. On this machine it settles after 146.
+
+**And it asserts the exact resting position rather than an inequality.** `2 * CELL_SIZE - BOX_SIZE.x - BOX_OFFSET.x` = 80: the wall's west face, less the box's width, less the box's offset inside the sprite. That number is the one that proves the sprite-to-box conversion was applied, because feeding `FieldBody` the raw sprite position still stops the character at the wall — just sixteen pixels inside it. The mutation table above is the evidence: that run reports 96.0 against an expected 80.0.
+
+**`test_walking_advances_past_the_idle_frame` could not have passed as written.** It called `_hold_for_frames`, which releases the key and lets a frame elapse — and releasing is exactly what puts the idle frame back, so it would have asserted `0 > 0` against a correct implementation. The frame has to be read while the character is still walking.
+
+**`test_standing_still_holds_the_idle_frame` was replaced.** It asserted `_frame == 0` on a freshly built player, which tests the initializer rather than any behavior. It is now `test_stopping_returns_to_the_idle_frame`: walk, let go, and land back on the idle pose.
+
+**Turning now invalidates the sprite immediately.** The planned code set `facing` in `_step` and redrew only when the walk frame changed in `_animate`, so changing direction mid-stride drew the old direction until the next frame tick — up to a full frame of the walk cycle, which at 11 fps is about 90 ms, every time you round a corner. `_face()` mirrors `UnitView._face()` and redraws on the turn itself.
+
+That timing is **not covered by a test, and cannot easily be**: the walk frame advances on its own, so a redraw happens within a frame or two regardless, and a headless test cannot freeze the cycle to observe the gap. It is on the list for the Task 8 screenshot.
+
+**Two tests added** beyond the six. A player whose `map` is still null stands still instead of erroring — Task 7 builds the player and assigns its map on separate lines, so that frame exists. And letting go of a key does not turn the character around, which `Facing.from_motion` documents as a rule but which is actually enforced here by `_step` returning early.
+
+**`texture_filter` was set in both `setup()` and `_ready()`.** It is now only in `_ready()`, which always runs.
 
 ---
 
@@ -1148,7 +1251,7 @@ grep -rE '\bNode\b|get_tree\(|\bInput\b|preload\(|\.tscn' core/
 grep -rlE 'randf|randi|randomize' core/ | grep -v real_roll_source
 ```
 
-Expected: 173 tests passing, and no output from either grep.
+Expected: 175 tests passing, and no output from either grep. (Task 6 delivered eight tests rather than the six planned, which is where the two extra come from.)
 
 - [ ] **Step 7: Walk around in it**
 
