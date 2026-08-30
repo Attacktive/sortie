@@ -2,7 +2,7 @@
 
 **Updated:** 2026-08-30
 **Branch:** `main` — PRs #1 through #4 merged fast-forward; history is linear.
-**Status:** playable end to end. 118 tests passing, exit 0, enforced by CI on every push and pull request.
+**Status:** playable end to end. 120 tests passing, exit 0, enforced by CI on every push and pull request.
 
 A grid-tactics RPG vertical slice in Godot 4.7.2 / GDScript.
 
@@ -77,7 +77,7 @@ If either produces output, something has leaked across the boundary.
 - Textured terrain with three grass variants picked by a hash of cell coordinates, so the field varies without a visible repeat and looks identical on every run.
 - Directional sprite animation: 9-frame walk and 6-frame slash, four facings each, driven from LPC sheets. Both are verified from captured frames — the walk cycle advances its legs, interpolates between cells, and turns corners with the feather trailing the direction of travel.
 - Damage numbers (crits gold and larger, misses grey), hit flash, death fade, turn banner.
-- Combat sound: an impact on a landed blow, a whiff on a miss, a heavy settle on a death, from a four-voice pool so a killing blow does not cut its own hit short.
+- Combat sound: an impact on a landed blow, a whiff on a miss, a heavy settle on a death, from a four-voice pool so a killing blow does not cut its own hit short. Each play is nudged in pitch and level, because one sample repeated verbatim is what makes an effect read as cheap.
 - Damage forecast panel, action menu, movement and attack overlays, enemy threat overlay.
 
 ### Verification
@@ -91,7 +91,11 @@ If either produces output, something has leaked across the boundary.
 ## Not done — pick up here
 
 1. **Play the interactive loop by hand.** Still the biggest gap, though a narrower one than it was. `test_battle_flow.gd` covers the state machine and the animations are now evidenced frame by frame, but nothing exercises real input events — clicking, keyboard cursor movement, menu focus. **Play a full battle to victory and to defeat before trusting it.**
-2. **More sound.** Combat has three effects. Nothing else does — no cursor blip, no menu click, no music. Those were left out deliberately until someone has played it, because UI sound gets annoying fast, but the pool takes them without changes.
+2. **More sound.** Two threads here, both needing ears rather than analysis.
+
+   - The three combat clips were called "clunky but ok-ish" on first listen, and pitch jitter was the answer to that. If they still read as repetitive, the next lever is a second variant per event — `Sfx.play()` would take an array and pick from it. Sixteen single-transient impacts under 0.45s were catalogued in the pack; `bookPlace2` has almost exactly `chop`'s envelope. Whether it *sounds* right is not something an envelope can settle.
+   - The whiff is 0.60s against a 0.43s swing and starts at the impact frame, so it trails past the animation. A whiff is arguably the sound of the swing itself and belongs at the start of the motion. That change was deliberately not made without someone hearing it first.
+   - Nothing outside combat makes any sound: no cursor blip, no menu click, no music.
 3. **Everything the slice deliberately excluded:** story, save/load, levelling, recruitment, multiple maps, classes, permadeath. Each is its own spec.
 
 ---
@@ -162,5 +166,5 @@ Kept because the shapes recur, and each was patched back into the plan so it doe
 | `ui/` | Action menu, forecast panel, damage numbers, turn banner, result screen |
 | `assets/lpc/` | Characters and terrain, CC-BY-SA — attribution files must not be deleted |
 | `assets/audio/` | Three CC0 combat sounds, with `CREDITS.md` recording which original became which clip |
-| `test/` | 118 tests; `test_full_battle.gd` is the headless auto-battle harness |
+| `test/` | 120 tests; `test_full_battle.gd` is the headless auto-battle harness |
 | `docs/superpowers/specs/` + `plans/` | The design spec and the implementation plan it was built from |

@@ -81,3 +81,22 @@ func _clips_played(battle: Battle) -> Array[String]:
 			played.append(player.stream.resource_path)
 
 	return played
+
+## Repeating one sample verbatim is what makes an effect read as cheap. Every
+## play is nudged, so two hits in a row are never bit-for-bit identical.
+func test_repeated_plays_do_not_sound_identical() -> void:
+	var sfx: Sfx = add_child_autofree(Sfx.new())
+	var pitches := {}
+
+	for i in 20:
+		pitches[sfx.play(Sfx.HIT).pitch_scale] = true
+
+	assert_gt(pitches.size(), 1, "every hit played at exactly the same pitch")
+
+func test_the_nudge_stays_within_its_bounds() -> void:
+	var sfx: Sfx = add_child_autofree(Sfx.new())
+
+	for i in 40:
+		var player := sfx.play(Sfx.HIT)
+		assert_between(player.pitch_scale, 1.0 - Sfx.PITCH_JITTER, 1.0 + Sfx.PITCH_JITTER, "pitch wandered out of range")
+		assert_between(player.volume_db, Sfx.VOLUME_DB - Sfx.VOLUME_JITTER_DB, Sfx.VOLUME_DB + Sfx.VOLUME_JITTER_DB, "level wandered out of range")
