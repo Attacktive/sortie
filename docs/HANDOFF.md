@@ -1,8 +1,8 @@
 # Sortie — Handoff
 
 **Updated:** 2026-08-30
-**Branch:** `main` — PRs [#1](https://github.com/Attacktive/sortie/pull/1) and [#2](https://github.com/Attacktive/sortie/pull/2) merged fast-forward; history is linear.
-**Status:** playable end to end. 108 tests passing, exit 0, now enforced by CI on every push and pull request.
+**Branch:** `main` — PRs #1 through #4 merged fast-forward; history is linear.
+**Status:** playable end to end. 110 tests passing, exit 0, enforced by CI on every push and pull request.
 
 A grid-tactics RPG vertical slice in Godot 4.7.2 / GDScript.
 
