@@ -764,7 +764,7 @@ git commit
 
 Message: `feat: draw a FieldMap with the battle's terrain art`
 
-#### What changed from the plan as written, and why
+#### What changed in Task 5, and why
 
 **`GLYPH_TEXTURES` became `SOLID_TEXTURES`, and lost its walkable entry.** The dictionary as planned mapped `FieldMap.WALKABLE` to `plain_a.png`, and nothing ever read it: walkable ground is drawn from `GridView.PLAIN_VARIANTS` through the hash, so it is one of three textures and never reliably that one. A constant that states a falsehood and is never used is worse than no constant, and the test that walked over it was checking a fact about itself rather than about the view.
 
@@ -1087,7 +1087,7 @@ git commit
 
 Message: `feat: walk a character around the field`
 
-#### What changed from the plan as written, and why
+#### What changed in Task 6, and why
 
 **The wall test counted frames, and the count was a bet on how fast the machine is.** As planned it held east for 120 frames and asserted the character had not passed x=128. Measured in this harness, 120 frames is 0.844 s of summed delta — about 7 ms a frame — which at 96 px/s carries the character **81 px**. The wall is **80 px** away. A machine one percent faster never reaches the wall at all, and the assertion passes having tested nothing; and since travel is summed delta rather than frames, every machine gives a different answer.
 
