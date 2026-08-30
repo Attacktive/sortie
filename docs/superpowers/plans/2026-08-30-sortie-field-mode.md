@@ -622,10 +622,12 @@ The lesson is about task boundaries rather than about collision: a task has to b
 
 **Interfaces:**
 
-- Consumes: `FieldMap`, `GridView.TERRAIN_TEXTURES`, `GridView.PLAIN_VARIANTS`, `GridView.plain_variant_for()`
-- Produces: `FieldView.map`, `FieldView.GLYPH_TEXTURES`
+- Consumes: `FieldMap`, `GridView.PLAIN_VARIANTS`, `GridView.plain_variant_for()`
+- Produces: `FieldView.map`, `FieldView.SOLID_TEXTURES`, `FieldView.layers_for()`
 
 Reuses the battle's terrain art and its per-cell grass-variant hash, so a large field does not read as a checkerboard. New field art is sub-project 6.
+
+**Done.** The shape held; four things about it did not, and they are written up at the end of the task.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -634,18 +636,34 @@ Create `test/test_field_view.gd`:
 ```gdscript
 extends GutTest
 
-func test_every_glyph_has_a_texture() -> void:
-	for glyph in [FieldMap.WALKABLE, FieldMap.WALL, FieldMap.TREE]:
-		assert_true(FieldView.GLYPH_TEXTURES.has(glyph), "glyph '%s' has nothing to draw" % glyph)
-		assert_true(ResourceLoader.exists(FieldView.GLYPH_TEXTURES[glyph]), "glyph '%s' points at a missing texture" % glyph)
+## What is worth testing about a view is what it decides to draw.
+## Whether those pixels actually landed is the screenshot probe's job in Task 8, and nothing headless can stand in for it.
 
-func test_the_view_draws_without_erroring() -> void:
+func _view() -> FieldView:
 	var view := FieldView.new()
 	view.map = FieldMap.from_ascii(PackedStringArray(["..#.", ".FF.", "...."]))
 	add_child_autofree(view)
+
+	return view
+
+func test_every_solid_glyph_has_art() -> void:
+	for glyph in [FieldMap.WALL, FieldMap.TREE]:
+		assert_true(FieldView.SOLID_TEXTURES.has(glyph), "glyph '%s' can be authored but has nothing to draw" % glyph)
+		assert_true(ResourceLoader.exists(FieldView.SOLID_TEXTURES[glyph]), "glyph '%s' points at a texture that is not there" % glyph)
+
+## Putting the view in the tree draws it for real, and GUT fails a test on any error raised while it runs, so this covers _draw as well as the layering.
+func test_a_solid_tile_is_drawn_on_top_of_grass() -> void:
+	var view := _view()
 	await get_tree().process_frame
 
-	assert_true(view.is_inside_tree(), "a view with a map has to survive being drawn")
+	var grass := view.layers_for(Vector2i(0, 0))
+	var wall := view.layers_for(Vector2i(2, 0))
+	var tree := view.layers_for(Vector2i(1, 1))
+
+	assert_eq(grass.size(), 1, "walkable ground is grass and nothing else")
+	assert_eq(wall.size(), 2, "a wall is grass with a wall on top of it, not a wall instead of grass")
+	assert_true(GridView.PLAIN_VARIANTS.has(wall[0].resource_path), "the layer under a wall has to be grass, and grass is whichever variant the hash picked for that cell")
+	assert_ne(wall[1], tree[1], "a tree that draws like a wall is a map you cannot read")
 ```
 
 - [ ] **Step 2: Run it and watch it fail**
@@ -654,7 +672,7 @@ func test_the_view_draws_without_erroring() -> void:
 godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_field_view.gd -gexit
 ```
 
-Expected: failure — `FieldView` is not a known identifier.
+Expected: failure — `FieldView` is not a known identifier, so the script does not even parse.
 
 - [ ] **Step 3: Write `scenes/field_view.gd`**
 
@@ -662,52 +680,67 @@ Expected: failure — `FieldView` is not a known identifier.
 class_name FieldView
 extends Node2D
 
-## Draws a FieldMap. Reuses the battle's terrain art, including its per-cell grass hash, so a field large enough to walk around does not read as a checkerboard.
+## Draws a FieldMap.
+##
+## Reuses the battle's terrain art, including its per-cell grass hash, so a field big enough to walk around does not read as a checkerboard.
+## Field-specific art is sub-project 6; until then the two modes are literally looking at the same tiles.
 
-const GLYPH_TEXTURES := {
-	FieldMap.WALKABLE: "res://assets/lpc/terrain/plain_a.png",
+## Only the solid glyphs. Walkable ground is not in here because it is not one texture: it is whichever grass variant the hash picks for that cell.
+const SOLID_TEXTURES := {
 	FieldMap.WALL: "res://assets/lpc/terrain/wall.png",
 	FieldMap.TREE: "res://assets/lpc/terrain/forest.png",
 }
 
 var map: FieldMap = null
 
-var _wall: Texture2D = null
-var _tree: Texture2D = null
+var _solids: Dictionary[String, Texture2D] = {}
 var _plains: Array[Texture2D] = []
 
 func _ready() -> void:
+	## Integer upscaling of 16px art into a 64px cell; anything but NEAREST turns it to mush.
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	_wall = load(GLYPH_TEXTURES[FieldMap.WALL])
-	_tree = load(GLYPH_TEXTURES[FieldMap.TREE])
+
+	for glyph in SOLID_TEXTURES:
+		_solids[glyph] = load(SOLID_TEXTURES[glyph])
 
 	for path in GridView.PLAIN_VARIANTS:
 		_plains.append(load(path))
 
 	queue_redraw()
 
+## Everything that goes on one cell, bottom first.
+## Grass always, then the solid tile over it rather than instead of it, so a tree keeps its transparent edges.
+##
+## This is the whole of what the view decides; _draw only puts it on screen. Keeping the decision out here is what lets a headless test see it.
+func layers_for(cell: Vector2i) -> Array[Texture2D]:
+	var layers: Array[Texture2D] = [_plains[GridView.plain_variant_for(cell)]]
+
+	if map.is_solid(cell):
+		layers.append(_texture_for(cell))
+
+	return layers
+
 func _draw() -> void:
 	if map == null:
 		return
 
-	var cell := float(GridGeometry.CELL_SIZE)
+	var size := float(GridGeometry.CELL_SIZE)
 
 	for y in map.size.y:
 		for x in map.size.x:
-			var at := Vector2(x, y) * cell
-			var here := Vector2i(x, y)
+			var cell := Vector2i(x, y)
+			var rect := Rect2(Vector2(cell) * size, Vector2(size, size))
 
-			draw_texture_rect(_plains[GridView.plain_variant_for(here)], Rect2(at, Vector2(cell, cell)), false)
+			for layer in layers_for(cell):
+				draw_texture_rect(layer, rect, false)
 
-			if map.is_solid(here):
-				draw_texture_rect(_texture_for(here), Rect2(at, Vector2(cell, cell)), false)
-
-## Solid tiles are drawn over grass rather than instead of it, so a tree keeps its transparent edges.
+## An unrecognized glyph draws as a wall: a tile you can see and cannot walk through is a bug, but a tile you cannot see and cannot walk through is a haunting. 👻
 func _texture_for(cell: Vector2i) -> Texture2D:
-	if map.glyph_at(cell) == FieldMap.TREE:
-		return _tree
+	var glyph := map.glyph_at(cell)
+	if _solids.has(glyph):
+		return _solids[glyph]
 
-	return _wall
+	return _solids[FieldMap.WALL]
 ```
 
 `FieldMap.glyph_at()` already exists from Task 2, which is why this task adds nothing to `core/`.
@@ -719,7 +752,7 @@ godot --headless --import
 godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_field_view.gd -gexit
 ```
 
-Expected: 2 tests passing.
+Expected: 2 tests passing. Whole suite: 163.
 
 - [ ] **Step 5: Commit**
 
@@ -730,6 +763,18 @@ git commit
 ```
 
 Message: `feat: draw a FieldMap with the battle's terrain art`
+
+#### What changed from the plan as written, and why
+
+**`GLYPH_TEXTURES` became `SOLID_TEXTURES`, and lost its walkable entry.** The dictionary as planned mapped `FieldMap.WALKABLE` to `plain_a.png`, and nothing ever read it: walkable ground is drawn from `GridView.PLAIN_VARIANTS` through the hash, so it is one of three textures and never reliably that one. A constant that states a falsehood and is never used is worse than no constant, and the test that walked over it was checking a fact about itself rather than about the view.
+
+**The layering rule moved out of `_draw` into `layers_for()`.** The first pass drew grass and then the solid tile inline, and a mutation that deleted the solid layer outright passed every test — a map of invisible walls, which is exactly the failure the fallback comment jokes about. `_draw` cannot be inspected from a headless test, so anything it alone decides is untested by construction. Now `_draw` is a loop with no opinions and the opinion lives in a function a test can call. The last uninspectable step is `draw_texture_rect` itself, and that is what Task 8's screenshot is for.
+
+**A third test was written and then deleted.** It asserted the `draw` signal fires. The signal fires whether or not `_draw` succeeds, so it proved a fact about Godot; what actually catches a broken `_draw` is GUT failing a test on any error raised during it, which the remaining test already gets by putting the view in the tree.
+
+**One test was wrong while the code was right**, for the second time in this plan. It asserted that the grass under a wall at (2,0) matches the grass at (0,0) — contradicting the very variant hash the view exists to use. Corrected to assert the layer under a wall is *some* grass variant.
+
+Verified by mutation, four for four: solid tiles all drawing as walls, a runtime error inside `_draw`, the solid layer never appended, and the solid tile layered underneath the grass instead of over it. Each one fails a test.
 
 ---
 
