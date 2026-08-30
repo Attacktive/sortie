@@ -1,8 +1,8 @@
 # Sortie — Handoff
 
 **Updated:** 2026-08-30
-**Branch:** `main` — PRs #1 through #10 merged fast-forward; history is linear.
-**Status:** the battle is playable end to end. Field mode is three tasks into eight and does not run yet. 161 tests passing, exit 0, enforced by CI on every push and pull request.
+**Branch:** `main` — PRs #1 through #11 merged fast-forward; history is linear.
+**Status:** the battle is playable end to end. Field mode is four tasks into eight and does not run yet. 163 tests passing, exit 0, enforced by CI on every push and pull request.
 
 A grid-tactics RPG vertical slice in Godot 4.7.2 / GDScript.
 
@@ -82,7 +82,7 @@ If either produces output, something has leaked across the boundary.
 
 ### Verification
 
-- 161 tests. The rules engine is covered exhaustively; the view state machine has its own suite (`test_battle_flow.gd`), and the input layer above it has another (`test_input.gd`).
+- 163 tests. The rules engine is covered exhaustively; the view state machine has its own suite (`test_battle_flow.gd`), and the input layer above it has another (`test_input.gd`).
 - **Input is driven by real events.** `test_input.gd` pushes synthesized `InputEventKey`, `InputEventMouseMotion`, and `InputEventMouseButton` objects through `get_viewport().push_input()`, so assertions travel the whole chain: event → viewport → `_unhandled_input` or GUI focus → cursor → state machine. A full turn is played on the keyboard alone, and an attack is ordered from a keypress through to a resolved exchange. Buttons fire on *release*, so a realistic tap sends both halves.
 - **CI** — `.github/workflows/tests.yaml` installs the pinned Godot 4.7.2 Linux build, rebuilds the import cache, and runs the suite on every push to `main` and every pull request. Until this existed, the tests had only ever run on one laptop.
 - A headless auto-battle harness plays the real scenario to completion with both sides on autopilot: **30 victories / 10 defeats / 0 unresolved across 40 seeds**, averaging 9.3 team-turns. Proves both endings are reachable and that seeds replay identically.
@@ -96,7 +96,7 @@ Story mode is a JRPG, so the battle is a **component the story mode calls into**
 - Spec: `docs/superpowers/specs/2026-08-30-sortie-field-mode-design.md`
 - Plan: `docs/superpowers/plans/2026-08-30-sortie-field-mode.md`
 
-Story mode decomposes into six sub-projects. **Field mode is #1**, and it is three tasks in:
+Story mode decomposes into six sub-projects. **Field mode is #1**, and it is four tasks in:
 
 | Task | State |
 |---|---|
@@ -104,14 +104,14 @@ Story mode decomposes into six sub-projects. **Field mode is #1**, and it is thr
 | 2. `FieldMap` | Done, PR #9 |
 | 3. `FieldBody` (Task 4 folded in) | Done, PR #10 |
 | 4. Sub-stepping | Folded into 3; see the plan for why |
-| 5. `FieldView` — draw the map | **Next.** ~2 tests, no `core/` changes |
-| 6. `FieldPlayer` — input, movement, animation | Not started. This is the one where you can finally walk |
+| 5. `FieldView` — draw the map | Done, PR #11 |
+| 6. `FieldPlayer` — input, movement, animation | **Next.** 6 tests. This is the one where you can finally walk |
 | 7. `field.tscn` and the camera | Not started |
 | 8. Screenshot verification and this document | Not started |
 
 Target on completion is 173 tests.
 
-**Nothing renders yet.** All three finished tasks are `core/`, so there is no scene to run and nothing to look at. Task 7 is the first point where `godot scenes/field.tscn` does anything.
+**Nothing renders yet.** `FieldView` can draw a map, but nothing constructs one: there is no field scene, no player, and no entry point. Task 7 is the first point where `godot scenes/field.tscn` does anything.
 
 Sub-projects 2 through 6 of story mode — interaction and dialogue, events and world state, mode flow and battle handoff, save/load, content — each need their own spec. `run/main_scene` stays `battle.tscn` until sub-project 4.
 
@@ -169,7 +169,8 @@ Kept because the shapes recur, and each was patched back into the plan so it doe
 | The cursor ignored the event it was handed | Mouse motion called `get_local_mouse_position()` — a fresh query of the display server — rather than reading `event.position`. It works in a real window, so nothing was visibly broken, but it answers "where is the pointer now" instead of "where did this event happen", and it made the entire pointer path untestable: headless has no mouse, so it read `(0, 0)` forever and `Input.warp_mouse` did not help. Found the moment real events were pointed at it. |
 | A test that hung instead of failing | The first input tests awaited `walk_finished` and `animator.finished` bare. Unwire the thing that starts them and the await never returns, so a broken build hangs CI rather than reporting a failure. Both are now `wait_for_signal(..., seconds)` with the result asserted. |
 | A task boundary in the wrong place | The plan split `FieldBody` from its sub-stepping guard, on the theory that a working sweep came first and tunneling was a refinement on top. Six of the sweep's own tests failed until sub-stepping existed, because they walk into walls at 1000 px/s and a sweep only inspects where the box lands, not what it passed over. A task has to be the smallest unit that can pass its own tests. |
-| A test that was wrong while the code was right | The wall-slide test drove 1000 px north against 200 px east and expected the character pinned to the wall. It is not — it slides, clears the wall's eastern edge, and correctly continues north. The tempting fix is to change the code until the assertion goes green, which would have broken sliding to satisfy a carelessly posed question. |
+| A test that was wrong while the code was right | The wall-slide test drove 1000 px north against 200 px east and expected the character pinned to the wall. It is not — it slides, clears the wall's eastern edge, and correctly continues north. The tempting fix is to change the code until the assertion goes green, which would have broken sliding to satisfy a carelessly posed question. It recurred one task later: a `FieldView` test asserted the grass under a wall at (2,0) matches the grass at (0,0), contradicting the per-cell variant hash the view exists to use. Twice now, so assume a third. |
+| A view that drew nothing and passed | `FieldView` first decided its grass-then-solid layering inside `_draw`. Deleting the solid layer outright — every wall and tree invisible, which is the worst failure this code has — passed every test. Nothing headless can see into `_draw`, so anything it alone decides is untested by construction. The decision moved out to `layers_for()` and `_draw` became a loop with no opinions. What is left inside `_draw` needs a screenshot, not a test. |
 | The invariant caught a comment | `## Pure and Node-free on purpose`, in a `core/` file explaining that it does not depend on a Node, trips the Node-free grep. The comment gave way rather than the invariant: a grep blunt enough to be unfoolable beats one clever enough to be wrong. No `core/` file can use that word, even to disclaim it. |
 | Variant type inference | Godot 4.7 treats inferring a type from a Variant value as an error, so `:=` fails on the flood fill's frontier variable. |
 
@@ -196,6 +197,7 @@ Kept because the shapes recur, and each was patched back into the plan so it doe
 | `core/field_body.gd` | **Field mode.** Axis-separated movement and collision, sub-stepped so a hitched frame cannot tunnel |
 | `scenes/battle.gd` | **The bridge.** Input → core → view, and the view state machine |
 | `scenes/grid_view.gd` | Terrain and overlay rendering |
+| `scenes/field_view.gd` | **Field mode.** Draws a `FieldMap` with the battle's terrain art; `layers_for()` holds every decision so `_draw` holds none |
 | `scenes/unit_view.gd` | Directional sprite animation, health bar, flash, death |
 | `scenes/combat_animator.gd` | Replays a resolved exchange in order, and owns the sound |
 | `scenes/sfx.gd` | Clip paths, the pure outcome-to-clip mapping, and a round-robin voice pool |
@@ -203,5 +205,5 @@ Kept because the shapes recur, and each was patched back into the plan so it doe
 | `ui/` | Action menu, forecast panel, damage numbers, turn banner, result screen |
 | `assets/lpc/` | Characters and terrain, CC-BY-SA — attribution files must not be deleted |
 | `assets/audio/` | Three CC0 combat sounds, with `CREDITS.md` recording which original became which clip |
-| `test/` | 161 tests; `test_full_battle.gd` is the headless auto-battle harness and `test_input.gd` drives the game with real input events |
+| `test/` | 163 tests; `test_full_battle.gd` is the headless auto-battle harness and `test_input.gd` drives the game with real input events |
 | `docs/superpowers/specs/` + `plans/` | The design spec and the implementation plan it was built from |
