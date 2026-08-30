@@ -273,9 +273,10 @@ Implementation lands on `feature/tactics-vertical-slice` and ships as a pull req
 
 ## 14. Open risks
 
-**GUT may not yet support Godot 4.7.**
-Verified at milestone 1.
-Fallback order: gdUnit4, then a plain headless script runner.
+**~~GUT may not yet support Godot 4.7.~~ Resolved.**
+GUT 9.7.1 is verified working on Godot 4.7.2 as of milestone 1: it reports failures with message and line number, and exits 1 on failure so CI can trust the exit code.
+The one wrinkle is a required one-time `godot --headless --import` pass — without it a fresh project has no import cache, GUT's `class_name` registrations do not exist, and `gut_cmdln.gd` aborts before running anything.
+No fallback to gdUnit4 is needed.
 
 **Three layers of randomness may read as noisy rather than tense in play.**
 `DAMAGE_VARIANCE` is a single constant; setting it to `0.0` removes damage spread without touching any logic.

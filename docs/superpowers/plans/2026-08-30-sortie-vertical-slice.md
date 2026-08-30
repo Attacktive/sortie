@@ -6,7 +6,7 @@
 
 **Architecture:** Two layers with exactly one bridge. Everything under `core/` is plain `RefCounted`/`Resource` GDScript with no `Node` reference, so it runs and tests headless. Everything under `scenes/` and `ui/` renders core state and forwards input. `scenes/battle.gd` is the only script permitted to touch both.
 
-**Tech Stack:** Godot 4.7.2 stable, GDScript, GUT 9.6.1 for tests.
+**Tech Stack:** Godot 4.7.2 stable, GDScript, GUT 9.7.1 for tests.
 
 **Spec:** `docs/superpowers/specs/2026-08-30-sortie-design.md`
 
@@ -108,12 +108,19 @@ renderer/rendering_method="gl_compatibility"
 GUT is committed to the repo rather than fetched at build time, so the test suite is reproducible without a network.
 
 ```bash
-curl -sSL https://github.com/bitwes/Gut/archive/refs/tags/v9.6.1.zip -o /tmp/gut.zip
+curl -sSL https://github.com/bitwes/Gut/archive/refs/tags/v9.7.1.zip -o /tmp/gut.zip
 unzip -q /tmp/gut.zip -d /tmp/gut-extract
 mkdir -p addons
-cp -R /tmp/gut-extract/Gut-9.6.1/addons/gut addons/gut
+cp -R /tmp/gut-extract/Gut-9.7.1/addons/gut addons/gut
 rm -rf /tmp/gut.zip /tmp/gut-extract
 test -f addons/gut/plugin.cfg && echo "GUT vendored"
+```
+
+A fresh project has no import cache, so GUT's `class_name` registrations do not exist yet and `gut_cmdln.gd` aborts with "Some GUT class_names have not been imported."
+Run the import pass once after vendoring:
+
+```bash
+godot --headless --import
 ```
 
 - [ ] **Step 4: Write a test that must fail**
@@ -150,7 +157,7 @@ Expected: 1 test, 1 passing, exit code 0.
 
 ```bash
 git add -A
-git commit -m "chore: scaffold Godot project with vendored GUT 9.6.1
+git commit -m "chore: scaffold Godot project with vendored GUT 9.7.1
 
 Headless test run verified green on Godot 4.7.2.
 
