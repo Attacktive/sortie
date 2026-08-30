@@ -1120,7 +1120,9 @@ That timing is **not covered by a test, and cannot easily be**: the walk frame a
 **Interfaces:**
 
 - Consumes: `FieldView`, `FieldPlayer`, `FieldMap`
-- Produces: `Field.MAP`, `Field.START_CELL`, `Field._player`, `Field._camera`
+- Produces: `Field.MAP`, `Field.START_CELL`, `Field.CAMERA_OFFSET`, `Field._view`, `Field._player`, `Field._camera`
+
+**Done.** Six tests rather than four. The two extra cover the camera's offset and the draw order, and the planned scene had both of them wrong; the writeup at the end of the task says how.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -1129,6 +1131,9 @@ Create `test/test_field.gd`:
 ```gdscript
 extends GutTest
 
+## The scene is where the pieces meet, so what is worth testing here is the wiring between them and nothing about the pieces themselves.
+## Every rule they follow is already covered in test_field_map.gd, test_field_body.gd, test_field_view.gd and test_field_player.gd.
+
 var _field: Field
 
 func before_each() -> void:
@@ -1136,13 +1141,12 @@ func before_each() -> void:
 	add_child_autofree(_field)
 	await get_tree().process_frame
 
-func test_the_field_puts_a_player_on_the_map() -> void:
-	assert_not_null(_field._player, "there is someone to walk around as")
-	assert_not_null(_field._player.map, "and they know what they are walking on")
+func test_everything_is_looking_at_the_same_map() -> void:
+	assert_not_null(_field._player, "there is nobody to walk around as")
+	assert_same(_field._player.map, _field._view.map, "drawing one map while colliding against another is a world where the walls are decorative")
 
 func test_the_player_starts_somewhere_walkable() -> void:
-	var start := _field._player.map.is_solid(Field.START_CELL)
-	assert_false(start, "spawning inside a wall is the one placement that traps the player")
+	assert_false(_field._player.map.is_solid(Field.START_CELL), "spawning inside a wall is the one placement the player cannot walk out of")
 
 ## The viewport is smaller than any map worth walking around, so the camera is required rather than decorative.
 func test_the_camera_is_limited_to_the_map() -> void:
@@ -1150,11 +1154,21 @@ func test_the_camera_is_limited_to_the_map() -> void:
 
 	assert_eq(_field._camera.limit_left, 0)
 	assert_eq(_field._camera.limit_top, 0)
-	assert_eq(_field._camera.limit_right, int(bounds.x), "the camera must stop at the map's edge, not show the void past it")
+	assert_eq(_field._camera.limit_right, int(bounds.x), "the camera has to stop at the map's edge rather than show the void past it")
 	assert_eq(_field._camera.limit_bottom, int(bounds.y))
 
 func test_the_camera_follows_the_player() -> void:
 	assert_eq(_field._camera.get_parent(), _field._player, "a camera that does not move with the player is not following anything")
+
+## Half a cell over, because a node's position is the sprite's top-left corner and centering on that frames the character down and to the right of where they actually are.
+func test_the_camera_is_centered_on_the_character() -> void:
+	var center := _field._player.position + Vector2.ONE * (GridGeometry.CELL_SIZE * 0.5)
+
+	assert_eq(_field._camera.global_position, center, "the camera centers on the character, not on the corner of the tile they are standing in")
+
+## Later siblings draw over earlier ones, and a character behind the ground is a character nobody can see.
+func test_the_character_draws_over_the_ground() -> void:
+	assert_gt(_field._player.get_index(), _field._view.get_index(), "the ground goes down before the person standing on it")
 ```
 
 - [ ] **Step 2: Run it and watch it fail**
@@ -1163,7 +1177,7 @@ func test_the_camera_follows_the_player() -> void:
 godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_field.gd -gexit
 ```
 
-Expected: failure — `res://scenes/field.tscn` does not exist.
+Expected: failure — but not the predicted one. The plan expected `res://scenes/field.tscn` to be missing; what actually happens is that the script does not parse, because `var _field: Field` names a class that does not exist yet. GUT reports `Nothing was run`.
 
 - [ ] **Step 3: Write `scenes/field.gd`**
 
@@ -1171,9 +1185,9 @@ Expected: failure — `res://scenes/field.tscn` does not exist.
 class_name Field
 extends Node2D
 
-## The walkable world. Owns the map, what draws it, who walks on it, and the camera that follows them.
+## The walkable world: the map, what draws it, who walks on it, and the camera that follows them.
 ##
-## This is field mode's whole bridge, and it is deliberately thin: no NPCs, no events, no way into a battle. Those attach here in later sub-projects.
+## Deliberately thin. There are no NPCs, no events and no way into a battle, because those are later sub-projects and this one only has to prove you can walk around.
 
 ## Bigger than the viewport on both axes, so the camera has something to do.
 const MAP := [
@@ -1194,6 +1208,9 @@ const MAP := [
 const START_CELL := Vector2i(2, 1)
 const PLAYER_SHEET := "res://assets/lpc/units/vanguard_walkcycle.png"
 
+## A node's position is the top-left corner of its sprite, so a camera sitting at the player's origin centers the screen on that corner and leaves the character down and to the right of it.
+const CAMERA_OFFSET := Vector2(GridGeometry.CELL_SIZE, GridGeometry.CELL_SIZE) * 0.5
+
 var _map: FieldMap = null
 var _view: FieldView = null
 var _player: FieldPlayer = null
@@ -1202,24 +1219,40 @@ var _camera: Camera2D = null
 func _ready() -> void:
 	_map = FieldMap.from_ascii(PackedStringArray(MAP))
 
+	_build_view()
+	_build_player()
+	_build_camera()
+
+func _build_view() -> void:
 	_view = FieldView.new()
 	_view.map = _map
 	add_child(_view)
 
+## Added after the view, because siblings draw in order and the ground has to go down before the person standing on it.
+func _build_player() -> void:
 	_player = FieldPlayer.new()
 	_player.map = _map
 	_player.position = GridGeometry.cell_to_position(START_CELL)
 	_player.setup(PLAYER_SHEET)
 	add_child(_player)
 
+## Parented to the player, so following costs nothing and can never lag a frame behind.
+## The limits are the map's own bounds: past them there is no world, only whatever the last frame left in the buffer.
+func _build_camera() -> void:
+	var bounds := _map.pixel_size()
+
 	_camera = Camera2D.new()
+	_camera.position = CAMERA_OFFSET
 	_camera.limit_left = 0
 	_camera.limit_top = 0
-	_camera.limit_right = int(_map.pixel_size().x)
-	_camera.limit_bottom = int(_map.pixel_size().y)
+	_camera.limit_right = int(bounds.x)
+	_camera.limit_bottom = int(bounds.y)
+
 	_player.add_child(_camera)
 	_camera.make_current()
 ```
+
+The map is 18x12 cells, so 1152x768 px against a 730x600 viewport: 422 px of horizontal travel for the camera and 168 px of vertical. Small enough to reach every limit by walking, which is the point of Step 9.
 
 - [ ] **Step 4: Write `scenes/field.tscn`**
 
@@ -1241,9 +1274,22 @@ godot --headless --import
 godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_field.gd -gexit
 ```
 
-Expected: 4 tests passing.
+Expected: 6 tests passing.
 
-- [ ] **Step 6: Run the whole suite and the invariants**
+- [ ] **Step 6: Prove the tests bite**
+
+Six mutations, each reverted after running:
+
+| Mutation | Result |
+|---|---|
+| The camera left at the player's origin rather than `CAMERA_OFFSET` | 1 failure |
+| The camera parented to the field instead of to the player | 2 failures |
+| The view added after the player, so the ground draws over the character | 1 failure |
+| The view handed its own `FieldMap`, built from the same ASCII | 1 failure |
+| `limit_right` and `limit_bottom` left at their defaults | 1 failure |
+| `START_CELL` moved to `(2, 0)`, inside the north wall | 1 failure |
+
+- [ ] **Step 7: Run the whole suite and the invariants**
 
 ```sh
 godot --headless -s addons/gut/gut_cmdln.gd -gdir=res://test -gexit
@@ -1251,9 +1297,17 @@ grep -rE '\bNode\b|get_tree\(|\bInput\b|preload\(|\.tscn' core/
 grep -rlE 'randf|randi|randomize' core/ | grep -v real_roll_source
 ```
 
-Expected: 175 tests passing, and no output from either grep. (Task 6 delivered eight tests rather than the six planned, which is where the two extra come from.)
+Expected: 177 tests passing, and no output from either grep. The plan said 175: Task 6 delivered eight tests rather than the planned six, and this task six rather than four.
 
-- [ ] **Step 7: Walk around in it**
+- [ ] **Step 8: Boot the scene for real**
+
+```sh
+godot --headless scenes/field.tscn --quit-after 30
+```
+
+Thirty frames of an actual scene run rather than a GUT instantiation, so `_ready()`, `_process()` and `_draw()` all execute the way they will in the game. Expected: no output whatsoever. This is cheap and it is not the same check as the suite — GUT adds the scene to a tree that is already running, and never boots it as the main scene.
+
+- [ ] **Step 9: Walk around in it**
 
 ```sh
 godot scenes/field.tscn
@@ -1261,7 +1315,9 @@ godot scenes/field.tscn
 
 Confirm by hand: the arrow keys move the character, walls stop them, a diagonal into a wall slides along it, the character faces where it is going, the walk cycle animates, and the camera follows and stops at the map edge. Note anything that feels wrong — speed and the feet box are both listed in the spec as unverifiable by testing.
 
-- [ ] **Step 8: Commit**
+The turn-redraw from Task 6 is the specific thing to watch for: round a corner at speed and see whether the character faces the new direction immediately or a beat late. No headless test can see that.
+
+- [ ] **Step 10: Commit**
 
 ```sh
 godot --headless --import
@@ -1270,6 +1326,18 @@ git commit
 ```
 
 Message: `feat: add the field scene, with a camera that follows`
+
+#### What changed in Task 7, and why
+
+**The camera was centered on the corner of the character rather than on the character.** A `Node2D`'s position is the top-left of its 64x64 sprite, so a camera parented at the player's origin puts that corner at the middle of the screen and leaves the character half a tile down and to the right of it — off-center by 32 px on both axes, forever, in a game whose whole subject is the thing in the middle of the screen. `CAMERA_OFFSET` is half a cell, and `test_the_camera_is_centered_on_the_character` compares the camera's global position against the sprite's center rather than against the constant, so it fails if either the offset or the parenting is wrong.
+
+**Nothing checked that the view had a map.** The planned tests asserted `_player.map` was not null and never looked at `_view.map` at all. A view with no map draws nothing: a black screen with a perfectly functional invisible character walking around on it, and all four planned tests passing. `test_everything_is_looking_at_the_same_map` asserts the two hold the *same object*, which also rules out the subtler version where each is built its own copy from the same ASCII and neither ever sees the other's changes. There are no changes yet. There will be — doors and chests are sub-project 3.
+
+**Draw order was unasserted, and it is a real way to lose the character.** Siblings draw in order, so a view added after the player paints the ground over them. One `get_index()` comparison covers it.
+
+**Construction moved out of `_ready()` into three named methods.** As planned it was twenty lines of straight-line building doing three unrelated jobs. `_build_view()`, `_build_player()`, `_build_camera()` says what the scene is made of in three words, and it gives the two comments that matter — why the player is added second, why the camera is parented to them — somewhere to live attached to the decision they explain rather than floating in a wall of assignments.
+
+**Step 8 is new.** Every earlier task's verification ran under GUT, which adds a scene to a tree that is already up. Booting `field.tscn` as the main scene is a different code path and costs one command, and it is the check that would catch an autoload, a main-scene setting or a `_ready()` ordering problem that GUT never exercises.
 
 ---
 
