@@ -19,12 +19,15 @@ These apply to every task below.
 - **A multiline expression is followed by an empty line** before the next statement. No empty line after an opening brace or `:`.
 - **Prefer `if` over the ternary operator.**
 - **American English** in prose, comments, and identifiers.
-- **`core/` stays Node-free.** After every task, both invariants must produce no output:
+- **`core/` stays free of the scene tree.** After every task, both invariants must produce no output:
 
   ```sh
   grep -rE '\bNode\b|get_tree\(|\bInput\b|preload\(|\.tscn' core/
   grep -rlE 'randf|randi|randomize' core/ | grep -v real_roll_source
   ```
+
+  The first one greps comments too, so a `core/` file cannot use the word "Node" even to explain that it does not depend on one.
+  That is the price of an invariant blunt enough to be unfoolable, and it is cheaper than a grep clever enough to be wrong.
 
 - **All 136 existing tests must keep passing.** Run the full suite, not just the new file:
 
@@ -390,7 +393,7 @@ Message: `feat: add FieldMap, the walkable world as a picture`
 
 ---
 
-### Task 3: `FieldBody` — axis-separated collision
+### Task 3: `FieldBody` — axis-separated collision and sub-stepping
 
 **Files:**
 
@@ -402,7 +405,7 @@ Message: `feat: add FieldMap, the walkable world as a picture`
 - Consumes: `FieldMap.solid_tiles_overlapping()`, `GridGeometry.CELL_SIZE`
 - Produces: `FieldBody.move(box: Rect2, velocity: Vector2, delta: float, map: FieldMap) -> Rect2`, `FieldBody.BOX_SIZE`, `FieldBody.BOX_OFFSET`, `FieldBody.SPEED`
 
-Sub-stepping is Task 4. This task resolves one step.
+**Task 4 was folded into this one during implementation.** The two cannot be separated: every "walk into a wall" test here drives a large velocity in a single step, which tunnels straight through the wall unless the move is sub-stepped. Splitting them put a task boundary where the first half cannot stand on its own.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -570,7 +573,7 @@ godot --headless --import
 godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_field_body.gd -gexit
 ```
 
-Expected: 11 tests passing. If `test_moving_away_from_a_wall_you_are_touching_works` fails, the cause is the boundary case in `solid_tiles_overlapping` — check the `- 0.001` from Task 2 is present.
+Expected: 13 tests passing, including the two from the folded Task 4. If `test_moving_away_from_a_wall_you_are_touching_works` fails, the cause is the boundary case in `solid_tiles_overlapping` — check the `- 0.001` from Task 2 is present.
 
 - [ ] **Step 5: Prove the slide test bites**
 
@@ -598,85 +601,15 @@ Message: `feat: add FieldBody, axis-separated movement in core`
 
 ---
 
-### Task 4: Sub-stepping, so a hitched frame cannot tunnel
+### Task 4: Folded into Task 3
 
-**Files:**
+Sub-stepping shipped as part of Task 3, and this task no longer exists on its own.
 
-- Modify: `core/field_body.gd`
-- Modify: `test/test_field_body.gd`
+The plan originally scheduled it separately, on the theory that a working sweep came first and the tunneling guard was a refinement layered on top.
+That was wrong. Task 3's tests walk into walls at 1000 px/s over a full second, which is 1000 px in one step, and a sweep only inspects where the box lands rather than what it passed over — so without sub-stepping the box sails clean past the wall and clamps against an out-of-bounds tile far beyond it.
+Six of Task 3's own tests failed until sub-stepping existed.
 
-**Interfaces:**
-
-- Produces: `FieldBody.MAX_STEP`. `move()` keeps its signature.
-
-- [ ] **Step 1: Write the failing test**
-
-Append to `test/test_field_body.gd`:
-
-```gdscript
-## At the design speed a frame moves 1.6 px and this is unreachable.
-## It is here for the frame that hitches — a delta spike, a breakpoint, a laptop waking from sleep — where one step could carry the box clean through a wall.
-## That bug is invisible in normal play and unreproducible when reported, so it gets a guard rather than a promise.
-func test_a_hitched_frame_cannot_tunnel_through_a_wall() -> void:
-	var box := _box_at(Vector2(100, 80))
-	var moved := FieldBody.move(box, Vector2(5000, 0), 1.0, _room())
-
-	assert_almost_eq(moved.end.x, 128.0, 0.001, "5000 px in one step still stops at the wall")
-
-func test_sub_stepping_does_not_change_an_ordinary_move() -> void:
-	var box := _box_at(Vector2(10, 200))
-	var moved := FieldBody.move(box, Vector2(96, 0), 1.0 / 60.0, _room())
-
-	assert_almost_eq(moved.position.x, 10.0 + 96.0 / 60.0, 0.001, "a normal frame is one step and lands exactly where the arithmetic says")
-```
-
-- [ ] **Step 2: Run it and watch the first one fail**
-
-```sh
-godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_field_body.gd -gexit
-```
-
-Expected: `test_a_hitched_frame_cannot_tunnel_through_a_wall` fails. The box jumps past the wall in a single sweep and lands in open ground beyond it, because `solid_tiles_overlapping` only reports tiles the box's *destination* touches, not the ones it flew over.
-
-- [ ] **Step 3: Add sub-stepping**
-
-In `core/field_body.gd`, add the constant and replace the body of `move()`:
-
-```gdscript
-## No single step may cross more than half a tile, so a swept box can never skip over one.
-const MAX_STEP := GridGeometry.CELL_SIZE * 0.5
-
-static func move(box: Rect2, velocity: Vector2, delta: float, map: FieldMap) -> Rect2:
-	var motion := velocity * delta
-	var longest := maxf(absf(motion.x), absf(motion.y))
-	var steps := maxi(1, ceili(longest / MAX_STEP))
-	var slice := motion / float(steps)
-
-	var moved := box
-
-	for i in steps:
-		moved = _sweep(moved, Vector2(slice.x, 0.0), map)
-		moved = _sweep(moved, Vector2(0.0, slice.y), map)
-
-	return moved
-```
-
-- [ ] **Step 4: Run the tests and watch them pass**
-
-```sh
-godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_field_body.gd -gexit
-```
-
-Expected: 13 tests passing. The earlier tests still pass because a normal frame produces `steps == 1` and the loop runs once.
-
-- [ ] **Step 5: Commit**
-
-```sh
-git add core/field_body.gd test/test_field_body.gd
-git commit
-```
-
-Message: `fix: sub-step long moves so a hitched frame cannot tunnel`
+The lesson is about task boundaries rather than about collision: a task has to be the smallest unit that can pass its own tests, and this split was drawn somewhere the first half could not stand up alone.
 
 ---
 
