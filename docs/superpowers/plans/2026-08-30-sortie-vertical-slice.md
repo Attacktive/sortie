@@ -2010,7 +2010,12 @@ static func _advance_toward_nearest(grid: BattleGrid, unit: BattleUnit, field: M
 	var best_distance := -1
 
 	for target in _sorted_units(targets):
+		## The target's own cell was marked solid along with every other opposing unit,
+		## and A* cannot path onto a solid cell — so clear the destination for its own search.
+		approach.set_point_solid(target.cell, false)
 		var route := approach.get_id_path(unit.cell, target.cell)
+		approach.set_point_solid(target.cell, true)
+
 		if route.size() < 2:
 			continue
 
