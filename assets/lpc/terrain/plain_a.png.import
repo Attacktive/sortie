@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://577h4ne6ino2"
-path="res://.godot/imported/wall.png-78058f98a07c8839d1a8f7d8cee419fc.ctex"
+uid="uid://nkptd18ksdjl"
+path="res://.godot/imported/plain_a.png-b3c57ed7c92c36ef858a7be2f63618fe.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/kenney/terrain/wall.png"
-dest_files=["res://.godot/imported/wall.png-78058f98a07c8839d1a8f7d8cee419fc.ctex"]
+source_file="res://assets/lpc/terrain/plain_a.png"
+dest_files=["res://.godot/imported/plain_a.png-b3c57ed7c92c36ef858a7be2f63618fe.ctex"]
 
 [params]
 

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dgm76q7s66p1y"
-path="res://.godot/imported/forest.png-9b6a13ef85800cb6af773554b49e1425.ctex"
+uid="uid://culyp1wir1lee"
+path="res://.godot/imported/skirmisher.png-9d04d2996192c118586e62998d7c032d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/kenney/terrain/forest.png"
-dest_files=["res://.godot/imported/forest.png-9b6a13ef85800cb6af773554b49e1425.ctex"]
+source_file="res://assets/lpc/units/skirmisher.png"
+dest_files=["res://.godot/imported/skirmisher.png-9d04d2996192c118586e62998d7c032d.ctex"]
 
 [params]
 

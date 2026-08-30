@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://7wkjbnx50ekh"
-path="res://.godot/imported/raider.png-a0085979c346e050dac4b86a8fb7d43c.ctex"
+uid="uid://cvmvhxg2j3jwg"
+path="res://.godot/imported/plain_b.png-20806a02f05a29e9effb283d7f53ff5c.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/kenney/units/raider.png"
-dest_files=["res://.godot/imported/raider.png-a0085979c346e050dac4b86a8fb7d43c.ctex"]
+source_file="res://assets/lpc/terrain/plain_b.png"
+dest_files=["res://.godot/imported/plain_b.png-20806a02f05a29e9effb283d7f53ff5c.ctex"]
 
 [params]
 

@@ -19,13 +19,13 @@ static func build_grid() -> BattleGrid:
 static func populate(grid: BattleGrid) -> Array[BattleUnit]:
 	var units: Array[BattleUnit] = []
 
-	units.append(_spawn(grid, Vector2i(0, 7), _make("Vanguard", 24, 9, 4, 0.90, 0.05, 0.05, 3, 1, UnitData.Team.PLAYER, "res://assets/kenney/units/vanguard.png")))
-	units.append(_spawn(grid, Vector2i(1, 7), _make("Mage", 16, 8, 1, 0.85, 0.10, 0.15, 3, 2, UnitData.Team.PLAYER, "res://assets/kenney/units/mage.png")))
-	units.append(_spawn(grid, Vector2i(0, 6), _make("Skirmisher", 18, 7, 2, 0.95, 0.20, 0.25, 5, 1, UnitData.Team.PLAYER, "res://assets/kenney/units/skirmisher.png")))
+	units.append(_spawn(grid, Vector2i(0, 7), _make("Vanguard", 24, 9, 4, 0.90, 0.05, 0.05, 3, 1, UnitData.Team.PLAYER, "res://assets/lpc/units/vanguard.png")))
+	units.append(_spawn(grid, Vector2i(1, 7), _make("Mage", 16, 8, 1, 0.85, 0.10, 0.15, 3, 2, UnitData.Team.PLAYER, "res://assets/lpc/units/mage.png")))
+	units.append(_spawn(grid, Vector2i(0, 6), _make("Skirmisher", 18, 7, 2, 0.95, 0.20, 0.25, 5, 1, UnitData.Team.PLAYER, "res://assets/lpc/units/skirmisher.png")))
 
-	units.append(_spawn(grid, Vector2i(9, 0), _make("Brute", 26, 10, 3, 0.85, 0.00, 0.05, 3, 1, UnitData.Team.ENEMY, "res://assets/kenney/units/brute.png")))
-	units.append(_spawn(grid, Vector2i(8, 0), _make("Raider", 18, 8, 1, 0.90, 0.10, 0.15, 4, 1, UnitData.Team.ENEMY, "res://assets/kenney/units/raider.png")))
-	units.append(_spawn(grid, Vector2i(9, 1), _make("Scout", 14, 6, 0, 0.90, 0.25, 0.10, 5, 1, UnitData.Team.ENEMY, "res://assets/kenney/units/scout.png")))
+	units.append(_spawn(grid, Vector2i(9, 0), _make("Brute", 26, 10, 3, 0.85, 0.00, 0.05, 3, 1, UnitData.Team.ENEMY, "res://assets/lpc/units/brute.png")))
+	units.append(_spawn(grid, Vector2i(8, 0), _make("Raider", 18, 8, 1, 0.90, 0.10, 0.15, 4, 1, UnitData.Team.ENEMY, "res://assets/lpc/units/raider.png")))
+	units.append(_spawn(grid, Vector2i(9, 1), _make("Scout", 14, 6, 0, 0.90, 0.25, 0.10, 5, 1, UnitData.Team.ENEMY, "res://assets/lpc/units/scout.png")))
 
 	return units
 

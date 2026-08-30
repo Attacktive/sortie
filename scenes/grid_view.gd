@@ -2,10 +2,19 @@ class_name GridView
 extends Node2D
 
 const TERRAIN_TEXTURES := {
-	Terrain.Type.PLAIN: "res://assets/kenney/terrain/plain.png",
-	Terrain.Type.FOREST: "res://assets/kenney/terrain/forest.png",
-	Terrain.Type.WALL: "res://assets/kenney/terrain/wall.png",
+	Terrain.Type.PLAIN: "res://assets/lpc/terrain/plain_a.png",
+	Terrain.Type.FOREST: "res://assets/lpc/terrain/forest.png",
+	Terrain.Type.WALL: "res://assets/lpc/terrain/wall.png",
 }
+
+## Plain grass comes in three variants. Which one a cell gets is a hash of its
+## coordinates, so the field looks varied without repeating on a visible grid,
+## and it is identical on every run and every machine.
+const PLAIN_VARIANTS := [
+	"res://assets/lpc/terrain/plain_a.png",
+	"res://assets/lpc/terrain/plain_b.png",
+	"res://assets/lpc/terrain/plain_c.png",
+]
 
 ## Forest and wall tiles are objects on grass, not full-bleed tiles,
 ## so grass is painted underneath everything first.
@@ -21,6 +30,7 @@ const THREAT_MOVE_HIGHLIGHT := Color(0.95, 0.55, 0.12, 0.42)
 var grid: BattleGrid = null
 
 var _textures: Dictionary[Terrain.Type, Texture2D] = {}
+var _plain: Array[Texture2D] = []
 var move_cells: Array[Vector2i] = []
 var attack_cells: Array[Vector2i] = []
 var threat_move_cells: Array[Vector2i] = []
@@ -33,6 +43,9 @@ func _ready() -> void:
 	for type in TERRAIN_TEXTURES:
 		_textures[type] = load(TERRAIN_TEXTURES[type])
 
+	for path in PLAIN_VARIANTS:
+		_plain.append(load(path))
+
 func refresh() -> void:
 	queue_redraw()
 
@@ -40,15 +53,13 @@ func _draw() -> void:
 	if grid == null:
 		return
 
-	var grass: Texture2D = _textures[Terrain.Type.PLAIN]
-
 	for y in grid.size.y:
 		for x in grid.size.x:
 			var cell := Vector2i(x, y)
 			var rect := Rect2(GridGeometry.cell_to_position(cell), Vector2.ONE * GridGeometry.CELL_SIZE)
 			var type := grid.terrain_at(cell)
 
-			draw_texture_rect(grass, rect, false)
+			draw_texture_rect(_plain[plain_variant_for(cell)], rect, false)
 			if type != Terrain.Type.PLAIN:
 				draw_texture_rect(_textures[type], rect, false)
 
@@ -59,6 +70,13 @@ func _draw() -> void:
 	_draw_highlights(threat_move_cells, THREAT_MOVE_HIGHLIGHT)
 	_draw_highlights(move_cells, MOVE_HIGHLIGHT)
 	_draw_highlights(attack_cells, ATTACK_HIGHLIGHT)
+
+## Two large primes keep neighbouring cells from landing on the same variant,
+## which is what a plain modulo of x + y would do and would read as stripes.
+static func plain_variant_for(cell: Vector2i) -> int:
+	var hash_value := absi(cell.x * 73856093 ^ cell.y * 19349663)
+
+	return hash_value % PLAIN_VARIANTS.size()
 
 func _draw_highlights(cells: Array[Vector2i], color: Color) -> void:
 	for cell in cells:

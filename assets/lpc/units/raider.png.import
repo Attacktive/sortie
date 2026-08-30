@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://mgluw80ar7fw"
-path="res://.godot/imported/brute.png-b907def2c7f5dfdc14c9c6e17a3b2cbf.ctex"
+uid="uid://cubf6rlp8yqif"
+path="res://.godot/imported/raider.png-90a3b133c5f93f66dc7bcfc26927d855.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/kenney/units/brute.png"
-dest_files=["res://.godot/imported/brute.png-b907def2c7f5dfdc14c9c6e17a3b2cbf.ctex"]
+source_file="res://assets/lpc/units/raider.png"
+dest_files=["res://.godot/imported/raider.png-90a3b133c5f93f66dc7bcfc26927d855.ctex"]
 
 [params]
 

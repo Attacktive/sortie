@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://proveoy8nc3w"
-path="res://.godot/imported/vanguard.png-73269454c6d6e018ea049edc5d2627d9.ctex"
+uid="uid://bepuc2phw25sx"
+path="res://.godot/imported/wall.png-fe6c4d07b6c84b5b2dbe1de64cd7a1ac.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/kenney/units/vanguard.png"
-dest_files=["res://.godot/imported/vanguard.png-73269454c6d6e018ea049edc5d2627d9.ctex"]
+source_file="res://assets/lpc/terrain/wall.png"
+dest_files=["res://.godot/imported/wall.png-fe6c4d07b6c84b5b2dbe1de64cd7a1ac.ctex"]
 
 [params]
 

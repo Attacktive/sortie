@@ -13,3 +13,8 @@ enabled=PackedStringArray("res://addons/gut/plugin.cfg")
 [rendering]
 
 renderer/rendering_method="gl_compatibility"
+
+[display]
+
+window/size/viewport_width=730
+window/size/viewport_height=600

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bxv1uuawitv61"
-path="res://.godot/imported/scout.png-723b127e108ffbe1752cb3e5b5fc3230.ctex"
+uid="uid://onj7smmsca7e"
+path="res://.godot/imported/mage.png-9e42f716027c14a1b7e1266c04f8219a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/kenney/units/scout.png"
-dest_files=["res://.godot/imported/scout.png-723b127e108ffbe1752cb3e5b5fc3230.ctex"]
+source_file="res://assets/lpc/units/mage.png"
+dest_files=["res://.godot/imported/mage.png-9e42f716027c14a1b7e1266c04f8219a.ctex"]
 
 [params]
 

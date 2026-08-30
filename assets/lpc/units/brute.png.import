@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://vv5pk7nptixo"
-path="res://.godot/imported/skirmisher.png-b17ec97322cc8d980516913572e1014f.ctex"
+uid="uid://cs1vxsj4w1t6w"
+path="res://.godot/imported/brute.png-955a27d5d47154c4d1f208da8401831d.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/kenney/units/skirmisher.png"
-dest_files=["res://.godot/imported/skirmisher.png-b17ec97322cc8d980516913572e1014f.ctex"]
+source_file="res://assets/lpc/units/brute.png"
+dest_files=["res://.godot/imported/brute.png-955a27d5d47154c4d1f208da8401831d.ctex"]
 
 [params]
 
