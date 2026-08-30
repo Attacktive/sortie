@@ -608,11 +608,20 @@ func test_walls_are_impassable_and_force_a_detour() -> void:
 		".#.",
 		"...",
 	]))
-	var unit := _place(grid, Vector2i(0, 0), 3, UnitData.Team.PLAYER)
+	var unit := _place(grid, Vector2i(0, 0), 4, UnitData.Team.PLAYER)
 	var field := Movement.field(grid, unit)
 
 	assert_false(field.can_reach(Vector2i(1, 0)), "the wall itself is never reachable")
-	assert_eq(field.cost_to(Vector2i(2, 0)), 3, "around the wall is three steps, not two")
+	assert_eq(field.cost_to(Vector2i(2, 0)), 4, "down, across twice, then back up — not the two-step direct line")
+
+func test_a_wall_can_push_a_nearby_cell_out_of_budget() -> void:
+	var grid := BattleGrid.from_ascii(PackedStringArray([
+		".#.",
+		"...",
+	]))
+	var unit := _place(grid, Vector2i(0, 0), 3, UnitData.Team.PLAYER)
+
+	assert_false(Movement.field(grid, unit).can_reach(Vector2i(2, 0)), "two tiles away by sight, four by foot")
 
 func test_enemies_block_movement_entirely() -> void:
 	var grid := BattleGrid.from_ascii(PackedStringArray([
@@ -762,7 +771,7 @@ static func field(grid: BattleGrid, unit: BattleUnit) -> MovementField:
 	var visited: Dictionary[Vector2i, bool] = {}
 
 	while true:
-		var next_cell := _cheapest_unvisited(result.costs, visited)
+		var next_cell: Variant = _cheapest_unvisited(result.costs, visited)
 		if next_cell == null:
 			break
 
@@ -798,6 +807,8 @@ static func field(grid: BattleGrid, unit: BattleUnit) -> MovementField:
 	return result
 
 ## Returns null when every discovered cell has already been expanded.
+## The caller must annotate the receiving variable as Variant explicitly:
+## Godot 4.7 treats inferring a type from a Variant value as an error, so `:=` fails here.
 static func _cheapest_unvisited(costs: Dictionary, visited: Dictionary) -> Variant:
 	var best: Variant = null
 	var best_cost := 0
