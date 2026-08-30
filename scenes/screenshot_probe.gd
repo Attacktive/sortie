@@ -1,23 +1,36 @@
 extends Node
 
-## Verification harness. Optionally drives the battle into a specific state,
+## Verification harness. Optionally drives the scene into a specific state,
 ## waits, saves the viewport, and quits. Gated entirely on environment variables,
 ## so it never runs during normal play.
 ##
+## Serves both the battle and the field. The battle knobs stage a turn; the field
+## knob holds a direction, because a walk cycle only exists while someone walks.
+##
 ## Animations are the one thing a static reading of the code cannot confirm, and
 ## this is how every visual claim in the project was checked instead of asserted.
+
+## The direction being held, if any. Pressed again every frame; see _process.
+var _held: String = ""
+
 func _ready() -> void:
-	var battle := get_parent()
+	var host := get_parent()
 
 	if OS.has_environment("SORTIE_SELECT"):
 		var parts := OS.get_environment("SORTIE_SELECT").split(",")
-		battle.call("_try_select", Vector2i(int(parts[0]), int(parts[1])))
+		host.call("_try_select", Vector2i(int(parts[0]), int(parts[1])))
 
 	if OS.has_environment("SORTIE_ATTACK"):
-		_stage_attack(battle, OS.get_environment("SORTIE_ATTACK").split(","))
+		_stage_attack(host, OS.get_environment("SORTIE_ATTACK").split(","))
 
 	if OS.has_environment("SORTIE_WALK"):
-		_stage_walk(battle, OS.get_environment("SORTIE_WALK").split(","))
+		_stage_walk(host, OS.get_environment("SORTIE_WALK").split(","))
+
+	if OS.has_environment("SORTIE_FIELD_WALK"):
+		_hold_direction(OS.get_environment("SORTIE_FIELD_WALK"))
+
+	if OS.has_environment("SORTIE_FIELD_TURN"):
+		_turn_after(OS.get_environment("SORTIE_FIELD_TURN").split(","))
 
 	var wait := float(OS.get_environment("SORTIE_WAIT")) if OS.has_environment("SORTIE_WAIT") else 0.0
 	if wait > 0.0:
@@ -31,8 +44,65 @@ func _ready() -> void:
 	## guarantees the capture holds a real frame.
 	await RenderingServer.frame_post_draw
 
+	if not _held.is_empty():
+		_report(host.get("_player"))
+
 	get_viewport().get_texture().get_image().save_png(OS.get_environment("SORTIE_SHOT"))
 	get_tree().quit()
+
+## "right", "up", "left" or "down": holds that direction down, so a capture lands mid-stride.
+## Pair with SORTIE_WAIT to choose which frame of the walk cycle is caught.
+##
+## An InputEventAction rather than a key, because the action is what FieldPlayer reads and a keycode would only be a longer way of saying the same thing.
+## It goes through Input.parse_input_event for the reason test_field_player.gd documents: get_vector reads held action state, and push_input delivers a one-shot that is gone by the next frame.
+func _hold_direction(direction: String) -> void:
+	var action := "ui_%s" % direction
+
+	## A capture tool that quietly does nothing is worse than none — that lesson is already in the handoff, written by an all-black PNG reported as a pass.
+	if not InputMap.has_action(action):
+		push_error("SORTIE_FIELD_WALK=%s is not a direction; expected right, up, left or down" % direction)
+		return
+
+	_held = action
+	_press()
+
+## Turns partway through: "<direction>,<seconds>".
+## Deliberately not awaited by the caller — it runs alongside the capture's own wait, so SORTIE_WAIT picks which frame after the turn is caught.
+##
+## This is what settles the one claim in field mode that no test can reach: turning is supposed to redraw the sprite on the turn itself rather than on the next walk frame.
+## The walk cycle runs at 11 fps and the game at roughly 140, so there are about a dozen rendered frames between one walk frame and the next — which is exactly the window a stale facing would be visible in, and exactly the window to capture.
+func _turn_after(parts: PackedStringArray) -> void:
+	await get_tree().create_timer(float(parts[1])).timeout
+
+	var release := InputEventAction.new()
+	release.action = _held
+	release.pressed = false
+	Input.parse_input_event(release)
+
+	_hold_direction(parts[0])
+
+## Pressed again every frame rather than once, because Godot releases every held action when the window loses focus, and a window launched from a terminal may never have had it.
+## Holding once was measured across three runs at the same speed: the character travelled the full distance, then 14 px, then nothing at all, with nothing different but the timing of a focus event.
+func _process(_delta: float) -> void:
+	if _held.is_empty():
+		return
+
+	_press()
+
+## The player reads Input before this node does, since it is the earlier sibling, so pressing only from _process would cost a frame at the start of every capture.
+func _press() -> void:
+	var event := InputEventAction.new()
+	event.action = _held
+	event.pressed = true
+
+	Input.parse_input_event(event)
+	Input.flush_buffered_events()
+
+## What the capture actually caught, printed beside it. A verification tool that says nothing about its own state is how an all-black PNG once passed for a verification.
+func _report(player: Node) -> void:
+	var vector := Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
+
+	print("SORTIE_FIELD_WALK %s: vector=%s position=%s frame=%d facing=%d" % [_held, vector, player.position, player._frame, player.facing])
 
 ## "ax,ay,tx,ty": teleport the attacker beside the target, then swing.
 func _stage_attack(battle: Node, parts: PackedStringArray) -> void:

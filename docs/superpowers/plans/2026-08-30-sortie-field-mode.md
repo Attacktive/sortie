@@ -1352,38 +1352,99 @@ Message: `feat: add the field scene, with a camera that follows`
 **Interfaces:**
 
 - Consumes: everything above
-- Produces: `SORTIE_FIELD_WALK` support in the screenshot probe
+- Produces: `SORTIE_FIELD_WALK` and `SORTIE_FIELD_TURN` support in the screenshot probe
 
 A single capture proves a frame drew. A series proves a cycle plays. This is how every visual claim in this project has been checked rather than asserted, and it has caught three bugs of its own.
 
+**Done.** It caught a fourth, in the probe itself, and it settled the turn-redraw question the last two tasks had to leave open. The writeup at the end says how.
+
 - [ ] **Step 1: Teach the probe to hold a direction**
 
-In `scenes/screenshot_probe.gd`, add before the wait:
+In `scenes/screenshot_probe.gd`, add the state:
+
+```gdscript
+## The direction being held, if any. Pressed again every frame; see _process.
+var _held: String = ""
+```
+
+Set it from the environment in `_ready()`, alongside the battle's own knobs:
 
 ```gdscript
 	if OS.has_environment("SORTIE_FIELD_WALK"):
 		_hold_direction(OS.get_environment("SORTIE_FIELD_WALK"))
+
+	if OS.has_environment("SORTIE_FIELD_TURN"):
+		_turn_after(OS.get_environment("SORTIE_FIELD_TURN").split(","))
 ```
 
-And add the method:
+Report what was caught, immediately after `await RenderingServer.frame_post_draw`:
 
 ```gdscript
-## "right", "up", "left", or "down": holds that direction so a capture lands mid-stride.
-## Pair with SORTIE_WAIT to choose which frame of the walk cycle is caught.
+	if not _held.is_empty():
+		_report(host.get("_player"))
+```
+
+And the methods:
+
+```gdscript
 func _hold_direction(direction: String) -> void:
+	var action := "ui_%s" % direction
+
+	## A capture tool that quietly does nothing is worse than none — that lesson is already in the handoff, written by an all-black PNG reported as a pass.
+	if not InputMap.has_action(action):
+		push_error("SORTIE_FIELD_WALK=%s is not a direction; expected right, up, left or down" % direction)
+		return
+
+	_held = action
+	_press()
+
+## Turns partway through: "<direction>,<seconds>".
+## Deliberately not awaited by the caller — it runs alongside the capture's own wait, so SORTIE_WAIT picks which frame after the turn is caught.
+##
+## This is what settles the one claim in field mode that no test can reach: turning is supposed to redraw the sprite on the turn itself rather than on the next walk frame.
+## The walk cycle runs at 11 fps and the game at roughly 140, so there are about a dozen rendered frames between one walk frame and the next — which is exactly the window a stale facing would be visible in, and exactly the window to capture.
+func _turn_after(parts: PackedStringArray) -> void:
+	await get_tree().create_timer(float(parts[1])).timeout
+
+	var release := InputEventAction.new()
+	release.action = _held
+	release.pressed = false
+	Input.parse_input_event(release)
+
+	_hold_direction(parts[0])
+
+## Pressed again every frame rather than once, because Godot releases every held action when the window loses focus, and a window launched from a terminal may never have had it.
+## Holding once was measured across three runs at the same speed: the character travelled the full distance, then 14 px, then nothing at all, with nothing different but the timing of a focus event.
+func _process(_delta: float) -> void:
+	if _held.is_empty():
+		return
+
+	_press()
+
+## The player reads Input before this node does, since it is the earlier sibling, so pressing only from _process would cost a frame at the start of every capture.
+func _press() -> void:
 	var event := InputEventAction.new()
-	event.action = "ui_%s" % direction
+	event.action = _held
 	event.pressed = true
 
 	Input.parse_input_event(event)
 	Input.flush_buffered_events()
+
+## What the capture actually caught, printed beside it. A verification tool that says nothing about its own state is how an all-black PNG once passed for a verification.
+func _report(player: Node) -> void:
+	var vector := Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
+
+	print("SORTIE_FIELD_WALK %s: vector=%s position=%s frame=%d facing=%d" % [_held, vector, player.position, player._frame, player.facing])
 ```
+
+The probe's local `battle` is now `host`, because it serves two scenes and a variable named for one of them is a lie the next reader has to catch.
 
 - [ ] **Step 2: Let the field host the probe**
 
 In `scenes/field.gd`, at the end of `_ready()`, matching what `battle.gd` already does:
 
 ```gdscript
+	## The same development affordance battle.gd carries, and the only way anything about how this looks gets checked rather than asserted.
 	if OS.has_environment("SORTIE_SHOT"):
 		add_child(load("res://scenes/screenshot_probe.gd").new())
 ```
@@ -1391,12 +1452,15 @@ In `scenes/field.gd`, at the end of `_ready()`, matching what `battle.gd` alread
 - [ ] **Step 3: Capture a walk cycle**
 
 ```sh
-S=/tmp/field
-mkdir -p "$S"
-for w in 0.10 0.18 0.26 0.34 0.42 0.50; do
+S=$(mktemp -d)
+for w in 0.10 0.20 0.30 0.40 0.50 0.60 0.70 0.80; do
 	SORTIE_SHOT="$S/walk_$w.png" SORTIE_FIELD_WALK=right SORTIE_WAIT=$w godot scenes/field.tscn --quit-after 600
 done
 ```
+
+Eight waits a tenth of a second apart, because the walk cycle runs at 11 fps: `int(t * 11)` gives a different frame at each one, so the series covers the whole cycle rather than sampling the same pose repeatedly.
+
+Read the probe's own report from each run. Every line must say `vector=(1.0, 0.0)`, and the positions must increase.
 
 - [ ] **Step 4: Confirm the captures are real frames**
 
@@ -1408,25 +1472,63 @@ done
 
 Expected: a non-zero mean and standard deviation for every file. **A mean of 0 with a standard deviation of 0 is a blank capture, not a passing test** — that exact failure is on the record in `docs/HANDOFF.md`.
 
-Then look at them: the character's x position must increase across the series, the legs must change, and the facing row must be RIGHT throughout.
+Then crop the character out of each frame at the position the probe reported, scale by an integer factor with `-filter point`, and tile them. The legs must change across the series and the facing row must be RIGHT throughout.
 
-- [ ] **Step 5: Update `docs/HANDOFF.md`**
+- [ ] **Step 5: Settle the turn-redraw**
+
+This is the claim Task 6 shipped without a test and Task 7 could not add one for. Capture the same instant twice, once with the code as written and once with the `queue_redraw()` removed from `FieldPlayer._face()`:
+
+```sh
+for w in 0.41 0.42 0.43; do
+	SORTIE_SHOT="$S/turn_$w.png" SORTIE_FIELD_WALK=right SORTIE_FIELD_TURN=down,0.40 SORTIE_WAIT=$w godot scenes/field.tscn --quit-after 600
+done
+```
+
+Expected: with the redraw, all three captures draw the character facing DOWN within 30 ms of the turn. Without it, at least one still draws RIGHT. Three captures rather than one because at 11 fps a walk frame lands in any given 30 ms window about a third of the time, and when it does it redraws the sprite and hides the bug.
+
+- [ ] **Step 6: Confirm the battle probe still works**
+
+The two scenes now share one file, so the battle's own captures are a regression surface:
+
+```sh
+SORTIE_SHOT=/tmp/battle.png SORTIE_ATTACK=0,7,8,0 SORTIE_WAIT=0.32 godot --quit-after 400
+```
+
+Expected: a battle frame with the attacker staged beside its target and a damage number over it. Look at it; a non-zero mean only proves something was drawn.
+
+- [ ] **Step 7: Update `docs/HANDOFF.md`**
 
 - Header: the test count, and that field mode exists.
 - "Run it": `godot scenes/field.tscn`, and the `SORTIE_FIELD_WALK` capture recipe.
 - "Done": a field mode section — the map, free movement resolved in `core/`, the feet box, sub-stepping, the camera.
 - "Not done": replace nothing; add the remaining story-mode sub-projects 2 through 6 with the spec as their reference.
 - "Map of the code": the six new files.
-- "Known issues and risks": the feet box is an unmeasured guess, and 96 px/s is unverified by anything but playing.
+- "Known issues and risks": the feet box is an unmeasured guess, and 96 px/s is now measured but still unjudged.
 
-- [ ] **Step 6: Commit**
+Per the repo's convention this is a separate commit, straight to `main`, not part of the pull request.
+
+- [ ] **Step 8: Commit**
 
 ```sh
-git add scenes/screenshot_probe.gd scenes/field.gd docs/HANDOFF.md
+git add scenes/screenshot_probe.gd scenes/field.gd docs/superpowers/plans/2026-08-30-sortie-field-mode.md
 git commit
 ```
 
-Message: `docs: verify the field walk cycle and refresh the handoff`
+Message: `feat: capture the field walk cycle and prove the turn redraws`
+
+#### What changed in Task 8, and why
+
+**The probe held a direction that kept letting go.** Holding once, as planned, worked in one run out of three. The probe's own report is what caught it: `vector=(0.0, 0.0)` at capture time, with the character 14 px from where it started in one run and 0 px in the next, at identical settings. Godot releases every held action when the window loses focus, and a window launched from a terminal may never have had focus to begin with — so the press was being thrown away at a different moment every run. It is now pressed again every frame, and once immediately in `_hold_direction` as well, because the player is the earlier sibling and reads `Input` before the probe's `_process` gets to set it.
+
+The first hypothesis was wrong and worth recording: the plan uses `InputEventAction` where the tests use `InputEventKey`, so the obvious suspect was the event type. A five-line throwaway test printed `is_action_pressed=true get_vector=(1.0, 0.0)` for both, which killed that idea before any code changed.
+
+**The probe now reports what it caught.** `vector`, `position`, `_frame` and `facing`, printed beside every field capture. Without it the fix above would have been guesswork against a set of images that all look approximately like a knight standing in grass. This is the same lesson as the all-black PNG already in the handoff, one level up: it is not enough for the tool to avoid lying, it has to say enough for a reader to catch it lying.
+
+**The walk is measured, not merely seen.** Travel is linear in the wait at **94.1 px/s** against a designed 96, starting 0.113 s in — window and scene startup, during which the capture's clock runs and the character does not. The frame index climbs 0, 1, 2, 3, 5, 6, 7, 8 across the series, and the cropped montage shows the legs striding and the facing row RIGHT throughout.
+
+**The turn-redraw is settled.** Two tasks flagged it as built-but-unverified and unreachable by any headless test. Capturing 10–30 ms after a turn, three times, with and without the `queue_redraw()` in `_face()`, discriminates cleanly: with it, every capture draws the new facing; without it, two of three still draw the old one and the third turns anyway because a walk frame happened to land in the window. That third capture is not noise — it is the reason the bug is intermittent, the reason it is invisible to a test, and the reason a single capture would have proved nothing.
+
+**One capture failed once and has not failed since.** In the first eight-run series, the 0.60 s run produced no report and a frame identical to the idle one; three deliberate retries at the same settings all worked, and it has not recurred in the twenty-odd runs since. Recorded rather than explained, because a cause narrated from plausibility is worse than an admitted gap.
 
 ---
 

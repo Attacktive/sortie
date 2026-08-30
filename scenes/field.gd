@@ -39,6 +39,10 @@ func _ready() -> void:
 	_build_player()
 	_build_camera()
 
+	## The same development affordance battle.gd carries, and the only way anything about how this looks gets checked rather than asserted.
+	if OS.has_environment("SORTIE_SHOT"):
+		add_child(load("res://scenes/screenshot_probe.gd").new())
+
 func _build_view() -> void:
 	_view = FieldView.new()
 	_view.map = _map
