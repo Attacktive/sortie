@@ -1,7 +1,7 @@
 # Sortie — Handoff
 
 **Updated:** 2026-08-30
-**Branch:** `feature/tactics-vertical-slice` → [PR #1](https://github.com/Attacktive/sortie/pull/1) (open, **not merged** — waiting on the go-ahead)
+**Branch:** `main` — [PR #1](https://github.com/Attacktive/sortie/pull/1) merged fast-forward; history is linear.
 **Status:** playable end to end. 108 tests passing, exit 0.
 
 A grid-tactics RPG vertical slice in Godot 4.7.2 / GDScript.
@@ -94,7 +94,8 @@ If either produces output, something has leaked across the boundary.
 | **`.github/FUNDING.yaml`** | GitHub's funding config is documented as `FUNDING.yml` and I have not seen `.yaml` confirmed as accepted. If the sponsor button never appears, rename it. Untested from here. |
 | **Interactive coverage** | See "Not done" #1. The rules are provably correct; the wiring between input and rules is not. |
 | **Art licence is share-alike** | LPC art is CC-BY-SA 3.0 / GPL 3.0. The OpenGameART page also lists OGA-BY, but the manifest *inside the download* names only the first two, so this project follows the stricter bundled manifest. Source code stays MIT; the share-alike obligation attaches to the artwork. `assets/lpc/ATTRIBUTION-tile-atlas.txt` must not be deleted. |
-| **Codacy** | Was pending on PR #1 at last check. CodeFactor passed. |
+| **`github-advanced-security` fails** | Not a finding. The Copilot-based scanner crashes with `CAPIError: 400 The requested model is not supported.` before analysing anything, so it reports failure without ever having looked at the code. Nothing in the repo can fix it. Codacy and CodeFactor both pass. |
+| **Codacy lints Markdown** | It flagged six markdownlint violations in this file — lists need a blank line above and below. Worth remembering when adding docs. |
 
 ---
 
