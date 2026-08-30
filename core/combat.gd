@@ -33,3 +33,29 @@ static func _raw_damage(grid: BattleGrid, attacker: BattleUnit, defender: Battle
 ## The floor of 1 lands here, before any critical multiplier, so a crit is always a clean 3x of the hit.
 static func _apply_variance(raw: int, variance: float) -> int:
 	return maxi(1, roundi(raw * variance))
+
+## Resolves one attack, drawing from rolls in a fixed order: hit, then crit, then variance.
+## Rolls are consumed conditionally — a miss draws exactly one.
+## This order is part of the contract: changing it invalidates every saved seed.
+static func resolve(grid: BattleGrid, attacker: BattleUnit, defender: BattleUnit, rolls: RollSource) -> AttackResult:
+	var result := AttackResult.new()
+	var prediction := forecast(grid, attacker, defender)
+
+	result.hit = rolls.roll_unit() < prediction.hit_chance
+	if not result.hit:
+		return result
+
+	result.crit = rolls.roll_unit() < prediction.crit_chance
+
+	var variance := 1.0 - DAMAGE_VARIANCE + rolls.roll_unit() * 2.0 * DAMAGE_VARIANCE
+	var base := _apply_variance(_raw_damage(grid, attacker, defender), variance)
+
+	var multiplier := 1
+	if result.crit:
+		multiplier = CRIT_MULTIPLIER
+
+	result.damage = base * multiplier
+	defender.hp = maxi(0, defender.hp - result.damage)
+	result.killed = not defender.is_alive()
+
+	return result
