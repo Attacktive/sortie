@@ -272,9 +272,16 @@ func test_the_map_remembers_which_glyph_was_authored() -> void:
 	assert_eq(map.glyph_at(Vector2i(2, 2)), FieldMap.TREE)
 	assert_eq(map.glyph_at(Vector2i(0, 0)), "", "walkable ground has no glyph to draw over the grass")
 
-func test_a_ragged_map_is_an_authoring_error() -> void:
-	## Matches BattleGrid: a map with rows of different lengths has holes in it, and failing at construction beats discovering that by walking into one.
-	assert_true(true, "asserts are checked by hand; see the assert in from_ascii()")
+## There is deliberately no test for the ragged-map assert.
+## GDScript's assert() halts the engine rather than raising something catchable, so GUT cannot exercise it, and a test that asserts true to stand in for one only inflates the count.
+## It was verified by hand instead: FieldMap.from_ascii(["....", "..", "...."]) fails with "row 1 is 2 wide but the map is 4".
+```
+
+Verify that assert by hand once, since no test can:
+
+```sh
+# A throwaway SceneTree script calling FieldMap.from_ascii(PackedStringArray(["....", "..", "...."]))
+# must halt with: Assertion failed: row 1 is 2 wide but the map is 4; a ragged map has holes in it
 ```
 
 - [ ] **Step 2: Run it and watch it fail**
@@ -361,7 +368,7 @@ godot --headless --import
 godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_field_map.gd -gexit
 ```
 
-Expected: 9 tests passing.
+Expected: 8 tests passing.
 
 - [ ] **Step 5: Confirm the invariant still holds**
 
@@ -1163,7 +1170,7 @@ grep -rE '\bNode\b|get_tree\(|\bInput\b|preload\(|\.tscn' core/
 grep -rlE 'randf|randi|randomize' core/ | grep -v real_roll_source
 ```
 
-Expected: 174 tests passing, and no output from either grep.
+Expected: 173 tests passing, and no output from either grep.
 
 - [ ] **Step 7: Walk around in it**
 
