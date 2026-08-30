@@ -93,3 +93,19 @@ static func attackable_cells(grid: BattleGrid, from_cell: Vector2i, attack_range
 				result.append(cell)
 
 	return result
+
+## Every cell this unit could attack this turn, from anywhere it can reach.
+## The union of attack range over the whole movement field — a threat map, which is
+## what a player actually needs to see before stepping into a danger zone.
+static func threat_cells(grid: BattleGrid, unit: BattleUnit) -> Array[Vector2i]:
+	var seen: Dictionary[Vector2i, bool] = {}
+
+	for from_cell in field(grid, unit).reachable_cells():
+		for cell in attackable_cells(grid, from_cell, unit.data.attack_range):
+			seen[cell] = true
+
+	var result: Array[Vector2i] = []
+	for cell in seen.keys():
+		result.append(cell)
+
+	return result

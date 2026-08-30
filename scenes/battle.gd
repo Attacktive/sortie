@@ -1,6 +1,7 @@
+class_name Battle
 extends Node2D
 
-enum State { SELECTING_UNIT, CHOOSING_MOVE, CHOOSING_ACTION, CHOOSING_TARGET, ANIMATING, ENEMY_TURN, RESOLVED }
+enum State { SELECTING_UNIT, INSPECTING, CHOOSING_MOVE, CHOOSING_ACTION, CHOOSING_TARGET, ANIMATING, ENEMY_TURN, RESOLVED }
 
 const MARGIN := Vector2(40, 40)
 const ENEMY_STEP_DELAY := 0.35
@@ -19,6 +20,9 @@ var _views: Dictionary[BattleUnit, UnitView] = {}
 
 var _selected: BattleUnit = null
 var _field: MovementField = null
+
+## Where the selected unit stood before it moved, so a cancel can put it back.
+var _origin_cell: Vector2i = Vector2i.ZERO
 
 func _ready() -> void:
 	_start_battle()
@@ -94,8 +98,11 @@ func _enter_unit_selection() -> void:
 	_field = null
 	_grid_view.move_cells.clear()
 	_grid_view.attack_cells.clear()
+	_clear_threat()
 	_forecast_panel.clear()
 	_action_menu.close()
+	_cursor.cancel_only = false
+	_cursor.cancel_only = false
 	_cursor.active = true
 	_refresh_all()
 
@@ -119,6 +126,9 @@ func _on_cursor_confirmed(cell: Vector2i) -> void:
 	match _state:
 		State.SELECTING_UNIT:
 			_try_select(cell)
+		State.INSPECTING:
+			_clear_threat()
+			_try_select(cell)
 		State.CHOOSING_MOVE:
 			_try_move(cell)
 		State.CHOOSING_TARGET:
@@ -126,14 +136,35 @@ func _on_cursor_confirmed(cell: Vector2i) -> void:
 
 func _try_select(cell: Vector2i) -> void:
 	var unit := _grid.unit_at(cell)
-	if unit == null or unit.team() != UnitData.Team.PLAYER or unit.has_acted or not unit.is_alive():
+	if unit == null or not unit.is_alive():
+		return
+
+	if unit.team() == UnitData.Team.ENEMY:
+		_inspect(unit)
+		return
+
+	if unit.has_acted:
 		return
 
 	_selected = unit
+	_origin_cell = unit.cell
 	_field = Movement.field(_grid, unit)
 	_grid_view.move_cells = _field.reachable_cells()
 	_grid_view.refresh()
 	_state = State.CHOOSING_MOVE
+
+## Shows where an enemy could walk, and everywhere it could strike from there.
+## Purely informational — it selects nothing and spends nothing.
+func _inspect(unit: BattleUnit) -> void:
+	_grid_view.move_cells.clear()
+	_grid_view.threat_move_cells = Movement.field(_grid, unit).reachable_cells()
+	_grid_view.threat_attack_cells = Movement.threat_cells(_grid, unit)
+	_grid_view.refresh()
+	_state = State.INSPECTING
+
+func _clear_threat() -> void:
+	_grid_view.threat_move_cells.clear()
+	_grid_view.threat_attack_cells.clear()
 
 func _try_move(cell: Vector2i) -> void:
 	if not _field.can_reach(cell):
@@ -160,7 +191,10 @@ func _try_move(cell: Vector2i) -> void:
 func _on_move_finished() -> void:
 	_state = State.CHOOSING_ACTION
 	_cursor.active = false
-	_action_menu.open(GridGeometry.cell_center(_selected.cell) + MARGIN, not _targets_in_range().is_empty())
+	_cursor.cancel_only = true
+
+	var anchor := GridGeometry.cell_to_position(_selected.cell) + MARGIN + Vector2(GridGeometry.CELL_SIZE + 6, 0)
+	_action_menu.open(anchor, not _targets_in_range().is_empty())
 
 func _targets_in_range() -> Array[BattleUnit]:
 	var result: Array[BattleUnit] = []
@@ -185,6 +219,7 @@ func _on_attack_chosen() -> void:
 
 func _on_wait_chosen() -> void:
 	_action_menu.close()
+	_cursor.cancel_only = false
 	_selected.has_acted = true
 	_enter_unit_selection()
 
@@ -210,13 +245,36 @@ func _try_attack(cell: Vector2i) -> void:
 ## Cancel backs out one step rather than abandoning the whole action.
 func _on_cancel() -> void:
 	match _state:
+		State.INSPECTING:
+			_clear_threat()
+			_grid_view.refresh()
+			_state = State.SELECTING_UNIT
 		State.CHOOSING_MOVE:
 			_enter_unit_selection()
+		State.CHOOSING_ACTION:
+			_undo_move()
 		State.CHOOSING_TARGET:
 			_grid_view.attack_cells.clear()
 			_forecast_panel.clear()
 			_grid_view.refresh()
 			_on_move_finished()
+
+## Puts the unit back where it started and reopens its movement range.
+## Committing a move must never be a one-way door.
+func _undo_move() -> void:
+	_action_menu.close()
+	_cursor.cancel_only = false
+	_cursor.active = true
+
+	if _selected.cell != _origin_cell:
+		_grid.move_unit(_selected, _origin_cell)
+		_views[_selected].snap()
+
+	_field = Movement.field(_grid, _selected)
+	_grid_view.move_cells = _field.reachable_cells()
+	_grid_view.refresh()
+	_cursor.cell = _selected.cell
+	_state = State.CHOOSING_MOVE
 
 func _cleanup_dead() -> void:
 	for unit in _views.keys():

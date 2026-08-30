@@ -18,6 +18,10 @@ var cell: Vector2i = Vector2i.ZERO
 var bounds: Vector2i = Vector2i.ONE
 var active: bool = true
 
+## Lets a cancel through while movement and confirmation stay locked.
+## Without this, any state that parks the cursor becomes inescapable.
+var cancel_only: bool = false
+
 func _process(_delta: float) -> void:
 	position = GridGeometry.cell_to_position(cell)
 
@@ -25,6 +29,13 @@ func _draw() -> void:
 	draw_rect(Rect2(Vector2.ZERO, Vector2.ONE * GridGeometry.CELL_SIZE), OUTLINE, false, 3.0)
 
 func _unhandled_input(event: InputEvent) -> void:
+	if not active and not cancel_only:
+		return
+
+	if event.is_action_pressed("ui_cancel") or (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT):
+		canceled.emit()
+		return
+
 	if not active:
 		return
 
@@ -34,10 +45,6 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	if event.is_action_pressed("ui_accept") or (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT):
 		confirmed.emit(cell)
-		return
-
-	if event.is_action_pressed("ui_cancel") or (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT):
-		canceled.emit()
 		return
 
 	for action in _DIRECTIONS:
