@@ -16,6 +16,8 @@ var _cursor: Cursor
 var _action_menu: ActionMenu
 var _forecast_panel: ForecastPanel
 var _result_screen: ResultScreen
+var _animator: CombatAnimator
+var _banner: TurnBanner
 var _views: Dictionary[BattleUnit, UnitView] = {}
 
 var _selected: BattleUnit = null
@@ -36,6 +38,7 @@ func _start_battle() -> void:
 	_turns = TurnOrder.new(_grid)
 	_build_views()
 	_enter_unit_selection()
+	_banner.announce("Your Turn", CombatAnimator.PLAYER_COLOR)
 
 	if OS.has_environment("SORTIE_SHOT"):
 		add_child(load("res://scenes/screenshot_probe.gd").new())
@@ -76,6 +79,12 @@ func _build_views() -> void:
 	_forecast_panel = ForecastPanel.new()
 	_forecast_panel.position = Vector2(40, 8)
 	layer.add_child(_forecast_panel)
+
+	_animator = CombatAnimator.new()
+	_grid_view.add_child(_animator)
+
+	_banner = TurnBanner.new()
+	layer.add_child(_banner)
 
 	_result_screen = ResultScreen.new()
 	_result_screen.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -231,8 +240,20 @@ func _try_attack(cell: Vector2i) -> void:
 	if Movement.manhattan(_selected.cell, cell) > _selected.data.attack_range:
 		return
 
-	Combat.exchange(_grid, _selected, target, _rolls)
+	## Rules resolve synchronously and completely; the animation only replays them.
+	var exchange := Combat.exchange(_grid, _selected, target, _rolls)
 	_selected.has_acted = true
+
+	_state = State.ANIMATING
+	_cursor.active = false
+	_cursor.cancel_only = false
+	_grid_view.move_cells.clear()
+	_grid_view.attack_cells.clear()
+	_forecast_panel.clear()
+	_grid_view.refresh()
+
+	await _animator.play(exchange, _views[_selected], _views[target])
+
 	_cleanup_dead()
 	_turns.check_resolution()
 	_refresh_all()
@@ -297,6 +318,7 @@ func _end_player_turn() -> void:
 	_turns.end_turn()
 	_state = State.ENEMY_TURN
 	_cursor.active = false
+	_banner.announce("Enemy Turn", CombatAnimator.ENEMY_COLOR)
 	_run_enemy_turn()
 
 func _run_enemy_turn() -> void:
@@ -311,6 +333,7 @@ func _run_enemy_turn() -> void:
 			return
 
 	_turns.end_turn()
+	_banner.announce("Your Turn", CombatAnimator.PLAYER_COLOR)
 	_enter_unit_selection()
 
 func _take_enemy_action(unit: BattleUnit) -> void:
@@ -325,7 +348,8 @@ func _take_enemy_action(unit: BattleUnit) -> void:
 		await view.walk_finished
 
 	if decision.target != null:
-		Combat.exchange(_grid, unit, decision.target, _rolls)
+		var exchange := Combat.exchange(_grid, unit, decision.target, _rolls)
+		await _animator.play(exchange, _views[unit], _views[decision.target])
 		_cleanup_dead()
 		_turns.check_resolution()
 

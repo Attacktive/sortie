@@ -44,18 +44,18 @@ func test_the_teams_do_not_start_within_reach_of_each_other() -> void:
 			var reach: int = maxi(player.data.attack_range, enemy.data.attack_range)
 			assert_true(Movement.manhattan(player.cell, enemy.cell) > reach, "the armies start already in contact")
 
-func test_every_unit_has_art_that_actually_exists() -> void:
+func test_every_unit_has_both_animation_sheets() -> void:
 	var grid := Scenario.build_grid()
 
 	for unit in Scenario.populate(grid):
-		var path := unit.data.sprite
-		assert_ne(path, "", "%s has no sprite" % unit.data.unit_name)
-		assert_true(ResourceLoader.exists(path), "%s points at a missing sprite: %s" % [unit.data.unit_name, path])
+		for path in [unit.data.sprite_walk, unit.data.sprite_slash]:
+			assert_ne(path, "", "%s is missing an animation sheet" % unit.data.unit_name)
+			assert_true(ResourceLoader.exists(path), "%s points at a missing sheet: %s" % [unit.data.unit_name, path])
 
-func test_the_two_sides_do_not_share_a_sprite() -> void:
+func test_no_two_units_share_a_look() -> void:
 	var grid := Scenario.build_grid()
 	var seen: Dictionary[String, bool] = {}
 
 	for unit in Scenario.populate(grid):
-		assert_false(seen.has(unit.data.sprite), "%s reuses another unit's sprite" % unit.data.unit_name)
-		seen[unit.data.sprite] = true
+		assert_false(seen.has(unit.data.sprite_walk), "%s reuses another unit's art" % unit.data.unit_name)
+		seen[unit.data.sprite_walk] = true

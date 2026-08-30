@@ -20,5 +20,7 @@ enum Team { PLAYER, ENEMY }
 @export var attack_range: int = 1
 @export var team: Team = Team.PLAYER
 
-## Path to this unit's sprite. A String, not a Texture2D, so core stays free of scene types.
-@export_file("*.png") var sprite: String = ""
+## LPC animation sheets, as Strings rather than Texture2D so core stays free of scene types.
+## Walk is 9 frames by 4 directions; slash is 6 by 4. Row order is up, left, down, right.
+@export_file("*.png") var sprite_walk: String = ""
+@export_file("*.png") var sprite_slash: String = ""
