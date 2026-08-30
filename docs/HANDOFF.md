@@ -1,8 +1,8 @@
 # Sortie — Handoff
 
 **Updated:** 2026-08-30
-**Branch:** `main` — PRs #1 through #12 merged fast-forward; history is linear.
-**Status:** the battle is playable end to end. Field mode is five tasks into eight and does not run yet. 171 tests passing, exit 0, enforced by CI on every push and pull request.
+**Branch:** `main` — PRs #1 through #13 merged fast-forward; history is linear.
+**Status:** the battle is playable end to end, and field mode now runs — `godot scenes/field.tscn` boots a world you can walk around. Six of its eight tasks are done. 177 tests passing, exit 0, enforced by CI on every push and pull request.
 
 A grid-tactics RPG vertical slice in Godot 4.7.2 / GDScript.
 
@@ -12,7 +12,8 @@ A grid-tactics RPG vertical slice in Godot 4.7.2 / GDScript.
 
 ```sh
 godot --headless --import   # once on a fresh clone; GUT's class_names need the import cache
-godot                       # play
+godot                       # play the battle
+godot scenes/field.tscn     # walk around the field; not wired to the battle yet
 godot --headless -s addons/gut/gut_cmdln.gd -gdir=res://test -gexit   # test
 ```
 
@@ -82,7 +83,7 @@ If either produces output, something has leaked across the boundary.
 
 ### Verification
 
-- 171 tests. The rules engine is covered exhaustively; the view state machine has its own suite (`test_battle_flow.gd`), and the input layer above it has another (`test_input.gd`).
+- 177 tests. The rules engine is covered exhaustively; the view state machine has its own suite (`test_battle_flow.gd`), and the input layer above it has another (`test_input.gd`).
 - **Input is driven by real events.** `test_input.gd` pushes synthesized `InputEventKey`, `InputEventMouseMotion`, and `InputEventMouseButton` objects through `get_viewport().push_input()`, so assertions travel the whole chain: event → viewport → `_unhandled_input` or GUI focus → cursor → state machine. A full turn is played on the keyboard alone, and an attack is ordered from a keypress through to a resolved exchange. Buttons fire on *release*, so a realistic tap sends both halves.
 - **CI** — `.github/workflows/tests.yaml` installs the pinned Godot 4.7.2 Linux build, rebuilds the import cache, and runs the suite on every push to `main` and every pull request. Until this existed, the tests had only ever run on one laptop.
 - A headless auto-battle harness plays the real scenario to completion with both sides on autopilot: **30 victories / 10 defeats / 0 unresolved across 40 seeds**, averaging 9.3 team-turns. Proves both endings are reachable and that seeds replay identically.
@@ -96,7 +97,7 @@ Story mode is a JRPG, so the battle is a **component the story mode calls into**
 - Spec: `docs/superpowers/specs/2026-08-30-sortie-field-mode-design.md`
 - Plan: `docs/superpowers/plans/2026-08-30-sortie-field-mode.md`
 
-Story mode decomposes into six sub-projects. **Field mode is #1**, and it is five tasks in:
+Story mode decomposes into six sub-projects. **Field mode is #1**, and it is six tasks in:
 
 | Task | State |
 |---|---|
@@ -106,14 +107,14 @@ Story mode decomposes into six sub-projects. **Field mode is #1**, and it is fiv
 | 4. Sub-stepping | Folded into 3; see the plan for why |
 | 5. `FieldView` — draw the map | Done, PR #11 |
 | 6. `FieldPlayer` — input, movement, animation | Done, PR #12 |
-| 7. `field.tscn` and the camera | **Next.** 4 tests, and the first thing you can actually run |
-| 8. Screenshot verification and this document | Not started |
+| 7. `field.tscn` and the camera | Done, PR #13 |
+| 8. Screenshot verification and this document | **Next.** No new tests — a capture series, and a rewrite of this file |
 
-Target on completion is 175 tests. It was 173 until Task 6 came in with eight tests rather than the planned six.
+Target on completion is 177 tests, which is where it already stands: Task 8 produces captures, not tests. The plan said 173. Task 6 came in with eight tests rather than six, and Task 7 with six rather than four.
 
-**Nothing renders yet.** Every piece exists — a map, something to draw it, someone to walk it — and nothing assembles them. There is no field scene and no entry point. Task 7 is the first point where `godot scenes/field.tscn` does anything.
+**It runs.** `godot scenes/field.tscn` boots an 18x12 world with a character you can walk around it: free 8-directional movement, collision against walls and trees, sliding along a wall taken at an angle, a walk cycle, and a camera that follows and stops at the map's edge. It is wired into nothing — `run/main_scene` is still `battle.tscn`, and there is no way from either mode to the other until sub-project 4.
 
-**One thing is built but unverified by eye:** turning redraws the sprite on the turn itself rather than on the next walk frame. No headless test can see that, because the walk cycle advances on its own and a redraw lands within a frame or two regardless. Look for it when Task 7 makes the field runnable — round a corner at speed and watch whether the character faces the new direction immediately.
+**Nobody has walked around in it yet.** It boots clean and every rule underneath it is tested, but everything only a person can judge is still open: whether 96 px/s reads as brisk or as wading, whether the feet box lets you stand behind a tree instead of being fenced a full tile away from it, and whether turning redraws the sprite immediately or a beat late. That last one is a fix from Task 6 with no test behind it and no headless way to get one — the walk cycle advances on its own, so a redraw lands within a frame or two regardless and the gap is invisible to anything but an eye. Round a corner at speed and watch.
 
 Sub-projects 2 through 6 of story mode — interaction and dialogue, events and world state, mode flow and battle handoff, save/load, content — each need their own spec. `run/main_scene` stays `battle.tscn` until sub-project 4.
 
@@ -121,7 +122,7 @@ Sub-projects 2 through 6 of story mode — interaction and dialogue, events and 
 
 ## Not done — pick up here
 
-1. **Play the interactive loop by hand.** Much narrower than it was: real events now cover selection, movement, cancel, menu focus, and ordering an attack, and the walk and swing are evidenced frame by frame. What no test can answer is whether it *feels* right — cursor speed, whether the menu lands somewhere sensible, whether a turn reads clearly. **Play a full battle to victory and to defeat before trusting it.**
+1. **Play it by hand — both modes.** The field has never been walked; see the paragraph above for what to watch. For the battle this is much narrower than it was: real events now cover selection, movement, cancel, menu focus, and ordering an attack, and the walk and swing are evidenced frame by frame. What no test can answer is whether it *feels* right — cursor speed, whether the menu lands somewhere sensible, whether a turn reads clearly. **Play a full battle to victory and to defeat before trusting it.**
 2. **More sound.** Two threads here, both needing ears rather than analysis.
 
    - The three combat clips were called "clunky but ok-ish" on first listen, and pitch jitter was the answer to that. If they still read as repetitive, the next lever is a second variant per event — `Sfx.play()` would take an array and pick from it. Sixteen single-transient impacts under 0.45s were catalogued in the pack; `bookPlace2` has almost exactly `chop`'s envelope. Whether it *sounds* right is not something an envelope can settle.
@@ -178,6 +179,8 @@ Kept because the shapes recur, and each was patched back into the plan so it doe
 | A planned test that could not have passed | It read the walk frame after a helper that releases the key, and releasing is exactly what restores the idle frame, so it would have asserted `0 > 0` against a correct implementation. Worth knowing that a plan's test code is a draft, not a fixture: five of this plan's tests have now been rewritten or dropped — one in Task 3, one in Task 5, three in Task 6 — and not one of them because the implementation was wrong. |
 | Two identical markdown headings failed CI | Codacy runs markdownlint, and MD024 rejects two headings with the same text anywhere in a file. Two task writeups both ended with "What changed from the plan as written, and why". Nothing local catches this — like the `FUNDING.yml` case above, the first evidence is a red check. Each writeup now names its task. |
 | The invariant caught a comment | `## Pure and Node-free on purpose`, in a `core/` file explaining that it does not depend on a Node, trips the Node-free grep. The comment gave way rather than the invariant: a grep blunt enough to be unfoolable beats one clever enough to be wrong. No `core/` file can use that word, even to disclaim it. |
+| A camera centered on a corner | A `Node2D`'s position is the top-left of its 64x64 sprite, so the planned field camera — parented at the player's origin — would have put *that corner* at screen center and left the character 32 px down and to the right of it. Permanently, in a game whose entire subject is the thing in the middle of the screen. The planned tests checked what the camera was parented to and what its limits were, never where it sat relative to the character. |
+| A scene whose tests could not see it | The rest of the field scene's planned coverage checked the pieces and skipped the relationships between them, which is the only thing a scene *is*. Nothing looked at the view's map, so a `FieldView` with a null map — a black screen with a perfectly functional invisible character walking around on it — would have passed all four. Nothing looked at draw order, so a ground layer painted over the character would have too. Neither was actually wrong in the planned code, unlike the camera above; both are asserted now. |
 | Variant type inference | Godot 4.7 treats inferring a type from a Variant value as an error, so `:=` fails on the flood fill's frontier variable. |
 
 ---
@@ -205,6 +208,7 @@ Kept because the shapes recur, and each was patched back into the plan so it doe
 | `scenes/grid_view.gd` | Terrain and overlay rendering |
 | `scenes/field_view.gd` | **Field mode.** Draws a `FieldMap` with the battle's terrain art; `layers_for()` holds every decision so `_draw` holds none |
 | `scenes/field_player.gd` | **Field mode.** Held input becomes a velocity, `FieldBody` says where it lands; owns the walk cycle and the facing, and no collision rules |
+| `scenes/field.gd` | **Field mode.** The whole scene — map, view, player, camera — and the ASCII map itself. `field.tscn` is a bare `Node2D` with this attached |
 | `scenes/unit_view.gd` | Directional sprite animation, health bar, flash, death |
 | `scenes/combat_animator.gd` | Replays a resolved exchange in order, and owns the sound |
 | `scenes/sfx.gd` | Clip paths, the pure outcome-to-clip mapping, and a round-robin voice pool |
@@ -212,5 +216,5 @@ Kept because the shapes recur, and each was patched back into the plan so it doe
 | `ui/` | Action menu, forecast panel, damage numbers, turn banner, result screen |
 | `assets/lpc/` | Characters and terrain, CC-BY-SA — attribution files must not be deleted |
 | `assets/audio/` | Three CC0 combat sounds, with `CREDITS.md` recording which original became which clip |
-| `test/` | 171 tests; `test_full_battle.gd` is the headless auto-battle harness and `test_input.gd` drives the game with real input events |
+| `test/` | 177 tests; `test_full_battle.gd` is the headless auto-battle harness and `test_input.gd` drives the game with real input events |
 | `docs/superpowers/specs/` + `plans/` | The design spec and the implementation plan it was built from |
