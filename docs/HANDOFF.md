@@ -1,8 +1,8 @@
 # Sortie — Handoff
 
 **Updated:** 2026-08-30
-**Branch:** `main` — [PR #1](https://github.com/Attacktive/sortie/pull/1) merged fast-forward; history is linear.
-**Status:** playable end to end. 108 tests passing, exit 0.
+**Branch:** `main` — PRs [#1](https://github.com/Attacktive/sortie/pull/1) and [#2](https://github.com/Attacktive/sortie/pull/2) merged fast-forward; history is linear.
+**Status:** playable end to end. 108 tests passing, exit 0, now enforced by CI on every push and pull request.
 
 A grid-tactics RPG vertical slice in Godot 4.7.2 / GDScript.
 
@@ -15,6 +15,11 @@ godot --headless --import   # once on a fresh clone; GUT's class_names need the 
 godot                       # play
 godot --headless -s addons/gut/gut_cmdln.gd -gdir=res://test -gexit   # test
 ```
+
+The first and the last of those are exactly what `.github/workflows/tests.yaml`
+runs on a fresh Ubuntu runner against a pinned Godot 4.7.2, so the workflow
+doubles as executable documentation for the setup. GUT exits non-zero on any
+failure, so the build breaks on its own.
 
 There is also a screenshot harness, gated on environment variables so it never runs in normal play:
 
@@ -73,6 +78,7 @@ If either produces output, something has leaked across the boundary.
 ### Verification
 
 - 108 tests. The rules engine is covered exhaustively; the view state machine has its own suite (`test_battle_flow.gd`).
+- **CI** — `.github/workflows/tests.yaml` installs the pinned Godot 4.7.2 Linux build, rebuilds the import cache, and runs the suite on every push to `main` and every pull request. Until this existed, the tests had only ever run on one laptop.
 - A headless auto-battle harness plays the real scenario to completion with both sides on autopilot: **30 victories / 10 defeats / 0 unresolved across 40 seeds**, averaging 9.3 team-turns. Proves both endings are reachable and that seeds replay identically.
 
 ---
@@ -91,10 +97,10 @@ If either produces output, something has leaked across the boundary.
 
 | Issue | Detail |
 |---|---|
-| **`.github/FUNDING.yaml`** | GitHub's funding config is documented as `FUNDING.yml` and I have not seen `.yaml` confirmed as accepted. If the sponsor button never appears, rename it. Untested from here. |
 | **Interactive coverage** | See "Not done" #1. The rules are provably correct; the wiring between input and rules is not. |
 | **Art licence is share-alike** | LPC art is CC-BY-SA 3.0 / GPL 3.0. The OpenGameART page also lists OGA-BY, but the manifest *inside the download* names only the first two, so this project follows the stricter bundled manifest. Source code stays MIT; the share-alike obligation attaches to the artwork. `assets/lpc/ATTRIBUTION-tile-atlas.txt` must not be deleted. |
 | **`github-advanced-security` fails** | Not a finding. The Copilot-based scanner crashes with `CAPIError: 400 The requested model is not supported.` before analysing anything, so it reports failure without ever having looked at the code. Nothing in the repo can fix it. Codacy and CodeFactor both pass. |
+| **Dependabot watched an empty folder** | It was configured for `github-actions` with `directory: '/.github'`, but there were no workflows at all. Now `/`, which is what the ecosystem expects. |
 | **Codacy lints Markdown** | It flagged six markdownlint violations in this file — lists need a blank line above and below. Worth remembering when adding docs. |
 
 ---
@@ -121,6 +127,7 @@ Kept because the shapes recur, and each was patched back into the plan so it doe
 | Death fade never played | `refresh()` hid dead units immediately, cutting off the animation before it started. |
 | Kenney sprites were the wrong *shape* | Their 16px characters are tokens — the opaque region is a rounded blob filling the tile with no negative space and no feet. Checking the sample sheet for *style* was not enough. |
 | The pine tree was invisible | Green tree on green grass; only its dark outline survived. Caught by looking at a screenshot rather than trusting the composite. |
+| `FUNDING.yaml` was silently ignored | GitHub reads `.github/FUNDING.yml` and nothing else. A `.yaml` sibling produces no error and no sponsor button — confirmed by fetching the repo page and finding no funding link at all. Renamed. The house style prefers `.yaml`, but this is the documented exception for tools that only accept `.yml`. |
 | Variant type inference | Godot 4.7 treats inferring a type from a Variant value as an error, so `:=` fails on the flood fill's frontier variable. |
 
 ---

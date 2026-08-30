@@ -1,0 +1,44 @@
+name: 'Tests'
+
+on:
+  push:
+    branches: ['main']
+  pull_request:
+    branches: ['main']
+
+permissions:
+  contents: read
+
+# A newer push to the same branch makes the in-flight run irrelevant.
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gut:
+    name: 'GUT suite'
+    runs-on: 'ubuntu-latest'
+    env:
+      GODOT_VERSION: '4.7.2'
+    steps:
+      - name: 'Check out the repository'
+        uses: 'actions/checkout@v7'
+
+      - name: 'Install Godot'
+        run: |
+          build="Godot_v${GODOT_VERSION}-stable_linux.x86_64"
+          curl -fsSL -o godot.zip "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable/${build}.zip"
+          unzip -q godot.zip -d "$RUNNER_TEMP/godot"
+          chmod +x "$RUNNER_TEMP/godot/$build"
+          ln -s "$RUNNER_TEMP/godot/$build" "$RUNNER_TEMP/godot/godot"
+          echo "$RUNNER_TEMP/godot" >> "$GITHUB_PATH"
+
+      - name: 'Confirm the pinned version'
+        run: godot --version
+
+      # A fresh clone has no .godot/ cache, and GUT's class_names resolve only once the import has run.
+      - name: 'Build the import cache'
+        run: godot --headless --import
+
+      - name: 'Run the test suite'
+        run: godot --headless -s addons/gut/gut_cmdln.gd -gdir=res://test -gexit
