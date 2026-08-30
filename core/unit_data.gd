@@ -20,5 +20,5 @@ enum Team { PLAYER, ENEMY }
 @export var attack_range: int = 1
 @export var team: Team = Team.PLAYER
 
-## Placeholder art only — no sprites in this slice.
-@export var color: Color = Color.WHITE
+## Path to this unit's sprite. A String, not a Texture2D, so core stays free of scene types.
+@export_file("*.png") var sprite: String = ""
