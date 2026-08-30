@@ -1,7 +1,7 @@
 # Sortie — Handoff
 
 **Updated:** 2026-08-30
-**Branch:** `main` — PRs #1 through #4 merged fast-forward; history is linear.
+**Branch:** `main` — PRs #1 through #5 merged fast-forward; history is linear.
 **Status:** playable end to end. 120 tests passing, exit 0, enforced by CI on every push and pull request.
 
 A grid-tactics RPG vertical slice in Godot 4.7.2 / GDScript.
@@ -82,7 +82,7 @@ If either produces output, something has leaked across the boundary.
 
 ### Verification
 
-- 108 tests. The rules engine is covered exhaustively; the view state machine has its own suite (`test_battle_flow.gd`).
+- 120 tests. The rules engine is covered exhaustively; the view state machine has its own suite (`test_battle_flow.gd`).
 - **CI** — `.github/workflows/tests.yaml` installs the pinned Godot 4.7.2 Linux build, rebuilds the import cache, and runs the suite on every push to `main` and every pull request. Until this existed, the tests had only ever run on one laptop.
 - A headless auto-battle harness plays the real scenario to completion with both sides on autopilot: **30 victories / 10 defeats / 0 unresolved across 40 seeds**, averaging 9.3 team-turns. Proves both endings are reachable and that seeds replay identically.
 
