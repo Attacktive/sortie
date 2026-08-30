@@ -13,8 +13,8 @@ const BOX_SIZE := Vector2(32.0, 20.0)
 ## This is the only conversion between box space and sprite space in the codebase.
 const BOX_OFFSET := Vector2(16.0, 44.0)
 
-## 1.5 tiles per second. Brisk without being twitchy, and the one number to turn when it feels wrong.
-const SPEED := 96.0
+## 1.875 tiles per second (120 px/s). Tuned for a brisker walk feel.
+const SPEED := 120.0
 
 ## No single step may cross more than half a tile, so a swept box can never skip over one.
 const MAX_STEP := GridGeometry.CELL_SIZE * 0.5
