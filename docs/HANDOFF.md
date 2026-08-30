@@ -2,7 +2,7 @@
 
 **Updated:** 2026-08-30
 **Branch:** `main` — PRs #1 through #4 merged fast-forward; history is linear.
-**Status:** playable end to end. 110 tests passing, exit 0, enforced by CI on every push and pull request.
+**Status:** playable end to end. 118 tests passing, exit 0, enforced by CI on every push and pull request.
 
 A grid-tactics RPG vertical slice in Godot 4.7.2 / GDScript.
 
@@ -77,6 +77,7 @@ If either produces output, something has leaked across the boundary.
 - Textured terrain with three grass variants picked by a hash of cell coordinates, so the field varies without a visible repeat and looks identical on every run.
 - Directional sprite animation: 9-frame walk and 6-frame slash, four facings each, driven from LPC sheets. Both are verified from captured frames — the walk cycle advances its legs, interpolates between cells, and turns corners with the feather trailing the direction of travel.
 - Damage numbers (crits gold and larger, misses grey), hit flash, death fade, turn banner.
+- Combat sound: an impact on a landed blow, a whiff on a miss, a heavy settle on a death, from a four-voice pool so a killing blow does not cut its own hit short.
 - Damage forecast panel, action menu, movement and attack overlays, enemy threat overlay.
 
 ### Verification
@@ -90,7 +91,7 @@ If either produces output, something has leaked across the boundary.
 ## Not done — pick up here
 
 1. **Play the interactive loop by hand.** Still the biggest gap, though a narrower one than it was. `test_battle_flow.gd` covers the state machine and the animations are now evidenced frame by frame, but nothing exercises real input events — clicking, keyboard cursor movement, menu focus. **Play a full battle to victory and to defeat before trusting it.**
-2. **Sound.** There is none. Even three effects (hit, miss, death) would move the needle more than most visual work at this point.
+2. **More sound.** Combat has three effects. Nothing else does — no cursor blip, no menu click, no music. Those were left out deliberately until someone has played it, because UI sound gets annoying fast, but the pool takes them without changes.
 3. **Everything the slice deliberately excluded:** story, save/load, levelling, recruitment, multiple maps, classes, permadeath. Each is its own spec.
 
 ---
@@ -100,6 +101,7 @@ If either produces output, something has leaked across the boundary.
 | Issue | Detail |
 |---|---|
 | **Interactive coverage** | See "Not done" #1. The rules are provably correct; the wiring between input and rules is not. |
+| **Audio licence is not** | The three sounds are Kenney RPG Audio, CC0. Chosen so a second share-alike obligation was not taken on for three files. `assets/audio/CREDITS.md` records which original became which clip. |
 | **Art licence is share-alike** | LPC art is CC-BY-SA 3.0 / GPL 3.0. The OpenGameART page also lists OGA-BY, but the manifest *inside the download* names only the first two, so this project follows the stricter bundled manifest. Source code stays MIT; the share-alike obligation attaches to the artwork. `assets/lpc/ATTRIBUTION-tile-atlas.txt` must not be deleted. |
 | **`github-advanced-security` fails** | Not a finding. The Copilot-based scanner crashes with `CAPIError: 400 The requested model is not supported.` before analysing anything, so it reports failure without ever having looked at the code. Nothing in the repo can fix it. Codacy and CodeFactor both pass. |
 | **Dependabot watched an empty folder** | It was configured for `github-actions` with `directory: '/.github'`, but there were no workflows at all. Now `/`, which is what the ecosystem expects. |
@@ -154,8 +156,11 @@ Kept because the shapes recur, and each was patched back into the plan so it doe
 | `scenes/battle.gd` | **The bridge.** Input → core → view, and the view state machine |
 | `scenes/grid_view.gd` | Terrain and overlay rendering |
 | `scenes/unit_view.gd` | Directional sprite animation, health bar, flash, death |
-| `scenes/combat_animator.gd` | Replays a resolved exchange in order |
+| `scenes/combat_animator.gd` | Replays a resolved exchange in order, and owns the sound |
+| `scenes/sfx.gd` | Clip paths, the pure outcome-to-clip mapping, and a round-robin voice pool |
 | `scenes/cursor.gd` | Keyboard and mouse cell selection |
 | `ui/` | Action menu, forecast panel, damage numbers, turn banner, result screen |
-| `test/` | 108 tests; `test_full_battle.gd` is the headless auto-battle harness |
+| `assets/lpc/` | Characters and terrain, CC-BY-SA — attribution files must not be deleted |
+| `assets/audio/` | Three CC0 combat sounds, with `CREDITS.md` recording which original became which clip |
+| `test/` | 118 tests; `test_full_battle.gd` is the headless auto-battle harness |
 | `docs/superpowers/specs/` + `plans/` | The design spec and the implementation plan it was built from |

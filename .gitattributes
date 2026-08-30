@@ -1,0 +1,4 @@
+# Vendored licence and attribution files are reproduced verbatim, so leave their
+# bytes alone rather than normalising line endings.
+assets/**/LICENSE*.txt -text
+assets/**/ATTRIBUTION*.txt -text

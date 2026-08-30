@@ -8,7 +8,7 @@ const ENEMY_STEP_DELAY := 0.35
 
 var _grid: BattleGrid
 var _turns: TurnOrder
-var _rolls: RealRollSource
+var _rolls: RollSource
 var _state: State = State.SELECTING_UNIT
 
 var _grid_view: GridView

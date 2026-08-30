@@ -6,6 +6,12 @@ signal finished
 const PLAYER_COLOR := Color(0.55, 0.78, 1.0)
 const ENEMY_COLOR := Color(1.0, 0.48, 0.42)
 
+var _sfx: Sfx
+
+func _ready() -> void:
+	_sfx = Sfx.new()
+	add_child(_sfx)
+
 ## Replays an already-resolved exchange. The rules ran synchronously and the
 ## model is already final; this only shows what happened, in order, with the
 ## health bar dropping on the frame the blade lands.
@@ -21,6 +27,8 @@ func _swing(actor: UnitView, target: UnitView, result: AttackResult) -> void:
 	actor.play_attack(target.unit.cell)
 	await actor.attack_connected
 
+	_sfx.play(Sfx.impact_clip(result.hit))
+
 	if result.hit:
 		target.flash()
 
@@ -30,5 +38,6 @@ func _swing(actor: UnitView, target: UnitView, result: AttackResult) -> void:
 	await actor.attack_finished
 
 	if result.killed:
+		_sfx.play(Sfx.DEATH)
 		target.play_death()
 		await get_tree().create_timer(UnitView.DEATH_SECONDS).timeout
