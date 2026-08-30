@@ -75,6 +75,17 @@ grep -rlE 'randf|randi|randomize' core/ | grep -v real_roll_source  # must be em
 | `test/test_terrain_art.gd` | The two facing tests move to the new core suite |
 | `scenes/screenshot_probe.gd` | Learns to capture the field, so movement can be verified visually |
 
+### On sharing the sprite animation
+
+`UnitView` advances frames and draws a sheet region, and `field_player.gd` needs to do the same thing.
+It is nonetheless not shared, and that is deliberate.
+
+The two differ in ways that would have to become flags on a common base: the battle's cycle plays once per path and clamps at the last frame, the field's loops continuously while a key is held; the battle draws a health bar, the field draws none; `UnitView` is built around a `BattleUnit` that has no meaning on the field.
+The overlap is roughly fifteen lines of frame timing.
+
+Two copies is not yet a pattern.
+If sub-project 2 needs a third for NPCs, that is the moment to extract an `LpcSprite` base — with three real callers to design it against instead of two and a guess.
+
 ## 4. Facing
 
 Facing is currently owned by `UnitView`, in `scenes/`.
@@ -86,22 +97,33 @@ extends RefCounted
 
 enum Direction { UP, LEFT, DOWN, RIGHT }
 
-static func from_vector(direction: Vector2, current: Direction) -> Direction
+## Which way a character walking along this vector should face.
+## An exact diagonal, or standing still, keeps `current`.
+static func from_motion(direction: Vector2, current: Direction) -> Direction
+
+## Which way a character aiming at this offset should face.
+## An exact diagonal resolves vertically.
+static func toward(offset: Vector2) -> Direction
 ```
+
+Two functions, because moving and aiming ask different questions and want different answers on a tie.
 
 The enum's integer values are the LPC sheet's row indices, because `_draw()` selects a row with `int(facing)`.
 This is a contract, not a listing order, and the existing test that pins it moves across with the enum.
 
-Battle movement is one axis at a time, so it never had to resolve a diagonal.
-Field movement is eight-directional against four-directional art, so:
+Both functions pick the row by dominant axis: `abs(x) > abs(y)` gives `LEFT`/`RIGHT`, otherwise `UP`/`DOWN`.
+They differ only in what they do when there is no dominant axis.
 
-- The dominant axis picks the row: `abs(x) > abs(y)` gives `LEFT`/`RIGHT`, otherwise `UP`/`DOWN`.
-- An exact diagonal keeps `current`.
+**`from_motion` keeps `current`.**
+Walking east and then also pressing north should not spin the character to face north — the player added a direction, they did not change their mind.
+Keeping the current facing preserves that intent through a diagonal.
+A zero vector keeps `current` for the same reason: stopping does not turn you around.
 
-That second rule exists because a perfect diagonal has no dominant axis.
-Without it, running diagonally flickers between two sheet rows every frame.
+**`toward` resolves vertically**, which is what `UnitView.face_toward()` already does.
+A range-2 Mage can target a cell diagonally, so this tie is reachable in the battle we have shipped, and its behavior must not change.
+Preserving it is why this is a second function rather than one with a compromise rule.
 
-A zero vector also keeps `current`: stopping does not turn you around.
+Battle path movement is one axis at a time and never sees a tie at all, so it may use either.
 
 ## 5. The movement model
 
