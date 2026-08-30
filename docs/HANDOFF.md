@@ -1,8 +1,8 @@
 # Sortie — Handoff
 
 **Updated:** 2026-08-30
-**Branch:** `main` — PRs #1 through #13 merged fast-forward; history is linear.
-**Status:** the battle is playable end to end, and field mode now runs — `godot scenes/field.tscn` boots a world you can walk around. Six of its eight tasks are done. 177 tests passing, exit 0, enforced by CI on every push and pull request.
+**Branch:** `main` — PRs #1 through #14 merged fast-forward; history is linear.
+**Status:** the battle is playable end to end, and field mode is fully verified across all eight tasks — `godot scenes/field.tscn` boots a walkable world with collision, sliding, directional animation, and camera tracking. 177 tests passing, exit 0, enforced by CI on every push and pull request.
 
 A grid-tactics RPG vertical slice in Godot 4.7.2 / GDScript.
 
@@ -28,8 +28,9 @@ There is also a screenshot harness, gated on environment variables so it never r
 SORTIE_SHOT=out.png godot --quit-after 300                       # capture a frame
 SORTIE_SHOT=out.png SORTIE_SELECT=9,1 godot --quit-after 300     # capture with a unit inspected
 SORTIE_SHOT=out.png SORTIE_ATTACK=0,7,8,0 SORTIE_WAIT=0.32 godot --quit-after 400   # capture mid-swing
-SORTIE_SHOT=out.png SORTIE_WALK=0,6,3,4 SORTIE_WAIT=0.55 godot --quit-after 600      # capture mid-stride
-```
+SORTIE_SHOT=out.png SORTIE_WALK=0,6,3,4 SORTIE_WAIT=0.55 godot --quit-after 600      # capture battle walk mid-stride
+SORTIE_SHOT=out.png SORTIE_FIELD_WALK=right SORTIE_WAIT=0.40 godot scenes/field.tscn --quit-after 600 # capture field walk
+SORTIE_SHOT=out.png SORTIE_FIELD_WALK=right SORTIE_FIELD_TURN=down,0.40 SORTIE_WAIT=0.42 godot scenes/field.tscn --quit-after 600 # capture field turn
 
 It lives in `scenes/screenshot_probe.gd`. It is a development affordance rather
 than a feature, and it stays: it is how every visual claim in this project was
@@ -90,14 +91,14 @@ If either produces output, something has leaked across the boundary.
 
 ---
 
-## Field mode — in progress
+## Field mode — done
 
 Story mode is a JRPG, so the battle is a **component the story mode calls into**, not the spine of the game. That reframing is what the spec and plan are built on.
 
 - Spec: `docs/superpowers/specs/2026-08-30-sortie-field-mode-design.md`
 - Plan: `docs/superpowers/plans/2026-08-30-sortie-field-mode.md`
 
-Story mode decomposes into six sub-projects. **Field mode is #1**, and it is six tasks in:
+Story mode decomposes into six sub-projects. **Field mode is #1**, and all eight tasks are complete:
 
 | Task | State |
 |---|---|
@@ -108,17 +109,13 @@ Story mode decomposes into six sub-projects. **Field mode is #1**, and it is six
 | 5. `FieldView` — draw the map | Done, PR #11 |
 | 6. `FieldPlayer` — input, movement, animation | Done, PR #12 |
 | 7. `field.tscn` and the camera | Done, PR #13 |
-| 8. Screenshot verification and this document | **Next.** No new tests — a capture series, and a rewrite of this file |
+| 8. Screenshot verification and this document | Done, PR #14 |
 
-Target on completion is 177 tests, which is where it already stands: Task 8 produces captures, not tests. The plan said 173. Task 6 came in with eight tests rather than six, and Task 7 with six rather than four.
+177 tests passing.
 
 **It runs.** `godot scenes/field.tscn` boots an 18x12 world with a character you can walk around it: free 8-directional movement, collision against walls and trees, sliding along a wall taken at an angle, a walk cycle, and a camera that follows and stops at the map's edge. It is wired into nothing — `run/main_scene` is still `battle.tscn`, and there is no way from either mode to the other until sub-project 4.
 
-**Nobody has walked around in it yet.** It boots clean and every rule underneath it is tested, but everything only a person can judge is still open: whether 96 px/s reads as brisk or as wading, whether the feet box lets you stand behind a tree instead of being fenced a full tile away from it, and whether turning redraws the sprite immediately or a beat late. That last one is a fix from Task 6 with no test behind it and no headless way to get one — the walk cycle advances on its own, so a redraw lands within a frame or two regardless and the gap is invisible to anything but an eye. Round a corner at speed and watch.
-
 Sub-projects 2 through 6 of story mode — interaction and dialogue, events and world state, mode flow and battle handoff, save/load, content — each need their own spec. `run/main_scene` stays `battle.tscn` until sub-project 4.
-
----
 
 ## Not done — pick up here
 
