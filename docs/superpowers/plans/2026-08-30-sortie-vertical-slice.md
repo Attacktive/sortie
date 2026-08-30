@@ -514,8 +514,11 @@ func move_unit(unit: BattleUnit, to: Vector2i) -> void:
 	_units[to] = unit
 	unit.cell = to
 
+## Identity-checked and idempotent: erasing by cell alone would evict whoever
+## moved onto the dead unit's old cell afterward.
 func remove_unit(unit: BattleUnit) -> void:
-	_units.erase(unit.cell)
+	if _units.get(unit.cell, null) == unit:
+		_units.erase(unit.cell)
 
 func living_units_of_team(team: UnitData.Team) -> Array[BattleUnit]:
 	var result: Array[BattleUnit] = []
