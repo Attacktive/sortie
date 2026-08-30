@@ -39,8 +39,10 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not active:
 		return
 
+	## The event's own position, not a fresh query of the global mouse state.
+	## Re-reading the device answers "where is the pointer now" rather than "where did this event happen", and it is unreadable anywhere without a real pointer.
 	if event is InputEventMouseMotion:
-		_move_to(GridGeometry.position_to_cell(get_local_mouse_position() + position))
+		_move_to(GridGeometry.position_to_cell(get_parent().to_local(event.position)))
 		return
 
 	if event.is_action_pressed("ui_accept") or (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT):

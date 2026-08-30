@@ -2,7 +2,7 @@
 
 **Updated:** 2026-08-30
 **Branch:** `main` — PRs #1 through #5 merged fast-forward; history is linear.
-**Status:** playable end to end. 120 tests passing, exit 0, enforced by CI on every push and pull request.
+**Status:** playable end to end. 136 tests passing, exit 0, enforced by CI on every push and pull request.
 
 A grid-tactics RPG vertical slice in Godot 4.7.2 / GDScript.
 
@@ -82,7 +82,8 @@ If either produces output, something has leaked across the boundary.
 
 ### Verification
 
-- 120 tests. The rules engine is covered exhaustively; the view state machine has its own suite (`test_battle_flow.gd`).
+- 136 tests. The rules engine is covered exhaustively; the view state machine has its own suite (`test_battle_flow.gd`), and the input layer above it has another (`test_input.gd`).
+- **Input is driven by real events.** `test_input.gd` pushes synthesized `InputEventKey`, `InputEventMouseMotion`, and `InputEventMouseButton` objects through `get_viewport().push_input()`, so assertions travel the whole chain: event → viewport → `_unhandled_input` or GUI focus → cursor → state machine. A full turn is played on the keyboard alone, and an attack is ordered from a keypress through to a resolved exchange. Buttons fire on *release*, so a realistic tap sends both halves.
 - **CI** — `.github/workflows/tests.yaml` installs the pinned Godot 4.7.2 Linux build, rebuilds the import cache, and runs the suite on every push to `main` and every pull request. Until this existed, the tests had only ever run on one laptop.
 - A headless auto-battle harness plays the real scenario to completion with both sides on autopilot: **30 victories / 10 defeats / 0 unresolved across 40 seeds**, averaging 9.3 team-turns. Proves both endings are reachable and that seeds replay identically.
 
@@ -90,7 +91,7 @@ If either produces output, something has leaked across the boundary.
 
 ## Not done — pick up here
 
-1. **Play the interactive loop by hand.** Still the biggest gap, though a narrower one than it was. `test_battle_flow.gd` covers the state machine and the animations are now evidenced frame by frame, but nothing exercises real input events — clicking, keyboard cursor movement, menu focus. **Play a full battle to victory and to defeat before trusting it.**
+1. **Play the interactive loop by hand.** Much narrower than it was: real events now cover selection, movement, cancel, menu focus, and ordering an attack, and the walk and swing are evidenced frame by frame. What no test can answer is whether it *feels* right — cursor speed, whether the menu lands somewhere sensible, whether a turn reads clearly. **Play a full battle to victory and to defeat before trusting it.**
 2. **More sound.** Two threads here, both needing ears rather than analysis.
 
    - The three combat clips were called "clunky but ok-ish" on first listen, and pitch jitter was the answer to that. If they still read as repetitive, the next lever is a second variant per event — `Sfx.play()` would take an array and pick from it. Sixteen single-transient impacts under 0.45s were catalogued in the pack; `bookPlace2` has almost exactly `chop`'s envelope. Whether it *sounds* right is not something an envelope can settle.
@@ -137,6 +138,8 @@ Kept because the shapes recur, and each was patched back into the plan so it doe
 | The pine tree was invisible | Green tree on green grass; only its dark outline survived. Caught by looking at a screenshot rather than trusting the composite. |
 | The screenshot harness could save nothing | With a short `SORTIE_WAIT` the timer expired before the first frame was ever drawn, and the capture was written anyway — an all-black PNG, `mean=0 stddev=0`, reported as a successful verification. It now awaits `RenderingServer.frame_post_draw` first. A verification tool that fails silently is worse than none. |
 | `FUNDING.yaml` was silently ignored | GitHub reads `.github/FUNDING.yml` and nothing else. A `.yaml` sibling produces no error and no sponsor button — confirmed by fetching the repo page and finding no funding link at all. Renamed. The house style prefers `.yaml`, but this is the documented exception for tools that only accept `.yml`. |
+| The cursor ignored the event it was handed | Mouse motion called `get_local_mouse_position()` — a fresh query of the display server — rather than reading `event.position`. It works in a real window, so nothing was visibly broken, but it answers "where is the pointer now" instead of "where did this event happen", and it made the entire pointer path untestable: headless has no mouse, so it read `(0, 0)` forever and `Input.warp_mouse` did not help. Found the moment real events were pointed at it. |
+| A test that hung instead of failing | The first input tests awaited `walk_finished` and `animator.finished` bare. Unwire the thing that starts them and the await never returns, so a broken build hangs CI rather than reporting a failure. Both are now `wait_for_signal(..., seconds)` with the result asserted. |
 | Variant type inference | Godot 4.7 treats inferring a type from a Variant value as an error, so `:=` fails on the flood fill's frontier variable. |
 
 ---
@@ -166,5 +169,5 @@ Kept because the shapes recur, and each was patched back into the plan so it doe
 | `ui/` | Action menu, forecast panel, damage numbers, turn banner, result screen |
 | `assets/lpc/` | Characters and terrain, CC-BY-SA — attribution files must not be deleted |
 | `assets/audio/` | Three CC0 combat sounds, with `CREDITS.md` recording which original became which clip |
-| `test/` | 120 tests; `test_full_battle.gd` is the headless auto-battle harness |
+| `test/` | 136 tests; `test_full_battle.gd` is the headless auto-battle harness and `test_input.gd` drives the game with real input events |
 | `docs/superpowers/specs/` + `plans/` | The design spec and the implementation plan it was built from |
