@@ -5,9 +5,6 @@ signal walk_finished
 signal attack_connected
 signal attack_finished
 
-## LPC sheet row order. Do not reorder: these are indices into the spritesheet.
-enum Facing { UP, LEFT, DOWN, RIGHT }
-
 const WALK_FRAMES := 9
 const SLASH_FRAMES := 6
 const WALK_FPS := 11.0
@@ -31,7 +28,7 @@ var unit: BattleUnit = null
 var _walk: Texture2D = null
 var _slash: Texture2D = null
 var _sheet: Texture2D = null
-var _facing: Facing = Facing.DOWN
+var _facing: Facing.Direction = Facing.Direction.DOWN
 var _frame: int = 0
 var _frame_count: int = 1
 var _elapsed: float = 0.0
@@ -93,11 +90,7 @@ func face_toward(cell: Vector2i) -> void:
 	if delta == Vector2i.ZERO:
 		return
 
-	if absi(delta.x) > absi(delta.y):
-		_facing = Facing.RIGHT if delta.x > 0 else Facing.LEFT
-	else:
-		_facing = Facing.DOWN if delta.y > 0 else Facing.UP
-
+	_facing = Facing.toward(Vector2(delta))
 	queue_redraw()
 
 ## Walks one cell at a time along the path, turning to face each step.
@@ -118,7 +111,7 @@ func walk_path(path: Array[Vector2i]) -> void:
 
 	for cell in path:
 		var step := cell - from
-		var facing := _facing_for(step)
+		var facing := Facing.from_motion(Vector2(step), _facing)
 		tween.tween_callback(func() -> void: _face(facing))
 		tween.tween_property(self, "position", GridGeometry.cell_to_position(cell), STEP_SECONDS)
 		from = cell
@@ -176,21 +169,9 @@ func play_death() -> void:
 		visible = false
 	)
 
-func _face(facing: Facing) -> void:
+func _face(facing: Facing.Direction) -> void:
 	_facing = facing
 	queue_redraw()
-
-static func _facing_for(step: Vector2i) -> Facing:
-	if step.x > 0:
-		return Facing.RIGHT
-
-	if step.x < 0:
-		return Facing.LEFT
-
-	if step.y < 0:
-		return Facing.UP
-
-	return Facing.DOWN
 
 func _draw() -> void:
 	if unit == null or _sheet == null:
