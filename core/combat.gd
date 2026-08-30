@@ -59,3 +59,20 @@ static func resolve(grid: BattleGrid, attacker: BattleUnit, defender: BattleUnit
 	result.killed = not defender.is_alive()
 
 	return result
+
+## One full trade: the attack, then a counterattack if the defender survives and can reach back.
+## The counter is a complete independent attack — its own hit, crit, and variance rolls.
+static func exchange(grid: BattleGrid, attacker: BattleUnit, defender: BattleUnit, rolls: RollSource) -> CombatExchange:
+	var result := CombatExchange.new()
+	result.attack = resolve(grid, attacker, defender, rolls)
+
+	if _can_counter(defender, attacker):
+		result.counter = resolve(grid, defender, attacker, rolls)
+
+	return result
+
+static func _can_counter(defender: BattleUnit, attacker: BattleUnit) -> bool:
+	if not defender.is_alive():
+		return false
+
+	return Movement.manhattan(defender.cell, attacker.cell) <= defender.data.attack_range
