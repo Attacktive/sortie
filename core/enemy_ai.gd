@@ -11,7 +11,7 @@ static func decide(grid: BattleGrid, unit: BattleUnit) -> AIDecision:
 	decision.move_to = unit.cell
 
 	var field := Movement.field(grid, unit)
-	var targets := grid.living_units_of_team(UnitData.Team.PLAYER)
+	var targets := grid.living_units_of_team(opposing_team(unit))
 	var best_score := -1.0
 
 	for cell in _sorted(field.reachable_cells()):
@@ -31,6 +31,15 @@ static func decide(grid: BattleGrid, unit: BattleUnit) -> AIDecision:
 	decision.move_to = _advance_toward_nearest(grid, unit, field, targets)
 
 	return decision
+
+## Whoever this unit is fighting. Derived rather than hardcoded to PLAYER,
+## so the same scoring can pilot either side — which is what makes a headless
+## end-to-end auto-battle possible.
+static func opposing_team(unit: BattleUnit) -> UnitData.Team:
+	if unit.team() == UnitData.Team.PLAYER:
+		return UnitData.Team.ENEMY
+
+	return UnitData.Team.PLAYER
 
 ## Expected damage from one attack, plus a bonus for a kill that needs no luck.
 static func score(grid: BattleGrid, attacker: BattleUnit, defender: BattleUnit) -> float:

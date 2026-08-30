@@ -1,7 +1,7 @@
 # Sortie — Design Spec
 
 - **Date:** 2026-08-30
-- **Status:** Approved for planning
+- **Status:** Implemented — see `docs/superpowers/plans/2026-08-30-sortie-vertical-slice.md`
 - **Engine:** Godot 4.7.2 stable, GDScript
 
 ## 1. Purpose
