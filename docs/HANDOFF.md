@@ -27,11 +27,15 @@ There is also a screenshot harness, gated on environment variables so it never r
 SORTIE_SHOT=out.png godot --quit-after 300                       # capture a frame
 SORTIE_SHOT=out.png SORTIE_SELECT=9,1 godot --quit-after 300     # capture with a unit inspected
 SORTIE_SHOT=out.png SORTIE_ATTACK=0,7,8,0 SORTIE_WAIT=0.32 godot --quit-after 400   # capture mid-swing
+SORTIE_SHOT=out.png SORTIE_WALK=0,6,3,4 SORTIE_WAIT=0.55 godot --quit-after 600      # capture mid-stride
 ```
 
-It lives in `scenes/screenshot_probe.gd`. It is a development affordance, not a
-feature — **decide whether to keep it before merge.** It is how every visual claim
-in this project was verified instead of asserted.
+It lives in `scenes/screenshot_probe.gd`. It is a development affordance rather
+than a feature, and it stays: it is how every visual claim in this project was
+verified instead of asserted, and it has now caught three bugs of its own.
+Vary `SORTIE_WAIT` across several runs and stack the results to inspect an
+animation frame by frame — a single capture proves a frame drew, not that a
+cycle plays.
 
 ---
 
@@ -71,7 +75,7 @@ If either produces output, something has leaked across the boundary.
 ### Presentation
 
 - Textured terrain with three grass variants picked by a hash of cell coordinates, so the field varies without a visible repeat and looks identical on every run.
-- Directional sprite animation: 9-frame walk and 6-frame slash, four facings each, driven from LPC sheets.
+- Directional sprite animation: 9-frame walk and 6-frame slash, four facings each, driven from LPC sheets. Both are verified from captured frames — the walk cycle advances its legs, interpolates between cells, and turns corners with the feather trailing the direction of travel.
 - Damage numbers (crits gold and larger, misses grey), hit flash, death fade, turn banner.
 - Damage forecast panel, action menu, movement and attack overlays, enemy threat overlay.
 
@@ -85,11 +89,9 @@ If either produces output, something has leaked across the boundary.
 
 ## Not done — pick up here
 
-1. **Play the interactive loop by hand.** This is the biggest gap. `test_battle_flow.gd` covers the state machine directly, but nothing exercises real input events — clicking, keyboard cursor movement, menu focus. Everything visual was verified by screenshot, and a screenshot cannot show a tween. **Play a full battle to victory and to defeat before trusting it.**
-2. **Walk animation in real play is unverified.** The slash animation was captured mid-swing; the walk cycle was not. It is wired identically, but "wired identically" is not evidence.
-3. **Decide the fate of `screenshot_probe.gd`** — keep as a documented dev tool, or delete before merge.
-4. **Sound.** There is none. Even three effects (hit, miss, death) would move the needle more than most visual work at this point.
-5. **Everything the slice deliberately excluded:** story, save/load, levelling, recruitment, multiple maps, classes, permadeath. Each is its own spec.
+1. **Play the interactive loop by hand.** Still the biggest gap, though a narrower one than it was. `test_battle_flow.gd` covers the state machine and the animations are now evidenced frame by frame, but nothing exercises real input events — clicking, keyboard cursor movement, menu focus. **Play a full battle to victory and to defeat before trusting it.**
+2. **Sound.** There is none. Even three effects (hit, miss, death) would move the needle more than most visual work at this point.
+3. **Everything the slice deliberately excluded:** story, save/load, levelling, recruitment, multiple maps, classes, permadeath. Each is its own spec.
 
 ---
 
@@ -127,6 +129,7 @@ Kept because the shapes recur, and each was patched back into the plan so it doe
 | Death fade never played | `refresh()` hid dead units immediately, cutting off the animation before it started. |
 | Kenney sprites were the wrong *shape* | Their 16px characters are tokens — the opaque region is a rounded blob filling the tile with no negative space and no feet. Checking the sample sheet for *style* was not enough. |
 | The pine tree was invisible | Green tree on green grass; only its dark outline survived. Caught by looking at a screenshot rather than trusting the composite. |
+| The screenshot harness could save nothing | With a short `SORTIE_WAIT` the timer expired before the first frame was ever drawn, and the capture was written anyway — an all-black PNG, `mean=0 stddev=0`, reported as a successful verification. It now awaits `RenderingServer.frame_post_draw` first. A verification tool that fails silently is worse than none. |
 | `FUNDING.yaml` was silently ignored | GitHub reads `.github/FUNDING.yml` and nothing else. A `.yaml` sibling produces no error and no sponsor button — confirmed by fetching the repo page and finding no funding link at all. Renamed. The house style prefers `.yaml`, but this is the documented exception for tools that only accept `.yml`. |
 | Variant type inference | Godot 4.7 treats inferring a type from a Variant value as an error, so `:=` fails on the flood fill's frontier variable. |
 

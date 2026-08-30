@@ -33,6 +33,21 @@ func test_the_impact_frame_falls_inside_the_swing() -> void:
 	assert_true(UnitView.SLASH_IMPACT_FRAME > 0, "damage landing on frame 0 would precede the swing")
 	assert_true(UnitView.SLASH_IMPACT_FRAME < UnitView.SLASH_FRAMES, "the impact frame must exist in the sheet")
 
+## _draw() picks a sheet row with int(_facing), so the enum's integer values are
+## the LPC row order itself, not an arbitrary listing.
+## Reordering it would silently turn every character the wrong way.
+func test_facing_values_are_the_lpc_row_order() -> void:
+	assert_eq(int(UnitView.Facing.UP), 0, "row 0 of an LPC sheet faces away from the camera")
+	assert_eq(int(UnitView.Facing.LEFT), 1, "row 1 of an LPC sheet faces left")
+	assert_eq(int(UnitView.Facing.DOWN), 2, "row 2 of an LPC sheet faces the camera")
+	assert_eq(int(UnitView.Facing.RIGHT), 3, "row 3 of an LPC sheet faces right")
+
+func test_every_step_direction_picks_its_own_facing() -> void:
+	assert_eq(UnitView._facing_for(Vector2i(1, 0)), UnitView.Facing.RIGHT, "a step east should face right")
+	assert_eq(UnitView._facing_for(Vector2i(-1, 0)), UnitView.Facing.LEFT, "a step west should face left")
+	assert_eq(UnitView._facing_for(Vector2i(0, -1)), UnitView.Facing.UP, "a step north should face up")
+	assert_eq(UnitView._facing_for(Vector2i(0, 1)), UnitView.Facing.DOWN, "a step south should face down")
+
 func test_grass_variation_is_deterministic_and_in_range() -> void:
 	for x in 12:
 		for y in 12:
