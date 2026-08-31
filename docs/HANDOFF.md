@@ -165,6 +165,7 @@ World state flag/variable store, trigger engine (step and interaction triggers),
 **It runs.** Stepping onto trigger tiles fires configured actions (flag mutation, dialogue, tile alterations). Interacting with objects can update flags and mutate map terrain dynamically. NPCs evaluate world flags to offer branching dialogue trees or updated conversations based on story progress.
 
 Sub-projects 4 through 6 of story mode — mode flow and battle handoff, save/load, content — each need their own spec. `run/main_scene` stays `battle.tscn` until sub-project 4.
+
 ---
 
 ## Not done — pick up here
