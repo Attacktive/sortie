@@ -9,6 +9,9 @@ const WALKABLE := "."
 const WALL := "#"
 const TREE := "F"
 
+## Shaved off the box's far edge before it is turned into a cell, so a box ending exactly on a cell boundary stops there instead of claiming the cell past it.
+const EDGE_EPSILON := 0.001
+
 var size: Vector2i = Vector2i.ZERO
 
 ## The authored glyph per non-walkable cell, not merely a bool, because a view has to tell a tree from a wall.
@@ -60,32 +63,26 @@ func pixel_size() -> Vector2:
 
 ## Every solid tile the box touches. The caller resolves against these; this only reports them.
 func solid_tiles_overlapping(box: Rect2) -> Array[Vector2i]:
-	var found: Array[Vector2i] = []
-	var cell := float(GridGeometry.CELL_SIZE)
-
-	var first := Vector2i(floori(box.position.x / cell), floori(box.position.y / cell))
-	var last := Vector2i(floori((box.end.x - 0.001) / cell), floori((box.end.y - 0.001) / cell))
-
-	for y in range(first.y, last.y + 1):
-		for x in range(first.x, last.x + 1):
-			var candidate := Vector2i(x, y)
-			if is_solid(candidate):
-				found.append(candidate)
-
-	return found
+	return _cells_in_box_where(box, is_solid)
 
 ## Every in-bounds cell the box touches.
+##
+## Deliberately not the other query filtered, in either direction: is_solid counts everything outside the map as solid, so past the edge the two are supposed to disagree.
 func cells_in_box(box: Rect2) -> Array[Vector2i]:
+	return _cells_in_box_where(box, is_in_bounds)
+
+## The sweep both box queries are, differing only in which cells they keep.
+func _cells_in_box_where(box: Rect2, keeps: Callable) -> Array[Vector2i]:
 	var found: Array[Vector2i] = []
 	var cell := float(GridGeometry.CELL_SIZE)
 
 	var first := Vector2i(floori(box.position.x / cell), floori(box.position.y / cell))
-	var last := Vector2i(floori((box.end.x - 0.001) / cell), floori((box.end.y - 0.001) / cell))
+	var last := Vector2i(floori((box.end.x - EDGE_EPSILON) / cell), floori((box.end.y - EDGE_EPSILON) / cell))
 
 	for y in range(first.y, last.y + 1):
 		for x in range(first.x, last.x + 1):
 			var candidate := Vector2i(x, y)
-			if is_in_bounds(candidate):
+			if keeps.call(candidate):
 				found.append(candidate)
 
 	return found
