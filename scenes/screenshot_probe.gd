@@ -32,6 +32,9 @@ func _ready() -> void:
 	if OS.has_environment("SORTIE_FIELD_TURN"):
 		_turn_after(OS.get_environment("SORTIE_FIELD_TURN").split(","))
 
+	if OS.has_environment("SORTIE_FIELD_INTERACT"):
+		_stage_field_interact(host)
+
 	var wait := float(OS.get_environment("SORTIE_WAIT")) if OS.has_environment("SORTIE_WAIT") else 0.0
 	if wait > 0.0:
 		await get_tree().create_timer(wait).timeout
@@ -123,3 +126,12 @@ func _stage_attack(battle: Node, parts: PackedStringArray) -> void:
 func _stage_walk(battle: Node, parts: PackedStringArray) -> void:
 	battle.call("_try_select", Vector2i(int(parts[0]), int(parts[1])))
 	battle.call("_try_move", Vector2i(int(parts[2]), int(parts[3])))
+
+## Positions the player directly west of the NPC facing right, and triggers interaction.
+func _stage_field_interact(field: Node) -> void:
+	var player: FieldPlayer = field.get("_player")
+	var npc: FieldNpc = field.get("_npc")
+	if player != null and npc != null:
+		player.position = npc.position - Vector2(GridGeometry.CELL_SIZE * 0.75, 0.0)
+		player.facing = Facing.Direction.RIGHT
+		field.call("_try_interact")

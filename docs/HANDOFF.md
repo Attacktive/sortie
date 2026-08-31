@@ -1,8 +1,8 @@
 # Sortie — Handoff
 
-**Updated:** 2026-08-30
+**Updated:** 2026-08-31
 **Branch:** `main` — PRs #1 through #14 merged fast-forward; history is linear.
-**Status:** the battle is playable end to end, and field mode is fully verified across all eight tasks — `godot scenes/field.tscn` boots a walkable world with collision, sliding, directional animation, and camera tracking. 177 tests passing, exit 0, enforced by CI on every push and pull request.
+**Status:** the battle is playable end to end, field mode is fully verified, and interaction & dialogue (sub-project 2) is complete across all seven tasks — `godot scenes/field.tscn` boots a walkable world with NPC interaction, dialogue box UI, choice branching, and speaker facing. 191 tests passing, exit 0, enforced by CI on every push and pull request.
 
 A grid-tactics RPG vertical slice in Godot 4.7.2 / GDScript.
 
@@ -31,6 +31,7 @@ SORTIE_SHOT=out.png SORTIE_ATTACK=0,7,8,0 SORTIE_WAIT=0.32 godot --quit-after 40
 SORTIE_SHOT=out.png SORTIE_WALK=0,6,3,4 SORTIE_WAIT=0.55 godot --quit-after 600      # capture battle walk mid-stride
 SORTIE_SHOT=out.png SORTIE_FIELD_WALK=right SORTIE_WAIT=0.40 godot scenes/field.tscn --quit-after 600 # capture field walk
 SORTIE_SHOT=out.png SORTIE_FIELD_WALK=right SORTIE_FIELD_TURN=down,0.40 SORTIE_WAIT=0.42 godot scenes/field.tscn --quit-after 600 # capture field turn
+SORTIE_SHOT=out.png SORTIE_FIELD_INTERACT=true SORTIE_WAIT=0.10 godot scenes/field.tscn --quit-after 300 # capture dialogue interaction
 
 It lives in `scenes/screenshot_probe.gd`. It is a development affordance rather
 than a feature, and it stays: it is how every visual claim in this project was
@@ -84,7 +85,7 @@ If either produces output, something has leaked across the boundary.
 
 ### Verification
 
-- 177 tests. The rules engine is covered exhaustively; the view state machine has its own suite (`test_battle_flow.gd`), and the input layer above it has another (`test_input.gd`).
+- 191 tests. The rules engine is covered exhaustively; the view state machine has its own suite (`test_battle_flow.gd`), and the input layer above it has another (`test_input.gd`).
 - **Input is driven by real events.** `test_input.gd` pushes synthesized `InputEventKey`, `InputEventMouseMotion`, and `InputEventMouseButton` objects through `get_viewport().push_input()`, so assertions travel the whole chain: event → viewport → `_unhandled_input` or GUI focus → cursor → state machine. A full turn is played on the keyboard alone, and an attack is ordered from a keypress through to a resolved exchange. Buttons fire on *release*, so a realistic tap sends both halves.
 - **CI** — `.github/workflows/tests.yaml` installs the pinned Godot 4.7.2 Linux build, rebuilds the import cache, and runs the suite on every push to `main` and every pull request. Until this existed, the tests had only ever run on one laptop.
 - A headless auto-battle harness plays the real scenario to completion with both sides on autopilot: **30 victories / 10 defeats / 0 unresolved across 40 seeds**, averaging 9.3 team-turns. Proves both endings are reachable and that seeds replay identically.
@@ -115,7 +116,31 @@ Story mode decomposes into six sub-projects. **Field mode is #1**, and all eight
 
 **It runs.** `godot scenes/field.tscn` boots an 18x12 world with a character you can walk around it: free 8-directional movement, collision against walls and trees, sliding along a wall taken at an angle, a walk cycle, and a camera that follows and stops at the map's edge. It is wired into nothing — `run/main_scene` is still `battle.tscn`, and there is no way from either mode to the other until sub-project 4.
 
-Sub-projects 2 through 6 of story mode — interaction and dialogue, events and world state, mode flow and battle handoff, save/load, content — each need their own spec. `run/main_scene` stays `battle.tscn` until sub-project 4.
+
+---
+
+## Interaction & dialogue — done
+
+Field interaction and branching dialogue. **Interaction & dialogue is #2**, and all seven tasks are complete:
+
+- Spec: `docs/superpowers/specs/2026-08-31-sortie-dialogue-design.md`
+- Plan: `docs/superpowers/plans/2026-08-31-sortie-dialogue.md`
+
+| Task | State |
+|---|---|
+| 1. Core dialogue data model | Done |
+| 2. Core dialogue runner state machine | Done |
+| 3. Core interaction geometry | Done |
+| 4. Dialogue Box UI component | Done |
+| 5. Field NPC Scene | Done |
+| 6. Field interaction wiring & player freeze | Done |
+| 7. Screenshot probe verification & handoff | Done |
+
+191 tests passing.
+
+**It runs.** Approaching an NPC on the field and pressing `ui_accept` initiates dialogue. The player freezes, the NPC turns to face the player, and a bottom dialogue box displays speaker name, text pages, and interactive branching choices navigated via keyboard or mouse. Closing the dialogue unfreezes the player.
+
+Sub-projects 3 through 6 of story mode — events and world state, mode flow and battle handoff, save/load, content — each need their own spec. `run/main_scene` stays `battle.tscn` until sub-project 4.
 
 ## Not done — pick up here
 
@@ -201,17 +226,22 @@ Kept because the shapes recur, and each was patched back into the plan so it doe
 | `core/facing.gd` | The four LPC sheet rows; `from_motion` for walking, `toward` for aiming |
 | `core/field_map.gd` | **Field mode.** The walkable world from ASCII: size, solidity, glyphs, box-to-tile overlap |
 | `core/field_body.gd` | **Field mode.** Axis-separated movement and collision, sub-stepped so a hitched frame cannot tunnel |
+| `core/dialogue_choice.gd` / `dialogue_node.gd` / `dialogue_tree.gd` | **Dialogue.** Graph structure for dialogue nodes and branching choices |
+| `core/dialogue_runner.gd` | **Dialogue.** Headless state machine traversing dialogue trees |
+| `core/interaction.gd` | **Dialogue.** Interaction probe box geometry for facing checks |
 | `scenes/battle.gd` | **The bridge.** Input → core → view, and the view state machine |
 | `scenes/grid_view.gd` | Terrain and overlay rendering |
 | `scenes/field_view.gd` | **Field mode.** Draws a `FieldMap` with the battle's terrain art; `layers_for()` holds every decision so `_draw` holds none |
 | `scenes/field_player.gd` | **Field mode.** Held input becomes a velocity, `FieldBody` says where it lands; owns the walk cycle and the facing, and no collision rules |
-| `scenes/field.gd` | **Field mode.** The whole scene — map, view, player, camera — and the ASCII map itself. `field.tscn` is a bare `Node2D` with this attached |
+| `scenes/field_npc.gd` | **Dialogue.** NPC scene on field with sprite, collision, facing, and dialogue tree |
+| `scenes/field.gd` | **Field mode.** The whole scene — map, view, player, camera, NPC, dialogue box — and the ASCII map itself. `field.tscn` is a bare `Node2D` with this attached |
 | `scenes/unit_view.gd` | Directional sprite animation, health bar, flash, death |
 | `scenes/combat_animator.gd` | Replays a resolved exchange in order, and owns the sound |
 | `scenes/sfx.gd` | Clip paths, the pure outcome-to-clip mapping, and a round-robin voice pool |
 | `scenes/cursor.gd` | Keyboard and mouse cell selection |
-| `ui/` | Action menu, forecast panel, damage numbers, turn banner, result screen |
+| `ui/dialogue_box.gd` | **Dialogue.** Text panel, speaker name, choice buttons, keyboard/mouse navigation |
+| `ui/` | Action menu, forecast panel, damage numbers, turn banner, result screen, dialogue box |
 | `assets/lpc/` | Characters and terrain, CC-BY-SA — attribution files must not be deleted |
 | `assets/audio/` | Three CC0 combat sounds, with `CREDITS.md` recording which original became which clip |
-| `test/` | 177 tests; `test_full_battle.gd` is the headless auto-battle harness and `test_input.gd` drives the game with real input events |
+| `test/` | 191 tests; `test_full_battle.gd` is the headless auto-battle harness and `test_input.gd` drives the game with real input events |
 | `docs/superpowers/specs/` + `plans/` | The design spec and the implementation plan it was built from |

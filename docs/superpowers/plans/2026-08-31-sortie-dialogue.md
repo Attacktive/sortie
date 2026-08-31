@@ -59,7 +59,7 @@ These apply to every task below.
   - `DialogueTree.get_node(id: String) -> DialogueNode`
   - `DialogueTree.has_node(id: String) -> bool`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `test/test_dialogue_tree.gd`:
 
@@ -121,7 +121,7 @@ func test_tree_construction_from_dict() -> void:
 	assert_eq(greeting.choices[0].next_id, "thanks")
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```sh
 godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_dialogue_tree.gd -gexit
@@ -129,7 +129,7 @@ godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_dialogue_tree
 
 Expected: FAIL (types not defined).
 
-- [ ] **Step 3: Implement `DialogueChoice`, `DialogueNode`, and `DialogueTree`**
+- [x] **Step 3: Implement `DialogueChoice`, `DialogueNode`, and `DialogueTree`**
 
 Create `core/dialogue_choice.gd`:
 
@@ -217,7 +217,7 @@ static func from_dict(dict: Dictionary) -> DialogueTree:
 	return tree
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```sh
 godot --headless --import
@@ -226,7 +226,7 @@ godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_dialogue_tree
 
 Expected: PASS (3 tests passed).
 
-- [ ] **Step 5: Check invariants and commit**
+- [x] **Step 5: Check invariants and commit**
 
 ```sh
 grep -rE '\bNode\b|get_tree\(|\bInput\b|preload\(|\.tscn' core/
@@ -235,6 +235,10 @@ git commit -m "feat: add dialogue data model in core
 
 Co-authored-by: Gemini 3.7 Flash <176961590+gemini-code-assist[bot]@users.noreply.github.com>"
 ```
+
+#### What changed in Task 1, and why
+
+Implemented `DialogueChoice`, `DialogueNode`, and `DialogueTree` in `core/` as pure `RefCounted` data structures. `DialogueTree.from_dict()` builds the graph and parses choice branches into typed objects. Covered by 3 unit tests in `test/test_dialogue_tree.gd`. Both `core/` invariants pass cleanly.
 
 ---
 
@@ -255,7 +259,7 @@ Co-authored-by: Gemini 3.7 Flash <176961590+gemini-code-assist[bot]@users.norepl
   - `DialogueRunner.select_choice(index: int) -> bool`
   - `DialogueRunner.is_finished() -> bool`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `test/test_dialogue_runner.gd`:
 
@@ -339,7 +343,7 @@ func test_choice_selection_branches_graph() -> void:
 	assert_true(runner.is_finished())
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```sh
 godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_dialogue_runner.gd -gexit
@@ -347,7 +351,7 @@ godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_dialogue_runn
 
 Expected: FAIL (`DialogueRunner` not found).
 
-- [ ] **Step 3: Implement `DialogueRunner`**
+- [x] **Step 3: Implement `DialogueRunner`**
 
 Create `core/dialogue_runner.gd`:
 
@@ -426,7 +430,7 @@ func select_choice(index: int) -> bool:
 	return true
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```sh
 godot --headless --import
@@ -435,7 +439,7 @@ godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_dialogue_runn
 
 Expected: PASS.
 
-- [ ] **Step 5: Check invariants and commit**
+- [x] **Step 5: Check invariants and commit**
 
 ```sh
 grep -rE '\bNode\b|get_tree\(|\bInput\b|preload\(|\.tscn' core/
@@ -444,6 +448,10 @@ git commit -m "feat: add headless dialogue runner state machine
 
 Co-authored-by: Gemini 3.7 Flash <176961590+gemini-code-assist[bot]@users.noreply.github.com>"
 ```
+
+#### What changed in Task 2, and why
+
+Implemented `DialogueRunner` in `core/` to traverse dialogue trees with linear page advances (`advance()`) and branching choices (`select_choice()`), transitioning to finished when a leaf node is exhausted or missing. 3 unit tests verify linear progression, choice branching, and invalid choice index bounds checking.
 
 ---
 
@@ -459,7 +467,7 @@ Co-authored-by: Gemini 3.7 Flash <176961590+gemini-code-assist[bot]@users.norepl
 - Consumes: `Facing.Direction`
 - Produces: `Interaction.probe_box(box: Rect2, facing: Facing.Direction, reach: float) -> Rect2`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `test/test_interaction.gd`:
 
@@ -497,7 +505,7 @@ func test_interaction_intersects_adjacent_target() -> void:
 	assert_false(probe_down.intersects(target_box), "facing away does not reach it")
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```sh
 godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_interaction.gd -gexit
@@ -505,7 +513,7 @@ godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_interaction.g
 
 Expected: FAIL (`Interaction` not found).
 
-- [ ] **Step 3: Implement `Interaction`**
+- [x] **Step 3: Implement `Interaction`**
 
 Create `core/interaction.gd`:
 
@@ -530,7 +538,7 @@ static func probe_box(box: Rect2, facing: Facing.Direction, reach: float = DEFAU
 	return Rect2(box.end.x, box.position.y, reach, box.size.y)
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```sh
 godot --headless --import
@@ -539,7 +547,7 @@ godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_interaction.g
 
 Expected: PASS.
 
-- [ ] **Step 5: Check invariants and commit**
+- [x] **Step 5: Check invariants and commit**
 
 ```sh
 grep -rE '\bNode\b|get_tree\(|\bInput\b|preload\(|\.tscn' core/
@@ -548,6 +556,10 @@ git commit -m "feat: add interaction probe geometry in core
 
 Co-authored-by: Gemini 3.7 Flash <176961590+gemini-code-assist[bot]@users.noreply.github.com>"
 ```
+
+#### What changed in Task 3, and why
+
+Implemented `Interaction.probe_box()` in `core/interaction.gd` to construct a reach bounding box extending from the player's collision box in the current `Facing.Direction`. 2 unit tests verify probe box construction in all 4 directions and intersection against adjacent target boxes. Both invariants pass cleanly.
 
 ---
 
@@ -566,7 +578,7 @@ Co-authored-by: Gemini 3.7 Flash <176961590+gemini-code-assist[bot]@users.norepl
   - `DialogueBox.signal finished`
   - `DialogueBox.signal choice_selected(index: int)`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `test/test_dialogue_box.gd`:
 
@@ -631,7 +643,7 @@ func test_accept_advances_and_finishes() -> void:
 	assert_signal_emitted(_box, "finished")
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```sh
 godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_dialogue_box.gd -gexit
@@ -639,7 +651,7 @@ godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_dialogue_box.
 
 Expected: FAIL (`DialogueBox` not found).
 
-- [ ] **Step 3: Implement `DialogueBox`**
+- [x] **Step 3: Implement `DialogueBox`**
 
 Create `ui/dialogue_box.gd`:
 
@@ -786,7 +798,7 @@ func get_selected_choice_index() -> int:
 	return _selected_choice
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```sh
 godot --headless --import
@@ -795,7 +807,7 @@ godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_dialogue_box.
 
 Expected: PASS.
 
-- [ ] **Step 5: Check invariants and commit**
+- [x] **Step 5: Check invariants and commit**
 
 ```sh
 git add ui/dialogue_box.gd ui/dialogue_box.gd.uid test/test_dialogue_box.gd test/test_dialogue_box.gd.uid
@@ -803,6 +815,10 @@ git commit -m "feat: add DialogueBox UI with keyboard choice navigation
 
 Co-authored-by: Gemini 3.7 Flash <176961590+gemini-code-assist[bot]@users.noreply.github.com>"
 ```
+
+#### What changed in Task 4, and why
+
+Implemented `DialogueBox` as a `CanvasLayer` component in `ui/dialogue_box.gd`. It builds a UI layout holding speaker name, wrapped dialogue text, and branching choice options with keyboard (`ui_up`/`ui_down`) navigation and `ui_accept` progression, emitting `finished` and `choice_selected`. 3 unit tests verify rendering, keyboard navigation, and completion signaling.
 
 ---
 
@@ -821,7 +837,7 @@ Co-authored-by: Gemini 3.7 Flash <176961590+gemini-code-assist[bot]@users.norepl
   - `FieldNpc.get_collision_box() -> Rect2`
   - `FieldNpc.face_toward(target_pos: Vector2)`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `test/test_field_npc.gd`:
 
@@ -854,7 +870,7 @@ func test_npc_faces_player_on_interaction() -> void:
 	assert_eq(_npc.facing, Facing.Direction.RIGHT)
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```sh
 godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_field_npc.gd -gexit
@@ -862,7 +878,7 @@ godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_field_npc.gd 
 
 Expected: FAIL (`FieldNpc` not found).
 
-- [ ] **Step 3: Implement `FieldNpc`**
+- [x] **Step 3: Implement `FieldNpc`**
 
 Create `scenes/field_npc.gd`:
 
@@ -904,7 +920,7 @@ func _draw() -> void:
 	draw_texture_rect_region(_sheet, Rect2(Vector2.ZERO, Vector2(cell, cell)), source)
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```sh
 godot --headless --import
@@ -913,7 +929,7 @@ godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_field_npc.gd 
 
 Expected: PASS.
 
-- [ ] **Step 5: Check invariants and commit**
+- [x] **Step 5: Check invariants and commit**
 
 ```sh
 git add scenes/field_npc.gd scenes/field_npc.gd.uid test/test_field_npc.gd test/test_field_npc.gd.uid
@@ -921,6 +937,10 @@ git commit -m "feat: add FieldNpc scene with collision and directional facing
 
 Co-authored-by: Gemini 3.7 Flash <176961590+gemini-code-assist[bot]@users.noreply.github.com>"
 ```
+
+#### What changed in Task 5, and why
+
+Implemented `FieldNpc` in `scenes/field_npc.gd` supporting NPC sprite drawing from LPC walk cycle sheets, feet collision box calculation (`get_collision_box()`), and dynamic directional orientation (`face_toward()`). Covered by 2 unit tests in `test/test_field_npc.gd`.
 
 ---
 
@@ -937,7 +957,7 @@ Co-authored-by: Gemini 3.7 Flash <176961590+gemini-code-assist[bot]@users.norepl
 - Consumes: `Interaction.probe_box()`, `FieldPlayer`, `FieldNpc`, `DialogueBox`
 - Produces: `FieldPlayer.frozen`, `field.gd` interaction handler
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `test/test_field_interaction.gd`:
 
@@ -991,7 +1011,7 @@ func test_facing_npc_and_pressing_accept_opens_dialogue_and_freezes_player() -> 
 	assert_false(player.frozen, "player unfreezes after dialogue closes")
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```sh
 godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_field_interaction.gd -gexit
@@ -999,7 +1019,7 @@ godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_field_interac
 
 Expected: FAIL.
 
-- [ ] **Step 3: Update `scenes/field_player.gd` and `scenes/field.gd`**
+- [x] **Step 3: Update `scenes/field_player.gd` and `scenes/field.gd`**
 
 In `scenes/field_player.gd`:
 Add `var frozen: bool = false` and guard `_process`:
@@ -1133,7 +1153,7 @@ func _on_dialogue_finished() -> void:
 		_player.frozen = false
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```sh
 godot --headless --import
@@ -1142,7 +1162,7 @@ godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_field_interac
 
 Expected: PASS.
 
-- [ ] **Step 5: Run full test suite**
+- [x] **Step 5: Run full test suite**
 
 ```sh
 godot --headless -s addons/gut/gut_cmdln.gd -gdir=res://test -gexit
@@ -1150,7 +1170,7 @@ godot --headless -s addons/gut/gut_cmdln.gd -gdir=res://test -gexit
 
 Expected: PASS (all tests passing).
 
-- [ ] **Step 6: Check invariants and commit**
+- [x] **Step 6: Check invariants and commit**
 
 ```sh
 grep -rE '\bNode\b|get_tree\(|\bInput\b|preload\(|\.tscn' core/
@@ -1159,6 +1179,10 @@ git commit -m "feat: wire field NPC interaction, player freezing, and dialogue f
 
 Co-authored-by: Gemini 3.7 Flash <176961590+gemini-code-assist[bot]@users.noreply.github.com>"
 ```
+
+#### What changed in Task 6, and why
+
+Wired NPC placement and dialogue interaction in `scenes/field.gd`. `FieldPlayer.frozen` stops movement while dialogue is open. When `ui_accept` is pressed while facing an adjacent NPC within probe reach, the player freezes, the NPC turns to face the player, and `DialogueBox` is started. When dialogue finishes, the player unfreezes. Real input tests in `test/test_field_interaction.gd` verify this sequence.
 
 ---
 
@@ -1174,7 +1198,7 @@ Co-authored-by: Gemini 3.7 Flash <176961590+gemini-code-assist[bot]@users.norepl
 
 - Consumes: `SORTIE_FIELD_INTERACT` environment variable in probe
 
-- [ ] **Step 1: Add dialogue capture support to `scenes/screenshot_probe.gd`**
+- [x] **Step 1: Add dialogue capture support to `scenes/screenshot_probe.gd`**
 
 Support `SORTIE_FIELD_INTERACT=true` in `scenes/screenshot_probe.gd`:
 
@@ -1183,7 +1207,7 @@ Support `SORTIE_FIELD_INTERACT=true` in `scenes/screenshot_probe.gd`:
 		host.call("_try_interact")
 ```
 
-- [ ] **Step 2: Capture dialogue box visually**
+- [x] **Step 2: Capture dialogue box visually**
 
 ```sh
 SORTIE_SHOT=/tmp/dialogue_open.png SORTIE_FIELD_INTERACT=true SORTIE_WAIT=0.1 godot scenes/field.tscn --quit-after 300
@@ -1191,11 +1215,11 @@ SORTIE_SHOT=/tmp/dialogue_open.png SORTIE_FIELD_INTERACT=true SORTIE_WAIT=0.1 go
 
 Verify the image shows the player standing near the Mage NPC with the dialogue panel rendered at the bottom.
 
-- [ ] **Step 3: Update `docs/HANDOFF.md`**
+- [x] **Step 3: Update `docs/HANDOFF.md`**
 
 Update `docs/HANDOFF.md` to reflect Sub-project 2 completion and the new test count.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```sh
 git add scenes/screenshot_probe.gd docs/HANDOFF.md docs/superpowers/plans/2026-08-31-sortie-dialogue.md
@@ -1203,6 +1227,10 @@ git commit -m "feat: verify dialogue box visually and update handoff
 
 Co-authored-by: Gemini 3.7 Flash <176961590+gemini-code-assist[bot]@users.noreply.github.com>"
 ```
+
+#### What changed in Task 7, and why
+
+Added `SORTIE_FIELD_INTERACT` staging support in `scenes/screenshot_probe.gd` with `_stage_field_interact(host)` positioning the player directly west of the NPC facing right and calling `_try_interact()`. Visual frame verification with `SORTIE_FIELD_INTERACT=true SORTIE_WAIT=0.10` confirmed the dialogue box renders over the field scene with speaker name and text. Updated `docs/HANDOFF.md` to record completion of Sub-project 2 (191 tests passing).
 
 ---
 
