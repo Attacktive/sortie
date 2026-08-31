@@ -5,11 +5,11 @@ extends RefCounted
 
 enum Op { EQUAL, NOT_EQUAL, LESS_THAN, LESS_EQUAL, GREATER_THAN, GREATER_EQUAL }
 
-var key: String = ''
+var key: String = ""
 var op: Op = Op.EQUAL
 var target_value: Variant = null
 
-func _init(p_key: String = '', p_op: Op = Op.EQUAL, p_val: Variant = null) -> void:
+func _init(p_key: String = "", p_op: Op = Op.EQUAL, p_val: Variant = null) -> void:
 	key = p_key
 	op = p_op
 	target_value = p_val
