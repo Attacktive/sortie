@@ -6,6 +6,7 @@ extends Node2D
 var npc_name: String = ""
 var dialogue: DialogueTree = null
 var facing: Facing.Direction = Facing.Direction.DOWN
+var conditional_dialogues: Array[Dictionary] = []
 
 var _sheet: Texture2D = null
 
@@ -17,6 +18,15 @@ func setup(sheet_path: String, p_name: String, p_dialogue: DialogueTree) -> void
 	npc_name = p_name
 	dialogue = p_dialogue
 	queue_redraw()
+
+func get_dialogue_for_state(state: WorldState) -> DialogueTree:
+	if state != null:
+		for entry in conditional_dialogues:
+			var cond: EventCondition = entry.get("condition")
+			if cond == null or cond.evaluate(state):
+				return entry.get("dialogue")
+
+	return dialogue
 
 func get_collision_box() -> Rect2:
 	return FieldBody.box_for_sprite(position)
