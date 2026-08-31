@@ -2,7 +2,7 @@
 
 **Updated:** 2026-08-31
 **Branch:** `main` — PRs #1 through #14 merged fast-forward; history is linear.
-**Status:** the battle is playable end to end, field mode is fully verified, and interaction & dialogue (sub-project 2) is complete across all seven tasks — `godot scenes/field.tscn` boots a walkable world with NPC interaction, dialogue box UI, choice branching, and speaker facing. 191 tests passing, exit 0, enforced by CI on every push and pull request.
+**Status:** the battle is playable end to end, field mode is fully verified, interaction & dialogue (sub-project 2) is complete, and events & world state (sub-project 3) is complete across all six tasks — `godot scenes/field.tscn` boots a walkable world with trigger zones, map tile mutations, dialogue branching on world flags, and NPC state changes. 201 tests passing, exit 0, enforced by CI on every push and pull request.
 
 A grid-tactics RPG vertical slice in Godot 4.7.2 / GDScript.
 
@@ -32,6 +32,7 @@ SORTIE_SHOT=out.png SORTIE_WALK=0,6,3,4 SORTIE_WAIT=0.55 godot --quit-after 600 
 SORTIE_SHOT=out.png SORTIE_FIELD_WALK=right SORTIE_WAIT=0.40 godot scenes/field.tscn --quit-after 600 # capture field walk
 SORTIE_SHOT=out.png SORTIE_FIELD_WALK=right SORTIE_FIELD_TURN=down,0.40 SORTIE_WAIT=0.42 godot scenes/field.tscn --quit-after 600 # capture field turn
 SORTIE_SHOT=out.png SORTIE_FIELD_INTERACT=true SORTIE_WAIT=0.10 godot scenes/field.tscn --quit-after 300 # capture dialogue interaction
+SORTIE_SHOT=out.png SORTIE_FIELD_TRIGGER=true SORTIE_WAIT=0.10 godot scenes/field.tscn --quit-after 300 # capture trigger event execution
 
 It lives in `scenes/screenshot_probe.gd`. It is a development affordance rather
 than a feature, and it stays: it is how every visual claim in this project was
@@ -85,7 +86,7 @@ If either produces output, something has leaked across the boundary.
 
 ### Verification
 
-- 191 tests. The rules engine is covered exhaustively; the view state machine has its own suite (`test_battle_flow.gd`), and the input layer above it has another (`test_input.gd`).
+- 201 tests. The rules engine is covered exhaustively; the view state machine has its own suite (`test_battle_flow.gd`), and the input layer above it has another (`test_input.gd`).
 - **Input is driven by real events.** `test_input.gd` pushes synthesized `InputEventKey`, `InputEventMouseMotion`, and `InputEventMouseButton` objects through `get_viewport().push_input()`, so assertions travel the whole chain: event → viewport → `_unhandled_input` or GUI focus → cursor → state machine. A full turn is played on the keyboard alone, and an attack is ordered from a keypress through to a resolved exchange. Buttons fire on *release*, so a realistic tap sends both halves.
 - **CI** — `.github/workflows/tests.yaml` installs the pinned Godot 4.7.2 Linux build, rebuilds the import cache, and runs the suite on every push to `main` and every pull request. Until this existed, the tests had only ever run on one laptop.
 - A headless auto-battle harness plays the real scenario to completion with both sides on autopilot: **30 victories / 10 defeats / 0 unresolved across 40 seeds**, averaging 9.3 team-turns. Proves both endings are reachable and that seeds replay identically.
@@ -139,8 +140,31 @@ Field interaction and branching dialogue. **Interaction & dialogue is #2**, and 
 
 **It runs.** Approaching an NPC on the field and pressing `ui_accept` initiates dialogue. The player freezes, the NPC turns to face the player, and a bottom dialogue box displays speaker name, text pages, and interactive branching choices navigated via keyboard or mouse. Closing the dialogue unfreezes the player.
 
-Sub-projects 3 through 6 of story mode — events and world state, mode flow and battle handoff, save/load, content — each need their own spec. `run/main_scene` stays `battle.tscn` until sub-project 4.
+Sub-projects 4 through 6 of story mode — mode flow and battle handoff, save/load, content — each need their own spec. `run/main_scene` stays `battle.tscn` until sub-project 4.
 
+---
+
+## Events & world state — done
+
+World state flag/variable store, trigger engine (step and interaction triggers), dynamic tile mutation, and state-dependent conditional dialogue. **Events & world state is #3**, and all six tasks are complete:
+
+- Spec: `docs/superpowers/specs/2026-08-31-sortie-events-design.md`
+- Plan: `docs/superpowers/plans/2026-08-31-sortie-events.md`
+
+| Task | State |
+|---|---|
+| 1. `WorldState` and `EventCondition` | Done |
+| 2. `EventAction`, `EventTrigger`, and `TriggerRegistry` | Done |
+| 3. Conditional dialogue selection | Done |
+| 4. Dynamic tile mutation in `FieldMap` / `FieldView` | Done |
+| 5. Field step & interact event wiring | Done |
+| 6. Visual verification and handoff update | Done |
+
+201 tests passing.
+
+**It runs.** Stepping onto trigger tiles fires configured actions (flag mutation, dialogue, tile alterations). Interacting with objects can update flags and mutate map terrain dynamically. NPCs evaluate world flags to offer branching dialogue trees or updated conversations based on story progress.
+
+Sub-projects 4 through 6 of story mode — mode flow and battle handoff, save/load, content — each need their own spec. `run/main_scene` stays `battle.tscn` until sub-project 4.
 ---
 
 ## Not done — pick up here
@@ -230,6 +254,11 @@ Kept because the shapes recur, and each was patched back into the plan so it doe
 | `core/dialogue_choice.gd` / `dialogue_node.gd` / `dialogue_tree.gd` | **Dialogue.** Graph structure for dialogue nodes and branching choices |
 | `core/dialogue_runner.gd` | **Dialogue.** Headless state machine traversing dialogue trees |
 | `core/interaction.gd` | **Dialogue.** Interaction probe box geometry for facing checks |
+| `core/world_state.gd` | **Events.** Key-value story state container supporting boolean flags, integer counts, and string states |
+| `core/event_condition.gd` | **Events.** Pure comparison evaluations (equality and inequalities) against a `WorldState` |
+| `core/event_action.gd` | **Events.** Atomic trigger actions (flag mutation, dialogue triggers, tile changes) |
+| `core/event_trigger.gd` | **Events.** Step and interact trigger definitions with spatial cells, conditions, and actions |
+| `core/trigger_registry.gd` | **Events.** Spatial index mapping grid cells to step and interact triggers |
 | `scenes/battle.gd` | **The bridge.** Input → core → view, and the view state machine |
 | `scenes/grid_view.gd` | Terrain and overlay rendering |
 | `scenes/field_view.gd` | **Field mode.** Draws a `FieldMap` with the battle's terrain art; `layers_for()` holds every decision so `_draw` holds none |
@@ -244,5 +273,5 @@ Kept because the shapes recur, and each was patched back into the plan so it doe
 | `ui/` | Action menu, forecast panel, damage numbers, turn banner, result screen, dialogue box |
 | `assets/lpc/` | Characters and terrain, CC-BY-SA — attribution files must not be deleted |
 | `assets/audio/` | Three CC0 combat sounds, with `CREDITS.md` recording which original became which clip |
-| `test/` | 191 tests; `test_full_battle.gd` is the headless auto-battle harness and `test_input.gd` drives the game with real input events |
+| `test/` | 201 tests; `test_full_battle.gd` is the headless auto-battle harness and `test_input.gd` drives the game with real input events |
 | `docs/superpowers/specs/` + `plans/` | The design spec and the implementation plan it was built from |

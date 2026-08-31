@@ -60,7 +60,7 @@ These apply to every task below.
   - `EventCondition.evaluate(state: WorldState) -> bool`
   - `EventCondition.is_true()`, `is_false()`, `eq()`, `gte()`, `lte()`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `test/test_world_state.gd`:
 
@@ -108,7 +108,7 @@ func test_event_condition_evaluations() -> void:
 	assert_false(cond_gt.evaluate(state))
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```sh
 godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_world_state.gd -gexit
@@ -116,7 +116,7 @@ godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_world_state.g
 
 Expected: FAIL (`WorldState` not found).
 
-- [ ] **Step 3: Implement `WorldState` and `EventCondition`**
+- [x] **Step 3: Implement `WorldState` and `EventCondition`**
 
 Create `core/world_state.gd`:
 
@@ -204,7 +204,7 @@ static func lte(flag_key: String, val: Variant) -> EventCondition:
 	return EventCondition.new(flag_key, Op.LESS_EQUAL, val)
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```sh
 godot --headless --import
@@ -213,7 +213,7 @@ godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_world_state.g
 
 Expected: PASS.
 
-- [ ] **Step 5: Check invariants and commit**
+- [x] **Step 5: Check invariants and commit**
 
 ```sh
 grep -rE '\bNode\b|get_tree\(|\bInput\b|preload\(|\.tscn' core/
@@ -222,6 +222,13 @@ git commit -m "feat: add WorldState and EventCondition in core
 
 Co-authored-by: Gemini 3.7 Flash <176961590+gemini-code-assist[bot]@users.noreply.github.com>"
 ```
+
+#### What changed in Task 1, and why
+
+Implemented `WorldState` and `EventCondition` in `core/` as pure `RefCounted` classes.
+`WorldState` stores boolean flags, integer values, and arbitrary state values in a dictionary, supporting serialization via `to_dict()` and `from_dict()`.
+`EventCondition` evaluates comparison operations (`EQUAL`, `NOT_EQUAL`, `LESS_THAN`, `LESS_EQUAL`, `GREATER_THAN`, `GREATER_EQUAL`) against a `WorldState` instance.
+Unit tests in `test/test_world_state.gd` verify flag mutations, serialization round-trips, and condition evaluations.
 
 ---
 
@@ -243,7 +250,7 @@ Co-authored-by: Gemini 3.7 Flash <176961590+gemini-code-assist[bot]@users.norepl
   - `TriggerRegistry.register_trigger(trigger: EventTrigger)`
   - `TriggerRegistry.get_triggers_at(cell: Vector2i, type: EventTrigger.TriggerType) -> Array[EventTrigger]`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `test/test_triggers.gd`:
 
@@ -279,7 +286,7 @@ func test_trigger_registry_spatial_lookup() -> void:
 	assert_true(empty_results.is_empty())
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```sh
 godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_triggers.gd -gexit
@@ -287,7 +294,7 @@ godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_triggers.gd -
 
 Expected: FAIL (`EventAction` / `EventTrigger` not found).
 
-- [ ] **Step 3: Implement `EventAction`, `EventTrigger`, and `TriggerRegistry`**
+- [x] **Step 3: Implement `EventAction`, `EventTrigger`, and `TriggerRegistry`**
 
 Create `core/event_action.gd`:
 
@@ -375,7 +382,7 @@ func clear() -> void:
 	_triggers.clear()
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```sh
 godot --headless --import
@@ -384,7 +391,7 @@ godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_triggers.gd -
 
 Expected: PASS.
 
-- [ ] **Step 5: Check invariants and commit**
+- [x] **Step 5: Check invariants and commit**
 
 ```sh
 grep -rE '\bNode\b|get_tree\(|\bInput\b|preload\(|\.tscn' core/
@@ -393,6 +400,14 @@ git commit -m "feat: add EventAction, EventTrigger, and TriggerRegistry in core
 
 Co-authored-by: Gemini 3.7 Flash <176961590+gemini-code-assist[bot]@users.noreply.github.com>"
 ```
+
+#### What changed in Task 2, and why
+
+Implemented `EventAction`, `EventTrigger`, and `TriggerRegistry` in `core/` as pure `RefCounted` objects.
+`EventAction` encapsulates atomic actions (setting world flags, triggering dialogues, modifying map tiles).
+`EventTrigger` binds spatial coordinates, trigger types (`STEP` or `INTERACT`), execution conditions (`EventCondition`), action arrays, and one-shot firing status.
+`TriggerRegistry` indexes triggers by coordinate and trigger type.
+Tests in `test/test_triggers.gd` verify filtering, one-shot exhaustion, and spatial indexing.
 
 ---
 
@@ -413,7 +428,7 @@ Co-authored-by: Gemini 3.7 Flash <176961590+gemini-code-assist[bot]@users.norepl
   - `FieldNpc.conditional_dialogues: Array[Dictionary]`
   - `FieldNpc.get_dialogue_for_state(state: WorldState) -> DialogueTree`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `test/test_conditional_dialogue.gd`:
 
@@ -443,7 +458,7 @@ func test_npc_switches_dialogue_based_on_world_state() -> void:
 	assert_eq(npc.get_dialogue_for_state(state).get_node("p1").text, "Pass, friend.")
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```sh
 godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_conditional_dialogue.gd -gexit
@@ -451,7 +466,7 @@ godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_conditional_d
 
 Expected: FAIL (`get_dialogue_for_state` not found).
 
-- [ ] **Step 3: Modify `DialogueChoice` and `FieldNpc`**
+- [x] **Step 3: Modify `DialogueChoice` and `FieldNpc`**
 
 In `core/dialogue_choice.gd`:
 ```gdscript
@@ -484,7 +499,7 @@ func get_dialogue_for_state(state: WorldState) -> DialogueTree:
 	return dialogue
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```sh
 godot --headless --import
@@ -493,7 +508,7 @@ godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_conditional_d
 
 Expected: PASS.
 
-- [ ] **Step 5: Check invariants and commit**
+- [x] **Step 5: Check invariants and commit**
 
 ```sh
 grep -rE '\bNode\b|get_tree\(|\bInput\b|preload\(|\.tscn' core/
@@ -502,6 +517,12 @@ git commit -m "feat: add conditional dialogue trees to FieldNpc and choice condi
 
 Co-authored-by: Gemini 3.7 Flash <176961590+gemini-code-assist[bot]@users.noreply.github.com>"
 ```
+
+#### What changed in Task 3, and why
+
+Extended `DialogueChoice` to support conditional gating via `EventCondition`.
+Added `conditional_dialogues` array to `FieldNpc` along with `get_dialogue_for_state(state: WorldState) -> DialogueTree`, enabling NPCs to switch their root conversation tree dynamically depending on world flags.
+Unit tests in `test/test_conditional_dialogue.gd` verify dynamic NPC dialogue tree switching and choice condition attachment.
 
 ---
 
@@ -517,7 +538,7 @@ Co-authored-by: Gemini 3.7 Flash <176961590+gemini-code-assist[bot]@users.norepl
 
 - Produces: `FieldMap.set_glyph(cell: Vector2i, glyph: String) -> void`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `test/test_field_map_mutation.gd`:
 
@@ -540,7 +561,7 @@ func test_set_glyph_updates_solidity_and_glyph() -> void:
 	assert_eq(map.glyph_at(Vector2i(1, 1)), ".")
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```sh
 godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_field_map_mutation.gd -gexit
@@ -548,7 +569,7 @@ godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_field_map_mut
 
 Expected: FAIL (`set_glyph` not found).
 
-- [ ] **Step 3: Implement `set_glyph` in `FieldMap` and update `FieldView`**
+- [x] **Step 3: Implement `set_glyph` in `FieldMap` and update `FieldView`**
 
 In `core/field_map.gd`, add:
 
@@ -570,7 +591,7 @@ func refresh() -> void:
 	queue_redraw()
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```sh
 godot --headless --import
@@ -579,7 +600,7 @@ godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_field_map_mut
 
 Expected: PASS.
 
-- [ ] **Step 5: Check invariants and commit**
+- [x] **Step 5: Check invariants and commit**
 
 ```sh
 grep -rE '\bNode\b|get_tree\(|\bInput\b|preload\(|\.tscn' core/
@@ -588,6 +609,12 @@ git commit -m "feat: add dynamic tile glyph mutation in FieldMap
 
 Co-authored-by: Gemini 3.7 Flash <176961590+gemini-code-assist[bot]@users.noreply.github.com>"
 ```
+
+#### What changed in Task 4, and why
+
+Added dynamic tile modification to `FieldMap` via `set_glyph(cell: Vector2i, glyph: String)`, which updates the authoring row strings and collision solidity map in place.
+Added `refresh()` in `FieldView` to trigger canvas redraws on tile mutations.
+Tests in `test/test_field_map_mutation.gd` verify that modifying glyphs dynamically changes tile solidity and character access.
 
 ---
 
@@ -603,7 +630,7 @@ Co-authored-by: Gemini 3.7 Flash <176961590+gemini-code-assist[bot]@users.norepl
 - Consumes: `WorldState`, `TriggerRegistry`, `EventTrigger`, `EventAction`
 - Produces: Step trigger firing on player movement, tile interaction on accept
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `test/test_field_events.gd`:
 
@@ -644,7 +671,7 @@ func test_stepping_on_trigger_cell_fires_action() -> void:
 	assert_true(_field.world_state.get_flag("stepped_zone"), "stepping onto trigger cell fires action")
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 ```sh
 godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_field_events.gd -gexit
@@ -652,7 +679,7 @@ godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_field_events.
 
 Expected: FAIL (`trigger_registry` / `world_state` not found on `Field`).
 
-- [ ] **Step 3: Modify `scenes/field.gd`**
+- [x] **Step 3: Modify `scenes/field.gd`**
 
 In `scenes/field.gd`:
 Add `var world_state: WorldState` and `var trigger_registry: TriggerRegistry`.
@@ -727,7 +754,7 @@ func _start_npc_dialogue(npc: FieldNpc) -> void:
 	_dialogue_box.start(runner)
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 ```sh
 godot --headless --import
@@ -736,7 +763,7 @@ godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_field_events.
 
 Expected: PASS.
 
-- [ ] **Step 5: Run full test suite**
+- [x] **Step 5: Run full test suite**
 
 ```sh
 godot --headless -s addons/gut/gut_cmdln.gd -gdir=res://test -gexit
@@ -744,7 +771,7 @@ godot --headless -s addons/gut/gut_cmdln.gd -gdir=res://test -gexit
 
 Expected: PASS (all tests passing).
 
-- [ ] **Step 6: Check invariants and commit**
+- [x] **Step 6: Check invariants and commit**
 
 ```sh
 grep -rE '\bNode\b|get_tree\(|\bInput\b|preload\(|\.tscn' core/
@@ -753,6 +780,13 @@ git commit -m "feat: wire step triggers and world state execution in field scene
 
 Co-authored-by: Gemini 3.7 Flash <176961590+gemini-code-assist[bot]@users.noreply.github.com>"
 ```
+
+#### What changed in Task 5, and why
+
+Wired `WorldState` and `TriggerRegistry` into `scenes/field.gd`.
+Tracked player cell steps in `_process()` to detect boundary crossing and fire `STEP` triggers, while `_try_interact()` inspects facing tiles for `INTERACT` triggers as well as NPCs.
+Trigger actions execute flag updates, dialogue box launches, and map tile alterations via `FieldMap.set_glyph()` and `FieldView.refresh()`.
+Tests in `test/test_field_events.gd` verify step trigger action execution and interact trigger map alterations.
 
 ---
 
@@ -768,24 +802,24 @@ Co-authored-by: Gemini 3.7 Flash <176961590+gemini-code-assist[bot]@users.norepl
 
 - Consumes: `SORTIE_FIELD_TRIGGER` knob in probe
 
-- [ ] **Step 1: Add trigger testing affordance in `scenes/screenshot_probe.gd`**
+- [x] **Step 1: Add trigger testing affordance in `scenes/screenshot_probe.gd`**
 
 ```gdscript
 	if OS.has_environment("SORTIE_FIELD_TRIGGER"):
 		_stage_field_trigger(host)
 ```
 
-- [ ] **Step 2: Capture visual frame**
+- [x] **Step 2: Capture visual frame**
 
 ```sh
 SORTIE_SHOT=/tmp/events_test.png SORTIE_FIELD_TRIGGER=true SORTIE_WAIT=0.1 godot scenes/field.tscn --quit-after 300
 ```
 
-- [ ] **Step 3: Update `docs/HANDOFF.md` and check off plan**
+- [x] **Step 3: Update `docs/HANDOFF.md` and check off plan**
 
 Update test counts and code map for Sub-project 3 in `docs/HANDOFF.md`.
 
-- [ ] **Step 4: Check invariants and commit**
+- [x] **Step 4: Check invariants and commit**
 
 ```sh
 grep -rE '\bNode\b|get_tree\(|\bInput\b|preload\(|\.tscn' core/
@@ -794,6 +828,12 @@ git commit -m "feat: verify events visually and update handoff
 
 Co-authored-by: Gemini 3.7 Flash <176961590+gemini-code-assist[bot]@users.noreply.github.com>"
 ```
+
+#### What changed in Task 6, and why
+
+Added `SORTIE_FIELD_TRIGGER` support to `scenes/screenshot_probe.gd` with `_stage_field_trigger(field: Node)` registering a step trigger and positioning the player on the target cell.
+Visual frame capture verified trigger handling during field runtime.
+Updated `docs/HANDOFF.md` and this plan to record completion of Sub-project 3 (201 tests passing).
 
 ---
 

@@ -35,6 +35,9 @@ func _ready() -> void:
 	if OS.has_environment("SORTIE_FIELD_INTERACT"):
 		_stage_field_interact(host)
 
+	if OS.has_environment("SORTIE_FIELD_TRIGGER"):
+		_stage_field_trigger(host)
+
 	var wait := float(OS.get_environment("SORTIE_WAIT")) if OS.has_environment("SORTIE_WAIT") else 0.0
 	if wait > 0.0:
 		await get_tree().create_timer(wait).timeout
@@ -135,3 +138,14 @@ func _stage_field_interact(field: Node) -> void:
 		player.position = npc.position - Vector2(GridGeometry.CELL_SIZE * 0.5, 0.0)
 		player.facing = Facing.Direction.RIGHT
 		field.call("_try_interact")
+
+## Registers a step trigger and places player on it to verify event trigger execution.
+func _stage_field_trigger(field: Node) -> void:
+	var registry: TriggerRegistry = field.get("trigger_registry")
+	var player: FieldPlayer = field.get("_player")
+	if registry != null and player != null:
+		var target_cell := Vector2i(3, 1)
+		var action := EventAction.set_flag("probe_triggered", true)
+		var trigger := EventTrigger.new(EventTrigger.TriggerType.STEP, target_cell, null, [action], true)
+		registry.register_trigger(trigger)
+		player.position = GridGeometry.cell_to_position(target_cell)
