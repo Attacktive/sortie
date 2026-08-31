@@ -28,12 +28,25 @@ static func from_ascii(rows: PackedStringArray) -> FieldMap:
 
 	return map
 
+func is_in_bounds(cell: Vector2i) -> bool:
+	return cell.x >= 0 and cell.y >= 0 and cell.x < size.x and cell.y < size.y
+
 ## Outside the map counts as solid, so the edge of the world needs no special case anywhere else.
 func is_solid(cell: Vector2i) -> bool:
-	if cell.x < 0 or cell.y < 0 or cell.x >= size.x or cell.y >= size.y:
+	if not is_in_bounds(cell):
 		return true
 
-	return _glyphs.has(cell)
+	if not _glyphs.has(cell):
+		return false
+
+	return _glyphs[cell] != WALKABLE
+
+## Dynamically modifies a tile glyph at runtime and updates its collision solidity.
+func set_glyph(cell: Vector2i, glyph: String) -> void:
+	if not is_in_bounds(cell) or glyph.is_empty():
+		return
+
+	_glyphs[cell] = glyph.substr(0, 1)
 
 ## What was authored at this cell. Empty outside the map, or on walkable ground.
 func glyph_at(cell: Vector2i) -> String:

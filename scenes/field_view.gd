@@ -29,6 +29,9 @@ func _ready() -> void:
 
 	queue_redraw()
 
+func refresh() -> void:
+	queue_redraw()
+
 ## Everything that goes on one cell, bottom first.
 ## Grass always, then the solid tile over it rather than instead of it, so a tree keeps its transparent edges.
 ##
