@@ -6,6 +6,19 @@ extends CanvasLayer
 signal finished
 signal choice_selected(index: int)
 
+const SPEAKER_FONT_SIZE := 16
+
+## The choices deliberately match the body text rather than sitting a size below it, so a choice reads as part of the page it is on rather than as a control bolted underneath.
+const BODY_FONT_SIZE := 15
+
+const SPEAKER_COLOR := Color(1.0, 0.85, 0.3)
+const CHOICE_COLOR := Color(0.75, 0.8, 0.85)
+const SELECTED_CHOICE_COLOR := Color(1.0, 0.9, 0.5)
+
+## Both three characters wide, so every choice's text starts at the same x and the cursor moving down the list does not shove the lines sideways.
+const CHOICE_CURSOR := " > "
+const CHOICE_INDENT := "   "
+
 var _runner: DialogueRunner = null
 var _selected_choice: int = 0
 
@@ -43,18 +56,19 @@ func _build_ui() -> void:
 	_panel.add_child(layout)
 
 	_speaker_label = Label.new()
-	_speaker_label.add_theme_font_size_override("font_size", 16)
-	_speaker_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
+	_speaker_label.add_theme_font_size_override("font_size", SPEAKER_FONT_SIZE)
+	_speaker_label.add_theme_color_override("font_color", SPEAKER_COLOR)
 	layout.add_child(_speaker_label)
 
 	_text_label = Label.new()
-	_text_label.add_theme_font_size_override("font_size", 15)
+	_text_label.add_theme_font_size_override("font_size", BODY_FONT_SIZE)
 	_text_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	layout.add_child(_text_label)
 
 	_choices_container = VBoxContainer.new()
 	_choices_container.add_theme_constant_override("separation", 4)
 	layout.add_child(_choices_container)
+
 func start(runner: DialogueRunner) -> void:
 	_runner = runner
 	_selected_choice = 0
@@ -80,19 +94,13 @@ func _refresh() -> void:
 	if node.has_choices():
 		_selected_choice = clampi(_selected_choice, 0, node.choices.size() - 1)
 		for i in node.choices.size():
-			var choice := node.choices[i]
 			var label := Label.new()
-			label.add_theme_font_size_override("font_size", 15)
-			var is_sel := (i == _selected_choice)
-			var prefix := " > " if is_sel else "   "
-			label.text = prefix + choice.text
-			if is_sel:
-				label.add_theme_color_override("font_color", Color(1.0, 0.9, 0.5))
-			else:
-				label.add_theme_color_override("font_color", Color(0.75, 0.8, 0.85))
+			label.add_theme_font_size_override("font_size", BODY_FONT_SIZE)
+			_style_choice(label, node.choices[i], i == _selected_choice)
 
 			_choices_container.add_child(label)
 			_choice_labels.append(label)
+
 ## Removed before being freed, because a queue_free'd node stays in the tree until the end of the frame and the replacements go in during this one: freeing alone lays out both pages' choices at once.
 func _clear_choices() -> void:
 	for child in _choices_container.get_children():
@@ -133,17 +141,22 @@ func _update_choice_highlight() -> void:
 		return
 
 	for i in _choice_labels.size():
-		var choice := node.choices[i]
-		var is_sel := (i == _selected_choice)
-		var prefix := " > " if is_sel else "   "
-		_choice_labels[i].text = prefix + choice.text
-		if is_sel:
-			_choice_labels[i].add_theme_color_override("font_color", Color(1.0, 0.9, 0.5))
-		else:
-			_choice_labels[i].add_theme_color_override("font_color", Color(0.75, 0.8, 0.85))
+		_style_choice(_choice_labels[i], node.choices[i], i == _selected_choice)
+
+## The one place a choice's cursor and color are decided, called both when the list is built and when the selection moves through it.
+func _style_choice(label: Label, choice: DialogueChoice, is_selected: bool) -> void:
+	if is_selected:
+		label.text = CHOICE_CURSOR + choice.text
+		label.add_theme_color_override("font_color", SELECTED_CHOICE_COLOR)
+		return
+
+	label.text = CHOICE_INDENT + choice.text
+	label.add_theme_color_override("font_color", CHOICE_COLOR)
+
 func _unhandled_input(event: InputEvent) -> void:
 	if not visible:
 		return
+
 	if event.is_action_pressed("ui_down"):
 		handle_input_action("ui_down")
 		get_viewport().set_input_as_handled()
