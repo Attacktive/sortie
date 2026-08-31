@@ -25,14 +25,21 @@ const NPC_SHEET := "res://assets/lpc/units/mage_walkcycle.png"
 
 const CAMERA_OFFSET := Vector2(GridGeometry.CELL_SIZE, GridGeometry.CELL_SIZE) * 0.5
 
+var world_state: WorldState = null
+var trigger_registry: TriggerRegistry = null
+
 var _map: FieldMap = null
 var _view: FieldView = null
 var _player: FieldPlayer = null
 var _camera: Camera2D = null
 var _npc: FieldNpc = null
 var _dialogue_box: DialogueBox = null
+var _last_player_cell: Vector2i = Vector2i(-1, -1)
 
 func _ready() -> void:
+	world_state = WorldState.new()
+	trigger_registry = TriggerRegistry.new()
+
 	_map = FieldMap.from_ascii(PackedStringArray(MAP))
 
 	_build_view()
@@ -40,6 +47,8 @@ func _ready() -> void:
 	_build_player()
 	_build_camera()
 	_build_dialogue_box()
+
+	_last_player_cell = GridGeometry.position_to_cell(_player.position + FieldBody.BOX_OFFSET)
 
 	if OS.has_environment("SORTIE_SHOT"):
 		add_child(load("res://scenes/screenshot_probe.gd").new())
@@ -95,6 +104,15 @@ func _build_dialogue_box() -> void:
 	_dialogue_box.finished.connect(_on_dialogue_finished)
 	add_child(_dialogue_box)
 
+func _process(_delta: float) -> void:
+	if _player == null:
+		return
+
+	var current_cell := GridGeometry.position_to_cell(_player.position + FieldBody.BOX_OFFSET)
+	if current_cell != _last_player_cell:
+		_last_player_cell = current_cell
+		_check_step_triggers(current_cell)
+
 func _unhandled_input(event: InputEvent) -> void:
 	if _dialogue_box != null and _dialogue_box.visible:
 		return
@@ -103,18 +121,61 @@ func _unhandled_input(event: InputEvent) -> void:
 		_try_interact()
 
 func _try_interact() -> void:
-	if _player == null or _npc == null:
+	if _player == null:
 		return
 
 	var probe := Interaction.probe_box(FieldBody.box_for_sprite(_player.position), _player.facing)
-	if probe.intersects(_npc.get_collision_box()):
+
+	if _npc != null and probe.intersects(_npc.get_collision_box()):
 		_start_npc_dialogue(_npc)
+		return
+
+	if _map != null and trigger_registry != null:
+		var cells := _map.cells_in_box(probe)
+		for cell in cells:
+			var triggers := trigger_registry.get_triggers_at(cell, EventTrigger.TriggerType.INTERACT)
+			for trig in triggers:
+				if trig.can_fire(world_state):
+					_execute_trigger(trig)
+					return
+
+func _check_step_triggers(cell: Vector2i) -> void:
+	if trigger_registry == null or world_state == null:
+		return
+
+	var triggers := trigger_registry.get_triggers_at(cell, EventTrigger.TriggerType.STEP)
+	for trig in triggers:
+		if trig.can_fire(world_state):
+			_execute_trigger(trig)
+
+func _execute_trigger(trig: EventTrigger) -> void:
+	trig.fired = true
+	for action in trig.actions:
+		_execute_action(action)
+
+func _execute_action(action: EventAction) -> void:
+	match action.type:
+		EventAction.Type.SET_FLAG:
+			world_state.set_flag(action.params.get("key"), action.params.get("value"))
+		EventAction.Type.SHOW_DIALOGUE:
+			var tree: DialogueTree = action.params.get("dialogue")
+			if tree != null:
+				_player.frozen = true
+				_dialogue_box.start(DialogueRunner.new(tree))
+		EventAction.Type.MODIFY_TILE:
+			var cell: Vector2i = action.params.get("cell", Vector2i(-1, -1))
+			var glyph: String = action.params.get("glyph", "")
+			if _map != null and _map.is_in_bounds(cell):
+				_map.set_glyph(cell, glyph)
+				if _view != null:
+					_view.refresh()
 
 func _start_npc_dialogue(npc: FieldNpc) -> void:
 	_player.frozen = true
 	npc.face_toward(_player.position)
 
-	var runner := DialogueRunner.new(npc.dialogue)
+	var dialogue_tree := npc.get_dialogue_for_state(world_state)
+	var runner := DialogueRunner.new(dialogue_tree)
 	_dialogue_box.start(runner)
 
 func _on_dialogue_finished() -> void:

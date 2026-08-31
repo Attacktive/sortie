@@ -73,3 +73,19 @@ func solid_tiles_overlapping(box: Rect2) -> Array[Vector2i]:
 				found.append(candidate)
 
 	return found
+
+## Every in-bounds cell the box touches.
+func cells_in_box(box: Rect2) -> Array[Vector2i]:
+	var found: Array[Vector2i] = []
+	var cell := float(GridGeometry.CELL_SIZE)
+
+	var first := Vector2i(floori(box.position.x / cell), floori(box.position.y / cell))
+	var last := Vector2i(floori((box.end.x - 0.001) / cell), floori((box.end.y - 0.001) / cell))
+
+	for y in range(first.y, last.y + 1):
+		for x in range(first.x, last.x + 1):
+			var candidate := Vector2i(x, y)
+			if is_in_bounds(candidate):
+				found.append(candidate)
+
+	return found
