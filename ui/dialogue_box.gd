@@ -25,23 +25,36 @@ func _build_ui() -> void:
 	_panel.anchor_right = 0.95
 	_panel.anchor_top = 0.68
 	_panel.anchor_bottom = 0.95
+
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.08, 0.1, 0.12, 0.92)
+	style.set_border_width_all(2)
+	style.border_color = Color(0.35, 0.4, 0.5, 0.95)
+	style.set_corner_radius_all(6)
+	style.content_margin_left = 18.0
+	style.content_margin_top = 14.0
+	style.content_margin_right = 18.0
+	style.content_margin_bottom = 14.0
+	_panel.add_theme_stylebox_override("panel", style)
 	add_child(_panel)
 
 	var layout := VBoxContainer.new()
-	layout.add_theme_constant_override("separation", 6)
+	layout.add_theme_constant_override("separation", 8)
 	_panel.add_child(layout)
 
 	_speaker_label = Label.new()
+	_speaker_label.add_theme_font_size_override("font_size", 16)
 	_speaker_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
 	layout.add_child(_speaker_label)
 
 	_text_label = Label.new()
+	_text_label.add_theme_font_size_override("font_size", 15)
 	_text_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	layout.add_child(_text_label)
 
 	_choices_container = VBoxContainer.new()
+	_choices_container.add_theme_constant_override("separation", 4)
 	layout.add_child(_choices_container)
-
 func start(runner: DialogueRunner) -> void:
 	_runner = runner
 	_selected_choice = 0

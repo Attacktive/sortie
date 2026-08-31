@@ -132,6 +132,6 @@ func _stage_field_interact(field: Node) -> void:
 	var player: FieldPlayer = field.get("_player")
 	var npc: FieldNpc = field.get("_npc")
 	if player != null and npc != null:
-		player.position = npc.position - Vector2(GridGeometry.CELL_SIZE * 0.75, 0.0)
+		player.position = npc.position - Vector2(GridGeometry.CELL_SIZE * 0.5, 0.0)
 		player.facing = Facing.Direction.RIGHT
 		field.call("_try_interact")
