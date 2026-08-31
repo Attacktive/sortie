@@ -21,8 +21,14 @@ func evaluate(state: WorldState) -> bool:
 	var val = state.get_flag(key)
 	match op:
 		Op.EQUAL:
+			if target_value is bool and val == null:
+				return target_value == false
+
 			return val == target_value
 		Op.NOT_EQUAL:
+			if target_value is bool and val == null:
+				return target_value != false
+
 			return val != target_value
 		Op.LESS_THAN:
 			return val != null and val < target_value

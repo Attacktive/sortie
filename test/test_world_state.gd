@@ -49,4 +49,8 @@ func test_event_condition_evaluations() -> void:
 	assert_false(cond_gt.evaluate(state))
 	assert_true(cond_lt.evaluate(state))
 	assert_true(cond_neq.evaluate(state))
+	assert_true(EventCondition.is_false('unset_flag').evaluate(state))
+	assert_false(EventCondition.is_true('unset_flag').evaluate(state))
+	assert_true(EventCondition.new('unset_flag', EventCondition.Op.NOT_EQUAL, true).evaluate(state))
+	assert_false(EventCondition.new('unset_flag', EventCondition.Op.NOT_EQUAL, false).evaluate(state))
 	assert_false(cond_true.evaluate(null))
