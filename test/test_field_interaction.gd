@@ -37,11 +37,16 @@ func test_facing_npc_and_pressing_accept_opens_dialogue_and_freezes_player() -> 
 	assert_true(player.frozen, "player freezes while dialogue is active")
 	assert_eq(npc.facing, Facing.Direction.DOWN, "NPC turns to face the player")
 
-	## Advance and finish dialogue
+	## Confirm first choice
 	_key(KEY_ENTER, true)
 	await get_tree().process_frame
 	_key(KEY_ENTER, false)
 	await get_tree().process_frame
 
+	## Advance past chosen page and finish dialogue
+	_key(KEY_ENTER, true)
+	await get_tree().process_frame
+	_key(KEY_ENTER, false)
+	await get_tree().process_frame
 	assert_false(dialogue_box.visible, "dialogue closes after last page")
 	assert_false(player.frozen, "player unfreezes after dialogue closes")

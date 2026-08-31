@@ -47,7 +47,7 @@ func _ready() -> void:
 	_build_player()
 	_build_camera()
 	_build_dialogue_box()
-
+	_build_triggers()
 	_last_player_cell = GridGeometry.position_to_cell(_player.position + FieldBody.BOX_OFFSET)
 
 	if OS.has_environment("SORTIE_SHOT"):
@@ -62,18 +62,45 @@ func _build_npc() -> void:
 	_npc = FieldNpc.new()
 	_npc.name = "FieldNpc"
 
-	var dialogue := DialogueTree.from_dict({
+	var default_dialogue := DialogueTree.from_dict({
 		"start": "greet",
 		"nodes": {
 			"greet": {
 				"speaker": "Mage",
-				"text": "Greetings, traveler. Keep your blade sharp.",
+				"text": "Greetings, traveler. If you walk east past the clearing, you will feel the mountain wind.",
+				"choices": [
+					{ "text": "I will explore.", "next": "explore" },
+					{ "text": "Who are you?", "next": "who" }
+				]
+			},
+			"explore": {
+				"speaker": "Mage",
+				"text": "Watch your step along the stone ruins.",
+				"next": ""
+			},
+			"who": {
+				"speaker": "Mage",
+				"text": "I watch over these ruins.",
 				"next": ""
 			}
 		}
 	})
 
-	_npc.setup(NPC_SHEET, "Mage", dialogue)
+	var post_breeze_dialogue := DialogueTree.from_dict({
+		"start": "greet2",
+		"nodes": {
+			"greet2": {
+				"speaker": "Mage",
+				"text": "You felt that chill from the east, didn't you? Something stirs in the forest.",
+				"next": ""
+			}
+		}
+	})
+
+	_npc.setup(NPC_SHEET, "Mage", default_dialogue)
+	_npc.conditional_dialogues = [
+		{ "condition": EventCondition.is_true("felt_breeze"), "dialogue": post_breeze_dialogue }
+	]
 	_npc.position = GridGeometry.cell_to_position(NPC_CELL)
 	add_child(_npc)
 
@@ -181,3 +208,26 @@ func _start_npc_dialogue(npc: FieldNpc) -> void:
 func _on_dialogue_finished() -> void:
 	if _player != null:
 		_player.frozen = false
+
+func _build_triggers() -> void:
+	var step_dialogue := DialogueTree.from_dict({
+		"start": "breeze",
+		"nodes": {
+			"breeze": {
+				"speaker": "World",
+				"text": "A cold mountain breeze rustles the trees to the east.",
+				"next": ""
+			}
+		}
+	})
+
+	var flag_action := EventAction.set_flag("felt_breeze", true)
+	var dialogue_action := EventAction.show_dialogue(step_dialogue)
+	var step_trig := EventTrigger.new(
+		EventTrigger.TriggerType.STEP,
+		Vector2i(8, 1),
+		EventCondition.is_false("felt_breeze"),
+		[flag_action, dialogue_action],
+		true
+	)
+	trigger_registry.register_trigger(step_trig)
