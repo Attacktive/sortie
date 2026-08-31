@@ -82,11 +82,17 @@ func _refresh() -> void:
 		for i in node.choices.size():
 			var choice := node.choices[i]
 			var label := Label.new()
-			var prefix := " > " if i == _selected_choice else "   "
+			label.add_theme_font_size_override("font_size", 15)
+			var is_sel := (i == _selected_choice)
+			var prefix := " > " if is_sel else "   "
 			label.text = prefix + choice.text
+			if is_sel:
+				label.add_theme_color_override("font_color", Color(1.0, 0.9, 0.5))
+			else:
+				label.add_theme_color_override("font_color", Color(0.75, 0.8, 0.85))
+
 			_choices_container.add_child(label)
 			_choice_labels.append(label)
-
 func _clear_choices() -> void:
 	for child in _choices_container.get_children():
 		child.queue_free()
@@ -125,13 +131,16 @@ func _update_choice_highlight() -> void:
 
 	for i in _choice_labels.size():
 		var choice := node.choices[i]
-		var prefix := " > " if i == _selected_choice else "   "
+		var is_sel := (i == _selected_choice)
+		var prefix := " > " if is_sel else "   "
 		_choice_labels[i].text = prefix + choice.text
-
+		if is_sel:
+			_choice_labels[i].add_theme_color_override("font_color", Color(1.0, 0.9, 0.5))
+		else:
+			_choice_labels[i].add_theme_color_override("font_color", Color(0.75, 0.8, 0.85))
 func _unhandled_input(event: InputEvent) -> void:
 	if not visible:
 		return
-
 	if event.is_action_pressed("ui_down"):
 		handle_input_action("ui_down")
 		get_viewport().set_input_as_handled()
