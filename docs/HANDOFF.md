@@ -116,7 +116,6 @@ Story mode decomposes into six sub-projects. **Field mode is #1**, and all eight
 
 **It runs.** `godot scenes/field.tscn` boots an 18x12 world with a character you can walk around it: free 8-directional movement, collision against walls and trees, sliding along a wall taken at an angle, a walk cycle, and a camera that follows and stops at the map's edge. It is wired into nothing — `run/main_scene` is still `battle.tscn`, and there is no way from either mode to the other until sub-project 4.
 
-
 ---
 
 ## Interaction & dialogue — done
@@ -141,6 +140,8 @@ Field interaction and branching dialogue. **Interaction & dialogue is #2**, and 
 **It runs.** Approaching an NPC on the field and pressing `ui_accept` initiates dialogue. The player freezes, the NPC turns to face the player, and a bottom dialogue box displays speaker name, text pages, and interactive branching choices navigated via keyboard or mouse. Closing the dialogue unfreezes the player.
 
 Sub-projects 3 through 6 of story mode — events and world state, mode flow and battle handoff, save/load, content — each need their own spec. `run/main_scene` stays `battle.tscn` until sub-project 4.
+
+---
 
 ## Not done — pick up here
 
