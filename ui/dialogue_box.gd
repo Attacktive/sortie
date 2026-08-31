@@ -93,9 +93,12 @@ func _refresh() -> void:
 
 			_choices_container.add_child(label)
 			_choice_labels.append(label)
+## Removed before being freed, because a queue_free'd node stays in the tree until the end of the frame and the replacements go in during this one: freeing alone lays out both pages' choices at once.
 func _clear_choices() -> void:
 	for child in _choices_container.get_children():
+		_choices_container.remove_child(child)
 		child.queue_free()
+
 	_choice_labels.clear()
 
 func handle_input_action(action: String) -> void:

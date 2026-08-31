@@ -56,3 +56,34 @@ func test_accept_advances_and_finishes() -> void:
 	_box.handle_input_action("ui_accept")
 	assert_false(_box.visible)
 	assert_signal_emitted(_box, "finished")
+
+## Freed nodes do not leave the tree until the end of the frame, so a box that only calls queue_free on the old labels holds both pages' choices at once for the frame in between, and the container lays out twice as many rows as there are choices.
+## get_choice_count reads the label array rather than the container, which is why this needs the container to see it.
+func test_choices_are_replaced_rather_than_stacked() -> void:
+	var tree := DialogueTree.from_dict({
+		"start": "first",
+		"nodes": {
+			"first": {
+				"speaker": "Guard",
+				"text": "Pass or halt?",
+				"choices": [
+					{ "text": "Pass", "next": "second" },
+					{ "text": "Halt", "next": "second" }
+				]
+			},
+			"second": {
+				"speaker": "Guard",
+				"text": "Which way?",
+				"choices": [
+					{ "text": "North", "next": "" },
+					{ "text": "South", "next": "" }
+				]
+			}
+		}
+	})
+
+	_box.start(DialogueRunner.new(tree))
+	_box.handle_input_action("ui_accept")
+
+	assert_eq(_box.get_choice_count(), 2)
+	assert_eq(_box._choices_container.get_child_count(), 2, "the page you just left is still on screen underneath the one you are looking at")
