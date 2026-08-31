@@ -11,6 +11,7 @@ const WALK_LOOP_FIRST := 1
 
 var map: FieldMap = null
 var facing: Facing.Direction = Facing.Direction.DOWN
+var frozen: bool = false
 
 var _sheet: Texture2D = null
 var _frame: int = 0
@@ -25,9 +26,9 @@ func setup(sheet_path: String) -> void:
 
 ## No map means no world to collide against, which happens for the frame between building the player and handing it one.
 func _process(delta: float) -> void:
-	if map == null:
+	if map == null or frozen:
+		_rest()
 		return
-
 	## Normalized, so a diagonal is not faster than an axis — and so an exact diagonal ties in Facing.from_motion, which is the tie it is written to keep the current facing through.
 	var direction := Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
 
