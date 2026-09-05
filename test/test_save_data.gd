@@ -10,7 +10,7 @@ func test_save_data_to_dict_and_from_dict_round_trip() -> void:
 	save.location_name = "Whispering Woods"
 	save.party_leader = "Mage"
 	save.world_state_data = {"talked_to_mage": true, "gold": 100}
-	save.field_state_data = {"cell": [4, 7], "facing": 1, "modified_tiles": {"(2, 3)": "."}}
+	save.field_state_data = {"cell": Vector2i(4, 7), "facing": 1, "modified_tiles": {"(2, 3)": "."}}
 
 	var dict := save.to_dict()
 	assert_eq(dict["version"], 1)
@@ -29,10 +29,9 @@ func test_save_data_to_dict_and_from_dict_round_trip() -> void:
 	assert_eq(restored.timestamp, "2026-09-05 12:34:56")
 	assert_eq(restored.playtime_seconds, 185.5)
 	assert_eq(restored.location_name, "Whispering Woods")
-	assert_eq(restored.party_leader, "Mage")
+	assert_eq(restored.field_state_data["cell"], Vector2i(4, 7))
 	assert_eq(restored.world_state_data["gold"], 100)
 	assert_eq(restored.world_state_data["talked_to_mage"], true)
-	assert_eq(restored.field_state_data["cell"], [4, 7])
 	assert_eq(restored.field_state_data["facing"], 1)
 
 

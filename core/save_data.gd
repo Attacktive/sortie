@@ -15,8 +15,11 @@ var party_leader: String = "Vanguard"
 var world_state_data: Dictionary = {}
 var field_state_data: Dictionary = {}
 
-
 func to_dict() -> Dictionary:
+	var field_copy := field_state_data.duplicate(true)
+	if field_copy.has("cell") and field_copy["cell"] is Vector2i:
+		field_copy["cell"] = [field_copy["cell"].x, field_copy["cell"].y]
+
 	return {
 		"version": version,
 		"slot_id": slot_id,
@@ -25,7 +28,7 @@ func to_dict() -> Dictionary:
 		"location_name": location_name,
 		"party_leader": party_leader,
 		"world_state": world_state_data.duplicate(true),
-		"field_state": field_state_data.duplicate(true),
+		"field_state": field_copy,
 	}
 
 
@@ -41,7 +44,15 @@ static func from_dict(dict: Dictionary) -> SaveData:
 	data.location_name = str(dict.get("location_name", "Unknown"))
 	data.party_leader = str(dict.get("party_leader", ""))
 	data.world_state_data = dict.get("world_state", {}).duplicate(true)
-	data.field_state_data = dict.get("field_state", {}).duplicate(true)
+
+	var field_copy: Dictionary = dict.get("field_state", {}).duplicate(true)
+	if field_copy.has("cell"):
+		if field_copy["cell"] is Array and field_copy["cell"].size() >= 2:
+			field_copy["cell"] = Vector2i(int(field_copy["cell"][0]), int(field_copy["cell"][1]))
+	if field_copy.has("facing"):
+		field_copy["facing"] = int(field_copy["facing"])
+	data.field_state_data = field_copy
+
 	return data
 
 
