@@ -2,7 +2,7 @@
 
 **Updated:** 2026-08-31
 **Branch:** `main` — PRs #1 through #24 merged fast-forward; history is linear.
-**Status:** the battle is playable end to end, field mode is fully verified, interaction & dialogue (sub-project 2) is complete, and events & world state (sub-project 3) is complete across all six tasks — `godot scenes/field.tscn` boots a walkable world with trigger zones, map tile mutations, dialogue branching on world flags, and NPC state changes. 203 tests passing, exit 0, enforced by CI on every push and pull request.
+**Status:** the battle is playable end to end, field mode is fully verified, interaction & dialogue (sub-project 2) is complete, and events & world state (sub-project 3) is complete across all six tasks — `godot scenes/field.tscn` boots a walkable world with trigger zones, map tile mutations, dialogue branching on world flags, and NPC state changes. 206 tests passing, exit 0, enforced by CI on every push and pull request.
 
 A grid-tactics RPG vertical slice in Godot 4.7.2 / GDScript.
 
@@ -161,7 +161,7 @@ World state flag/variable store, trigger engine (step and interaction triggers),
 | 5. Field step & interact event wiring | Done |
 | 6. Visual verification and handoff update | Done |
 
-203 tests passing.
+206 tests passing.
 
 **It runs.** Stepping onto trigger tiles fires configured actions (flag mutation, dialogue, tile alterations). Interacting with objects can update flags and mutate map terrain dynamically. NPCs evaluate world flags to offer branching dialogue trees or updated conversations based on story progress.
 

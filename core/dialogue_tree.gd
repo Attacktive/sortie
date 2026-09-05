@@ -31,9 +31,17 @@ static func from_dict(dict: Dictionary) -> DialogueTree:
 			var raw_choices: Array = node_data.get("choices", [])
 			for raw_choice in raw_choices:
 				if raw_choice is Dictionary:
+					var cond: EventCondition = null
+					var raw_cond = raw_choice.get("condition", null)
+					if raw_cond is EventCondition:
+						cond = raw_cond
+					elif raw_cond is Dictionary:
+						cond = EventCondition.from_dict(raw_cond)
+
 					var choice := DialogueChoice.new(
 						str(raw_choice.get("text", "")),
-						str(raw_choice.get("next", ""))
+						str(raw_choice.get("next", "")),
+						cond
 					)
 
 					node.choices.append(choice)

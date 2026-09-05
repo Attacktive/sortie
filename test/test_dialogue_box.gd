@@ -87,3 +87,26 @@ func test_choices_are_replaced_rather_than_stacked() -> void:
 
 	assert_eq(_box.get_choice_count(), 2)
 	assert_eq(_box._choices_container.get_child_count(), 2, "the page you just left is still on screen underneath the one you are looking at")
+
+func test_dialogue_box_filters_choices_by_condition() -> void:
+	var tree := DialogueTree.from_dict({
+		"start": "choice_node",
+		"nodes": {
+			"choice_node": {
+				"speaker": "Chest",
+				"text": "Open chest?",
+				"choices": [
+					{ "text": "Leave it", "next": "" },
+					{ "text": "Use Key", "next": "", "condition": EventCondition.is_true("has_key") }
+				]
+			}
+		}
+	})
+
+	var state := WorldState.new()
+	_box.start(DialogueRunner.new(tree, state))
+	assert_eq(_box.get_choice_count(), 1)
+
+	state.set_flag("has_key", true)
+	_box.start(DialogueRunner.new(tree, state))
+	assert_eq(_box.get_choice_count(), 2)

@@ -92,16 +92,16 @@ func _refresh() -> void:
 	_text_label.text = node.text
 	_clear_choices()
 
-	if node.has_choices():
-		_selected_choice = clampi(_selected_choice, 0, node.choices.size() - 1)
-		for i in node.choices.size():
+	var choices := _runner.get_available_choices()
+	if not choices.is_empty():
+		_selected_choice = clampi(_selected_choice, 0, choices.size() - 1)
+		for i in choices.size():
 			var label := Label.new()
 			label.add_theme_font_size_override("font_size", BODY_FONT_SIZE)
-			_style_choice(label, node.choices[i], i == _selected_choice)
+			_style_choice(label, choices[i], i == _selected_choice)
 
 			_choices_container.add_child(label)
 			_choice_labels.append(label)
-
 ## Removed before being freed, because a queue_free'd node stays in the tree until the end of the frame and the replacements go in during this one: freeing alone lays out both pages' choices at once.
 func _clear_choices() -> void:
 	for child in _choices_container.get_children():
@@ -118,12 +118,13 @@ func handle_input_action(action: String) -> void:
 	if node == null:
 		return
 
-	if node.has_choices():
+	var choices := _runner.get_available_choices()
+	if not choices.is_empty():
 		if action == "ui_down":
-			_selected_choice = (_selected_choice + 1) % node.choices.size()
+			_selected_choice = (_selected_choice + 1) % choices.size()
 			_update_choice_highlight()
 		elif action == "ui_up":
-			_selected_choice = (_selected_choice - 1 + node.choices.size()) % node.choices.size()
+			_selected_choice = (_selected_choice - 1 + choices.size()) % choices.size()
 			_update_choice_highlight()
 		elif action == "ui_accept":
 			var idx := _selected_choice
@@ -137,12 +138,15 @@ func handle_input_action(action: String) -> void:
 			_refresh()
 
 func _update_choice_highlight() -> void:
-	var node := _runner.current_node()
-	if node == null or not node.has_choices():
+	if _runner == null:
+		return
+
+	var choices := _runner.get_available_choices()
+	if choices.is_empty():
 		return
 
 	for i in _choice_labels.size():
-		_style_choice(_choice_labels[i], node.choices[i], i == _selected_choice)
+		_style_choice(_choice_labels[i], choices[i], i == _selected_choice)
 
 ## The one place a choice's cursor and color are decided, called both when the list is built and when the selection moves through it.
 func _style_choice(label: Label, choice: DialogueChoice, is_selected: bool) -> void:

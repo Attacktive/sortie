@@ -58,3 +58,24 @@ static func gte(flag_key: String, val: Variant) -> EventCondition:
 
 static func lte(flag_key: String, val: Variant) -> EventCondition:
 	return EventCondition.new(flag_key, Op.LESS_EQUAL, val)
+
+## Deserializes an EventCondition from a dictionary specification.
+static func from_dict(dict: Dictionary) -> EventCondition:
+	var flag: String = str(dict.get("flag", dict.get("key", "")))
+	var raw_op = dict.get("op", Op.EQUAL)
+	var op: Op = Op.EQUAL
+	if raw_op is Op:
+		op = raw_op
+	elif raw_op is int:
+		op = raw_op as Op
+	elif raw_op is String:
+		match raw_op:
+			"==": op = Op.EQUAL
+			"!=": op = Op.NOT_EQUAL
+			"<": op = Op.LESS_THAN
+			"<=": op = Op.LESS_EQUAL
+			">": op = Op.GREATER_THAN
+			">=": op = Op.GREATER_EQUAL
+
+	var val: Variant = dict.get("value", dict.get("target_value", true))
+	return EventCondition.new(flag, op, val)

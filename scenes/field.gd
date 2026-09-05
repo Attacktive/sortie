@@ -196,7 +196,7 @@ func _execute_action(action: EventAction) -> void:
 			var tree: DialogueTree = action.params.get("dialogue")
 			if tree != null:
 				_player.frozen = true
-				_dialogue_box.start(DialogueRunner.new(tree))
+				_dialogue_box.start(DialogueRunner.new(tree, world_state))
 		EventAction.Type.MODIFY_TILE:
 			var cell: Vector2i = action.params.get("cell", Vector2i(-1, -1))
 			var glyph: String = action.params.get("glyph", "")
@@ -210,7 +210,7 @@ func _start_npc_dialogue(npc: FieldNpc) -> void:
 	npc.face_toward(_player.position)
 
 	var dialogue_tree := npc.get_dialogue_for_state(world_state)
-	var runner := DialogueRunner.new(dialogue_tree)
+	var runner := DialogueRunner.new(dialogue_tree, world_state)
 	_dialogue_box.start(runner)
 
 func _on_dialogue_finished() -> void:
