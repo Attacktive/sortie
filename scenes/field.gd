@@ -60,6 +60,7 @@ func _ready() -> void:
 	_build_camera()
 	_build_dialogue_box()
 	_build_triggers()
+
 	_last_player_cell = GridGeometry.position_to_cell(FieldBody.box_for_sprite(_player.position).get_center())
 
 	## Dev affordance for visual verification harnesses; never instantiated during normal play.
@@ -182,7 +183,6 @@ func _build_roderick() -> void:
 	_roderick.position = GridGeometry.cell_to_position(RODERICK_CELL)
 	add_child(_roderick)
 
-## Added after the view and NPC, keeping characters sorted on top of the ground map.
 func _build_player() -> void:
 	_player = FieldPlayer.new()
 	_player.name = "FieldPlayer"
@@ -202,8 +202,11 @@ func _get_obstacle_boxes() -> Array[Rect2]:
 	return boxes
 
 
-## Parented to the player, so following costs nothing and can never lag a frame behind.
-## The limits are the map's own bounds: past them there is no world, only whatever the last frame left in the buffer.
+
+
+
+
+
 func _build_camera() -> void:
 	var bounds := _map.pixel_size()
 
@@ -216,6 +219,7 @@ func _build_camera() -> void:
 
 	_player.add_child(_camera)
 	_camera.make_current()
+
 
 ## Added last so dialogue UI draws above the map and characters.
 func _build_dialogue_box() -> void:
