@@ -4,6 +4,9 @@ signal battle_requested(battle_id: String, restore_state: Dictionary)
 
 ## The walkable world: the map, what draws it, who walks on it, and the camera that follows them.
 
+signal save_requested
+signal load_requested
+signal title_requested
 ## Bigger than the viewport on both axes, so the camera has something to do.
 const MAP := [
 	"##################",
@@ -37,6 +40,7 @@ var _player: FieldPlayer = null
 var _camera: Camera2D = null
 var _npc: FieldNpc = null
 var _dialogue_box: DialogueBox = null
+var _field_menu: FieldMenu = null
 var _last_player_cell: Vector2i = Vector2i(-1, -1)
 
 func _ready() -> void:
@@ -154,10 +158,13 @@ func _process(_delta: float) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if _dialogue_box != null and _dialogue_box.visible:
 		return
+	if _field_menu != null and is_instance_valid(_field_menu) and _field_menu.visible:
+		return
 
 	if event.is_action_pressed("ui_accept"):
 		_try_interact()
-
+	elif event.is_action_pressed("ui_cancel"):
+		_open_field_menu()
 func _try_interact() -> void:
 	if _player == null:
 		return
@@ -231,6 +238,46 @@ func _on_dialogue_finished() -> void:
 
 func get_map() -> FieldMap:
 	return _map
+
+
+func get_field_menu() -> FieldMenu:
+	return _field_menu
+
+
+func _open_field_menu() -> void:
+	if _field_menu != null and is_instance_valid(_field_menu):
+		return
+
+	if _player != null:
+		_player.frozen = true
+
+	_field_menu = FieldMenu.new()
+	_field_menu.save_requested.connect(_on_field_menu_save)
+	_field_menu.load_requested.connect(_on_field_menu_load)
+	_field_menu.title_requested.connect(_on_field_menu_title)
+	_field_menu.resume_requested.connect(_close_field_menu)
+	add_child(_field_menu)
+
+
+func _close_field_menu() -> void:
+	if _field_menu != null and is_instance_valid(_field_menu):
+		_field_menu.queue_free()
+		_field_menu = null
+
+	if _player != null:
+		_player.frozen = false
+
+
+func _on_field_menu_save() -> void:
+	save_requested.emit()
+
+
+func _on_field_menu_load() -> void:
+	load_requested.emit()
+
+
+func _on_field_menu_title() -> void:
+	title_requested.emit()
 
 
 ## Captures field state snapshot (player cell, facing, modified tiles) for save/load.
