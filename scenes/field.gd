@@ -48,7 +48,7 @@ func _ready() -> void:
 	_build_camera()
 	_build_dialogue_box()
 	_build_triggers()
-	_last_player_cell = GridGeometry.position_to_cell(_player.position + FieldBody.BOX_OFFSET)
+	_last_player_cell = GridGeometry.position_to_cell(FieldBody.box_for_sprite(_player.position).get_center())
 
 	if OS.has_environment("SORTIE_SHOT"):
 		add_child(load("res://scenes/screenshot_probe.gd").new())
@@ -135,7 +135,7 @@ func _process(_delta: float) -> void:
 	if _player == null:
 		return
 
-	var current_cell := GridGeometry.position_to_cell(_player.position + FieldBody.BOX_OFFSET)
+	var current_cell := GridGeometry.position_to_cell(FieldBody.box_for_sprite(_player.position).get_center())
 	if current_cell != _last_player_cell:
 		_last_player_cell = current_cell
 		_check_step_triggers(current_cell)
