@@ -31,6 +31,10 @@ var _origin_cell: Vector2i = Vector2i.ZERO
 
 var mission_id: String = "default"
 var _mission: MissionData = null
+var _turn_count: int = 1
+var _consumed_area_triggers: Array[Rect2i] = []
+var _played_turn_triggers: Array[int] = []
+var _battle_dialogue: DialogueBox = null
 
 
 func _ready() -> void:
@@ -42,6 +46,9 @@ func _start_battle() -> void:
 	_rolls = RealRollSource.new(seed_value)
 	print("Sortie battle seed: %d" % seed_value)
 
+	_turn_count = 1
+	_consumed_area_triggers.clear()
+	_played_turn_triggers.clear()
 	if mission_id != "default":
 		_mission = MissionRegistry.get_mission(mission_id)
 
@@ -140,7 +147,19 @@ func _refresh_all() -> void:
 
 	_grid_view.refresh()
 
-## --- Player turn ---
+func _play_modal_dialogue(tree: DialogueTree, on_complete: Callable) -> void:
+	_cursor.active = false
+	_battle_dialogue = DialogueBox.new()
+	_battle_dialogue.name = "BattleDialogueBox"
+	add_child(_battle_dialogue)
+	_battle_dialogue.finished.connect(func() -> void:
+		_battle_dialogue.queue_free()
+		_battle_dialogue = null
+		on_complete.call()
+	)
+	var runner := DialogueRunner.new(tree)
+	_battle_dialogue.start(runner)
+
 
 func _enter_unit_selection() -> void:
 	_state = State.SELECTING_UNIT
@@ -152,15 +171,23 @@ func _enter_unit_selection() -> void:
 	_forecast_panel.clear()
 	_action_menu.close()
 	_cursor.cancel_only = false
-	_cursor.cancel_only = false
-	_cursor.active = true
 	_refresh_all()
 
 	if _turns.should_end_turn():
 		_end_player_turn()
+		return
+
+	if _mission != null and _mission.turn_dialogue_triggers.has(_turn_count) and not _played_turn_triggers.has(_turn_count):
+		_played_turn_triggers.append(_turn_count)
+		var tree: DialogueTree = _mission.turn_dialogue_triggers[_turn_count]
+		_play_modal_dialogue(tree, func() -> void:
+			_cursor.active = true
+		)
+	else:
+		_cursor.active = true
+
 
 func _on_cursor_moved(cell: Vector2i) -> void:
-	_cursor.queue_redraw()
 
 	if _state != State.CHOOSING_TARGET:
 		return
@@ -239,12 +266,30 @@ func _try_move(cell: Vector2i) -> void:
 	view.walk_path(path)
 
 func _on_move_finished() -> void:
+	var triggered_tree: DialogueTree = null
+	if _mission != null:
+		for area: Rect2i in _mission.area_dialogue_triggers.keys():
+			if not _consumed_area_triggers.has(area) and area.has_point(_selected.cell):
+				_consumed_area_triggers.append(area)
+				triggered_tree = _mission.area_dialogue_triggers[area]
+				break
+
+	if triggered_tree != null:
+		_play_modal_dialogue(triggered_tree, func() -> void:
+			_open_action_menu()
+		)
+	else:
+		_open_action_menu()
+
+
+func _open_action_menu() -> void:
 	_state = State.CHOOSING_ACTION
 	_cursor.active = false
 	_cursor.cancel_only = true
 
 	var anchor := GridGeometry.cell_to_position(_selected.cell) + MARGIN + Vector2(GridGeometry.CELL_SIZE + 6, 0)
 	_action_menu.open(anchor, not _targets_in_range().is_empty())
+
 
 func _targets_in_range() -> Array[BattleUnit]:
 	var result: Array[BattleUnit] = []
@@ -376,8 +421,10 @@ func _run_enemy_turn() -> void:
 			return
 
 	_turns.end_turn()
+	_turn_count += 1
 	_banner.announce("Your Turn", CombatAnimator.PLAYER_COLOR)
 	_enter_unit_selection()
+
 
 func _take_enemy_action(unit: BattleUnit) -> void:
 	var decision := EnemyAI.decide(_grid, unit)
