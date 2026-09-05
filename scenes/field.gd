@@ -318,6 +318,11 @@ func restore(restore_state: Dictionary) -> void:
 				target_cell = mod_cell
 			elif mod_cell is Array and mod_cell.size() >= 2:
 				target_cell = Vector2i(int(mod_cell[0]), int(mod_cell[1]))
+			elif mod_cell is String:
+				var str_cell: String = mod_cell
+				var parts := str_cell.replace("(", "").replace(")", "").split(",")
+				if parts.size() >= 2:
+					target_cell = Vector2i(int(parts[0]), int(parts[1]))
 			_map.set_glyph(target_cell, str(modified_tiles[mod_cell]))
 		if _view != null:
 			_view.refresh()
