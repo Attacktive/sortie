@@ -27,6 +27,10 @@ static func from_dict(dict: Dictionary) -> DialogueTree:
 			str(node_data.get("next", ""))
 		)
 
+		var raw_action = node_data.get("action", null)
+		if raw_action is EventAction:
+			node.action = raw_action
+
 		if node_data.has("choices"):
 			var raw_choices: Array = node_data.get("choices", [])
 			for raw_choice in raw_choices:

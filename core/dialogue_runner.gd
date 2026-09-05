@@ -8,6 +8,8 @@ var tree: DialogueTree = null
 var world_state: WorldState = null
 var current_node_id: String = ""
 var _finished: bool = false
+var last_node: DialogueNode = null
+
 
 func _init(p_tree: DialogueTree, p_state: WorldState = null) -> void:
 	world_state = p_state
@@ -41,6 +43,8 @@ func advance() -> bool:
 
 	if has_available_choices():
 		return false
+
+	last_node = node
 
 	if node.next_id.is_empty():
 		_finished = true
@@ -83,7 +87,7 @@ func select_choice(index: int) -> bool:
 
 	if index < 0 or index >= available.size():
 		return false
-
+	last_node = current_node()
 	var choice := available[index]
 	if choice.next_id.is_empty():
 		_finished = true
@@ -92,6 +96,5 @@ func select_choice(index: int) -> bool:
 	if not tree.has_node(choice.next_id):
 		_finished = true
 		return false
-
 	current_node_id = choice.next_id
 	return true

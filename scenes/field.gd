@@ -27,7 +27,8 @@ const START_CELL := Vector2i(2, 1)
 const NPC_CELL := Vector2i(5, 1)
 const PLAYER_SHEET := "res://assets/lpc/units/vanguard_walkcycle.png"
 const NPC_SHEET := "res://assets/lpc/units/mage_walkcycle.png"
-
+const RODERICK_CELL := Vector2i(8, 2)
+const RODERICK_SHEET := "res://assets/lpc/units/brute_walkcycle.png"
 ## A node's position is the top-left corner of its sprite, so a camera sitting at the player's origin centers the screen on that corner and leaves the character down and to the right of it.
 const CAMERA_OFFSET := Vector2(GridGeometry.CELL_SIZE, GridGeometry.CELL_SIZE) * 0.5
 
@@ -39,6 +40,7 @@ var _view: FieldView = null
 var _player: FieldPlayer = null
 var _camera: Camera2D = null
 var _npc: FieldNpc = null
+var _roderick: FieldNpc = null
 var _dialogue_box: DialogueBox = null
 var _field_menu: FieldMenu = null
 var _last_player_cell: Vector2i = Vector2i(-1, -1)
@@ -53,6 +55,7 @@ func _ready() -> void:
 
 	_build_view()
 	_build_npc()
+	_build_roderick()
 	_build_player()
 	_build_camera()
 	_build_dialogue_box()
@@ -115,6 +118,70 @@ func _build_npc() -> void:
 	_npc.position = GridGeometry.cell_to_position(NPC_CELL)
 	add_child(_npc)
 
+
+func _build_roderick() -> void:
+	_roderick = FieldNpc.new()
+	_roderick.name = "SirRoderick"
+
+	var briefing := DialogueTree.from_dict({
+		"start": "briefing_dishonor",
+		"nodes": {
+			"briefing_dishonor": {
+				"speaker": "Sir Roderick",
+				"text": "Men, today Highspire faces its gravest dishonor.",
+				"next": "briefing_catapult",
+			},
+			"briefing_catapult": {
+				"speaker": "Sir Roderick",
+				"text": "The enemy has assembled a catapult 80 paces out, and they are launching rotten produce into the royal herb garden.",
+				"next": "briefing_sally",
+			},
+			"briefing_sally": {
+				"speaker": "Sir Roderick",
+				"text": "We sally out, dismantle the contraption, and preserve the King's rosemary!",
+				"choices": [
+					{"text": "[Sortie!]", "next": "action_sortie"},
+					{"text": "[Prepare]", "next": "action_prepare"},
+				],
+			},
+			"action_sortie": {
+				"speaker": "Sir Roderick",
+				"text": "Sound the charge!",
+				"action": EventAction.start_battle("M01_CABBAGE"),
+			},
+			"action_prepare": {
+				"speaker": "Sir Roderick",
+				"text": "Hurry, Pip. Every second we tarry is another bruised turnip in His Majesty's parsley.",
+			},
+		},
+	})
+
+	var victory_debrief := DialogueTree.from_dict({
+		"start": "post_victory",
+		"nodes": {
+			"post_victory": {
+				"speaker": "Sir Roderick",
+				"text": "Splendid work out there! The royal herb garden is safe. The scout reports the remaining cabbage hurled over the ramparts was surprisingly edible in soup.",
+				"next": "post_tease",
+			},
+			"post_tease": {
+				"speaker": "Sir Roderick",
+				"text": "Catch your breath—word has it our ale shipment down south has run into trouble.",
+			},
+		},
+	})
+
+	_roderick.setup(RODERICK_SHEET, "Sir Roderick", briefing)
+	_roderick.conditional_dialogues = [
+		{
+			"condition": EventCondition.is_true("mission_m01_completed"),
+			"dialogue": victory_debrief,
+		},
+	]
+
+	_roderick.position = GridGeometry.cell_to_position(RODERICK_CELL)
+	add_child(_roderick)
+
 ## Added after the view and NPC, keeping characters sorted on top of the ground map.
 func _build_player() -> void:
 	_player = FieldPlayer.new()
@@ -173,6 +240,10 @@ func _try_interact() -> void:
 
 	if _npc != null and probe.intersects(_npc.get_collision_box()):
 		_start_npc_dialogue(_npc)
+		return
+
+	if _roderick != null and probe.intersects(_roderick.get_collision_box()):
+		_start_npc_dialogue(_roderick)
 		return
 
 	if _map != null and trigger_registry != null:
@@ -235,6 +306,11 @@ func _start_npc_dialogue(npc: FieldNpc) -> void:
 func _on_dialogue_finished() -> void:
 	if _player != null:
 		_player.frozen = false
+
+	if _dialogue_box != null:
+		var last: DialogueNode = _dialogue_box.get_last_node()
+		if last != null and last.action != null:
+			_execute_action(last.action)
 
 func get_map() -> FieldMap:
 	return _map

@@ -184,3 +184,10 @@ func get_choice_count() -> int:
 
 func get_selected_choice_index() -> int:
 	return _selected_choice
+
+
+func get_last_node() -> DialogueNode:
+	if _runner == null:
+		return null
+
+	return _runner.last_node
