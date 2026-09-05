@@ -29,6 +29,10 @@ func _ready() -> void:
 
 	show_title()
 
+	## Dev affordance for visual verification harnesses; never instantiated during normal play.
+	if OS.has_environment("SORTIE_SHOT"):
+		add_child(load("res://scenes/screenshot_probe.gd").new())
+
 func get_active_scene() -> Node:
 	return _active_scene
 

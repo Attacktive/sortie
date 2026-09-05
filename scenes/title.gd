@@ -20,6 +20,7 @@ func _ready() -> void:
 	canvas.add_child(bg)
 
 	_menu = TitleMenu.new()
+	_menu.name = "TitleMenu"
 	_menu.new_game_requested.connect(func() -> void: new_game_requested.emit())
 	_menu.quick_battle_requested.connect(func() -> void: quick_battle_requested.emit())
 	_menu.quit_requested.connect(func() -> void: quit_requested.emit())

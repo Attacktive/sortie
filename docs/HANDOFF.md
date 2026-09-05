@@ -1,8 +1,8 @@
 # Sortie — Handoff
 
-**Updated:** 2026-08-31
-**Branch:** `main` — PRs #1 through #24 merged fast-forward; history is linear.
-**Status:** the battle is playable end to end, field mode is fully verified, interaction & dialogue (sub-project 2) is complete, and events & world state (sub-project 3) is complete across all six tasks — `godot scenes/field.tscn` boots a walkable world with trigger zones, map tile mutations, dialogue branching on world flags, and NPC state changes. 206 tests passing, exit 0, enforced by CI on every push and pull request.
+**Updated:** 2026-09-05
+**Branch:** `main` — PRs #1 through #26 merged fast-forward; history is linear.
+**Status:** the battle is playable end to end, field mode is fully verified, interaction & dialogue (sub-project 2) is complete, events & world state (sub-project 3) is complete, and mode flow & battle handoff (sub-project 4) is complete across all seven tasks — `godot` boots into `scenes/game.tscn` showing a Title screen with New Game, Quick Battle, and Quit; New Game enters Field mode; encounter triggers hand off to Battle with visual transitions; winning restores field position and world flags; losing offers retry or return to title. 225 tests passing, exit 0, enforced by CI on every push and pull request.
 
 A grid-tactics RPG vertical slice in Godot 4.7.2 / GDScript.
 
@@ -12,8 +12,9 @@ A grid-tactics RPG vertical slice in Godot 4.7.2 / GDScript.
 
 ```sh
 godot --headless --import   # once on a fresh clone; GUT's class_names need the import cache
-godot                       # play the battle
-godot scenes/field.tscn     # walk around the field; not wired to the battle yet
+godot                       # play the game (boots to title screen)
+godot scenes/field.tscn     # walk around field standalone
+godot scenes/battle.tscn    # play battle standalone
 godot --headless -s addons/gut/gut_cmdln.gd -gdir=res://test -gexit   # test
 ```
 
@@ -25,7 +26,8 @@ failure, so the build breaks on its own.
 There is also a screenshot harness, gated on environment variables so it never runs in normal play:
 
 ```sh
-SORTIE_SHOT=out.png godot --quit-after 300                       # capture a frame
+SORTIE_SHOT=out.png godot --quit-after 300                       # capture title screen
+SORTIE_SHOT=out.png SORTIE_TITLE_SELECT=ui_down godot --quit-after 300 # capture title selection
 SORTIE_SHOT=out.png SORTIE_SELECT=9,1 godot --quit-after 300     # capture with a unit inspected
 SORTIE_SHOT=out.png SORTIE_ATTACK=0,7,8,0 SORTIE_WAIT=0.32 godot --quit-after 400   # capture mid-swing
 SORTIE_SHOT=out.png SORTIE_WALK=0,6,3,4 SORTIE_WAIT=0.55 godot --quit-after 600      # capture battle walk mid-stride
@@ -165,7 +167,32 @@ World state flag/variable store, trigger engine (step and interaction triggers),
 
 **It runs.** Stepping onto trigger tiles fires configured actions (flag mutation, dialogue, tile alterations). Interacting with objects can update flags and mutate map terrain dynamically. NPCs evaluate world flags to offer branching dialogue trees or updated conversations based on story progress.
 
-Sub-projects 4 through 6 of story mode — mode flow and battle handoff, save/load, content — each need their own spec. `run/main_scene` stays `battle.tscn` until sub-project 4.
+Sub-projects 5 and 6 of story mode — save/load and content — each need their own spec. `run/main_scene` is `scenes/game.tscn`.
+
+---
+
+## Mode flow & battle handoff — done
+
+Top-level mode coordinator (`Game`), screen transition layer, Title screen, Field-to-Battle encounter handoff, Field restoration upon victory, and Battle defeat/retry flow. **Mode flow & battle handoff is #4**, and all seven tasks are complete:
+
+- Spec: `docs/superpowers/specs/2026-09-05-sortie-mode-flow-design.md`
+- Plan: `docs/superpowers/plans/2026-09-05-sortie-mode-flow.md`
+
+| Task | State |
+| --- | --- |
+| 1. Screen transition layer (`TransitionLayer`) | Done |
+| 2. `EventAction.START_BATTLE` in `core/` | Done |
+| 3. Title scene & `TitleMenu` | Done |
+| 4. Field mode handoff & restoration | Done |
+| 5. Battle result flow (victory & defeat) | Done |
+| 6. Root `Game` coordinator & `main_scene` wiring | Done |
+| 7. Visual probe verification & handoff update | Done |
+
+225 tests passing.
+
+**It runs.** `godot` boots into `scenes/game.tscn` presenting the Title Screen. "New Game" transitions into Field mode at spawn coordinates. Triggering `EventAction.start_battle()` freezes the player, captures restore coordinates, plays the classic 3-beat battle flash/fade transition, and swaps into Battle mode. Winning the battle transitions back to the field and restores player position and facing while setting victory world flags. Losing the battle presents Retry Battle (immediate restart) and Return to Title options. Selecting "Quick Battle" from the title screen enters combat directly without field exploration overhead.
+
+Sub-projects 5 and 6 of story mode — save/load and content — each need their own spec. `run/main_scene` is now `scenes/game.tscn`.
 
 ---
 
