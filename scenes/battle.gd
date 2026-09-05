@@ -1,5 +1,8 @@
 class_name Battle
 extends Node2D
+signal battle_completed(victory: bool)
+signal title_requested
+signal retry_requested
 
 enum State { SELECTING_UNIT, INSPECTING, CHOOSING_MOVE, CHOOSING_ACTION, CHOOSING_TARGET, ANIMATING, ENEMY_TURN, RESOLVED }
 
@@ -89,6 +92,12 @@ func _build_views() -> void:
 	_result_screen = ResultScreen.new()
 	_result_screen.set_anchors_preset(Control.PRESET_FULL_RECT)
 	layer.add_child(_result_screen)
+	_result_screen.continue_requested.connect(func() -> void: battle_completed.emit(true))
+	_result_screen.retry_requested.connect(func() -> void:
+		retry_requested.emit()
+		_start_battle()
+	)
+	_result_screen.title_requested.connect(func() -> void: title_requested.emit())
 	_result_screen.restart_requested.connect(_start_battle)
 
 	_refresh_all()
@@ -308,7 +317,9 @@ func _finish_if_resolved() -> bool:
 
 	_state = State.RESOLVED
 	_cursor.active = false
-	_result_screen.show_result(_turns.phase == TurnOrder.Phase.VICTORY)
+	var victory: bool = _turns.phase == TurnOrder.Phase.VICTORY
+	_result_screen.show_result(victory)
+	battle_completed.emit(victory)
 
 	return true
 
