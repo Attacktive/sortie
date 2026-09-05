@@ -1,8 +1,8 @@
 # Sortie — Handoff
 
 **Updated:** 2026-09-05
-**Branch:** `main` — PRs #1 through #26 merged fast-forward; history is linear.
-**Status:** the battle is playable end to end, field mode is fully verified, interaction & dialogue (sub-project 2) is complete, events & world state (sub-project 3) is complete, and mode flow & battle handoff (sub-project 4) is complete across all seven tasks — `godot` boots into `scenes/game.tscn` showing a Title screen with New Game, Quick Battle, and Quit; New Game enters Field mode; encounter triggers hand off to Battle with visual transitions; winning restores field position and world flags; losing offers retry or return to title. 225 tests passing, exit 0, enforced by CI on every push and pull request.
+**Branch:** `main` — PRs #1 through #28 merged fast-forward; history is linear.
+**Status:** the battle is playable end to end, field mode is fully verified, interaction & dialogue (sub-project 2) is complete, events & world state (sub-project 3) is complete, mode flow & battle handoff (sub-project 4) is complete, and save & load (sub-project 5) is complete across all eight tasks — `godot` boots into `scenes/game.tscn` showing a Title screen with New Game, Load Game, Quick Battle, and Quit; field pause menu allows saving and loading across 10 persistent slots with atomic disk writes; rehydrates player coordinates, facing, world flags, and dynamic map mutations. 249 tests passing, exit 0, enforced by CI on every push and pull request.
 
 A grid-tactics RPG vertical slice in Godot 4.7.2 / GDScript.
 
@@ -35,6 +35,8 @@ SORTIE_SHOT=out.png SORTIE_FIELD_WALK=right SORTIE_WAIT=0.40 godot scenes/field.
 SORTIE_SHOT=out.png SORTIE_FIELD_WALK=right SORTIE_FIELD_TURN=down,0.40 SORTIE_WAIT=0.42 godot scenes/field.tscn --quit-after 600 # capture field turn
 SORTIE_SHOT=out.png SORTIE_FIELD_INTERACT=true SORTIE_WAIT=0.10 godot scenes/field.tscn --quit-after 300 # capture dialogue interaction
 SORTIE_SHOT=out.png SORTIE_FIELD_TRIGGER=true SORTIE_WAIT=0.10 godot scenes/field.tscn --quit-after 300 # capture trigger event execution
+SORTIE_SHOT=out.png SORTIE_FIELD_MENU=true godot scenes/game.tscn --quit-after 300 # capture field pause menu
+SORTIE_SHOT=out.png SORTIE_SAVE_MENU=true godot scenes/game.tscn --quit-after 300  # capture save slot selector
 ```
 
 It lives in `scenes/screenshot_probe.gd`. It is a development affordance rather
@@ -192,7 +194,33 @@ Top-level mode coordinator (`Game`), screen transition layer, Title screen, Fiel
 
 **It runs.** `godot` boots into `scenes/game.tscn` presenting the Title Screen. "New Game" transitions into Field mode at spawn coordinates. Triggering `EventAction.start_battle()` freezes the player, captures restore coordinates, plays the classic 3-beat battle flash/fade transition, and swaps into Battle mode. Winning the battle transitions back to the field and restores player position and facing while setting victory world flags. Losing the battle presents Retry Battle (immediate restart) and Return to Title options. Selecting "Quick Battle" from the title screen enters combat directly without field exploration overhead.
 
-Sub-projects 5 and 6 of story mode — save/load and content — each need their own spec. `run/main_scene` is now `scenes/game.tscn`.
+Sub-project 6 of story mode — content — needs its own spec. `run/main_scene` is `scenes/game.tscn`.
+
+---
+
+## Save & load — done
+
+Disk persistence of WorldState, field restore snapshots, and 10-slot management. **Save & load is #5**, and all eight tasks are complete:
+
+- Spec: `docs/superpowers/specs/2026-09-05-sortie-save-and-load-design.md`
+- Plan: `docs/superpowers/plans/2026-09-05-sortie-save-and-load.md`
+
+| Task | State |
+| --- | --- |
+| 1. Core `SaveData` domain model & validation | Done |
+| 2. Core `SaveManager` atomic persistence & slot summaries | Done |
+| 3. Field state capture & map tile mutation rehydration | Done |
+| 4. `SaveSlotMenu` UI (10-slot selector) | Done |
+| 5. `FieldMenu` UI (field pause system menu) | Done |
+| 6. Title screen integration ("Load Game" option) | Done |
+| 7. Game coordinator integration & end-to-end save/load flow | Done |
+| 8. Visual probe verification & handoff update | Done |
+
+249 tests passing.
+
+**It runs.** Pressing Escape (`ui_cancel`) while walking the field freezes the player and opens the Field Menu (`FieldMenu`) with Save, Load, Title, and Resume. Saving writes atomic JSON snapshots to `user://saves/slot_<id>.json` via `.tmp` rename to eliminate write-interruption risks. Loading from either the Field Menu or the Title Screen ("Load Game") rehydrates cumulative playtime, `WorldState` flags, player position, facing, camera boundaries, and dynamically modified map tiles. Corrupted or invalid save files are detected and rejected gracefully without crashing.
+
+Sub-project 6 of story mode — content — is the final piece of the story mode roadmap.
 
 ---
 
@@ -204,7 +232,7 @@ Sub-projects 5 and 6 of story mode — save/load and content — each need their
    - The three combat clips were called "clunky but ok-ish" on first listen, and pitch jitter was the answer to that. If they still read as repetitive, the next lever is a second variant per event — `Sfx.play()` would take an array and pick from it. Sixteen single-transient impacts under 0.45s were catalogued in the pack; `bookPlace2` has almost exactly `chop`'s envelope. Whether it *sounds* right is not something an envelope can settle.
    - The whiff is 0.60s against a 0.43s swing and starts at the impact frame, so it trails past the animation. A whiff is arguably the sound of the swing itself and belongs at the start of the motion. That change was deliberately not made without someone hearing it first.
    - Nothing outside combat makes any sound: no cursor blip, no menu click, no music.
-3. **Everything the slice deliberately excluded:** save/load, leveling, recruitment, multiple maps, classes, permadeath. Each is its own spec. Story is no longer on this list — it is underway above.
+3. **Everything the slice deliberately excluded:** leveling, recruitment, multiple maps, classes, permadeath. Each is its own spec. Story is no longer on this list — it is underway above.
 
 ---
 

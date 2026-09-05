@@ -37,12 +37,25 @@ func _ready() -> void:
 
 	if OS.has_environment("SORTIE_FIELD_TRIGGER"):
 		_stage_field_trigger(host)
-
 	if OS.has_environment("SORTIE_TITLE_SELECT"):
 		await get_tree().process_frame
 		var menu: TitleMenu = host.find_child("TitleMenu", true, false)
 		if menu != null:
 			menu.handle_input_action(OS.get_environment("SORTIE_TITLE_SELECT"))
+
+	if OS.has_environment("SORTIE_FIELD_MENU"):
+		await get_tree().process_frame
+		if host is Game:
+			host.start_new_game()
+			await get_tree().process_frame
+			var field: Field = host.get_active_scene()
+			if field != null:
+				field._open_field_menu()
+
+	if OS.has_environment("SORTIE_SAVE_MENU"):
+		await get_tree().process_frame
+		if host is Game:
+			host._open_slot_menu(SaveSlotMenu.Mode.SAVE)
 	var wait := float(OS.get_environment("SORTIE_WAIT")) if OS.has_environment("SORTIE_WAIT") else 0.0
 	if wait > 0.0:
 		await get_tree().create_timer(wait).timeout
