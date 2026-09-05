@@ -16,7 +16,7 @@ var size: Vector2i = Vector2i.ZERO
 
 ## The authored glyph per non-walkable cell, not merely a bool, because a view has to tell a tree from a wall.
 var _glyphs: Dictionary[Vector2i, String] = {}
-
+var _modified_glyphs: Dictionary[Vector2i, String] = {}
 static func from_ascii(rows: PackedStringArray) -> FieldMap:
 	var map := FieldMap.new()
 	map.size = Vector2i(rows[0].length(), rows.size())
@@ -49,8 +49,9 @@ func set_glyph(cell: Vector2i, glyph: String) -> void:
 	if not is_in_bounds(cell) or glyph.is_empty():
 		return
 
-	_glyphs[cell] = glyph.substr(0, 1)
-
+	var char_glyph := glyph.substr(0, 1)
+	_glyphs[cell] = char_glyph
+	_modified_glyphs[cell] = char_glyph
 ## What was authored at this cell. Empty outside the map, or on walkable ground.
 func glyph_at(cell: Vector2i) -> String:
 	if not _glyphs.has(cell):
@@ -58,6 +59,11 @@ func glyph_at(cell: Vector2i) -> String:
 
 	return _glyphs[cell]
 
+
+
+## Returns all tiles modified dynamically at runtime.
+func get_modified_tiles() -> Dictionary[Vector2i, String]:
+	return _modified_glyphs.duplicate()
 func pixel_size() -> Vector2:
 	return Vector2(size) * float(GridGeometry.CELL_SIZE)
 

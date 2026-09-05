@@ -229,7 +229,30 @@ func _on_dialogue_finished() -> void:
 	if _player != null:
 		_player.frozen = false
 
-## Restores player position and facing direction when returning from battle.
+func get_map() -> FieldMap:
+	return _map
+
+
+## Captures field state snapshot (player cell, facing, modified tiles) for save/load.
+func capture_state() -> Dictionary:
+	var modified_tiles: Dictionary = {}
+	if _map != null:
+		modified_tiles = _map.get_modified_tiles()
+
+	var cell := START_CELL
+	var facing := Facing.Direction.DOWN
+	if _player != null:
+		cell = GridGeometry.position_to_cell(_player.position)
+		facing = _player.facing
+
+	return {
+		"cell": cell,
+		"facing": facing,
+		"modified_tiles": modified_tiles,
+	}
+
+
+## Restores player position and facing direction when returning from battle or loading.
 func restore(restore_state: Dictionary) -> void:
 	if _player == null or restore_state.is_empty():
 		return
@@ -240,6 +263,18 @@ func restore(restore_state: Dictionary) -> void:
 	_player.frozen = false
 	_last_player_cell = cell
 
+	var modified_tiles: Dictionary = restore_state.get("modified_tiles", {})
+	if _map != null and not modified_tiles.is_empty():
+		for mod_cell in modified_tiles:
+			var target_cell: Vector2i = Vector2i.ZERO
+			if mod_cell is Vector2i:
+				target_cell = mod_cell
+			elif mod_cell is Array and mod_cell.size() >= 2:
+				target_cell = Vector2i(int(mod_cell[0]), int(mod_cell[1]))
+			_map.set_glyph(target_cell, str(modified_tiles[mod_cell]))
+		if _view != null:
+			_view.refresh()
+
 	if _camera != null and _map != null:
 		var bounds := _map.pixel_size()
 		_camera.limit_left = 0
@@ -248,7 +283,6 @@ func restore(restore_state: Dictionary) -> void:
 		_camera.limit_bottom = int(bounds.y)
 		_camera.position = CAMERA_OFFSET
 		_camera.reset_smoothing()
-
 func _build_triggers() -> void:
 	var step_dialogue := DialogueTree.from_dict({
 		"start": "breeze",
