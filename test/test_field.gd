@@ -53,3 +53,7 @@ func test_player_collides_with_npcs_and_cannot_walk_through_them() -> void:
 	_field._player.facing = Facing.Direction.RIGHT
 	_field._try_interact()
 	assert_true(_field._dialogue_box.visible, "interacting with NPC while flush against them opens dialogue")
+
+
+func test_y_sort_is_enabled_for_depth_sorting() -> void:
+	assert_true(_field.y_sort_enabled, "field root node has y_sort_enabled for 2.5D depth sorting")

@@ -67,6 +67,26 @@ func _ready() -> void:
 				field._player.facing = Facing.Direction.UP
 				field._start_npc_dialogue(field._roderick)
 
+	if OS.has_environment("SORTIE_NORTH_OF_NPC"):
+		await get_tree().process_frame
+		if host is Game:
+			host.start_new_game()
+			await get_tree().process_frame
+			var field: Field = host.get_active_scene()
+			if field != null and field._roderick != null:
+				field._player.position = field._roderick.position - Vector2(0.0, 30.0)
+				field._player.facing = Facing.Direction.DOWN
+
+	if OS.has_environment("SORTIE_SOUTH_OF_NPC"):
+		await get_tree().process_frame
+		if host is Game:
+			host.start_new_game()
+			await get_tree().process_frame
+			var field: Field = host.get_active_scene()
+			if field != null and field._roderick != null:
+				field._player.position = field._roderick.position + Vector2(0.0, 30.0)
+				field._player.facing = Facing.Direction.UP
+
 	if OS.has_environment("SORTIE_BATTLE_BANTER"):
 		await get_tree().process_frame
 		if host is Game:

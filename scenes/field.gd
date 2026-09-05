@@ -46,6 +46,8 @@ var _field_menu: FieldMenu = null
 var _last_player_cell: Vector2i = Vector2i(-1, -1)
 
 func _ready() -> void:
+	y_sort_enabled = true
+
 	if world_state == null:
 		world_state = WorldState.new()
 	if trigger_registry == null:
