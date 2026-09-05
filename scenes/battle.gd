@@ -29,20 +29,31 @@ var _field: MovementField = null
 ## Where the selected unit stood before it moved, so a cancel can put it back.
 var _origin_cell: Vector2i = Vector2i.ZERO
 
+var mission_id: String = "default"
+var _mission: MissionData = null
+
+
 func _ready() -> void:
 	_start_battle()
+
 
 func _start_battle() -> void:
 	var seed_value := int(Time.get_unix_time_from_system())
 	_rolls = RealRollSource.new(seed_value)
 	print("Sortie battle seed: %d" % seed_value)
 
-	_grid = Scenario.build_grid()
+	if mission_id != "default":
+		_mission = MissionRegistry.get_mission(mission_id)
+
+	if _mission != null:
+		_grid = BattleGrid.from_ascii(_mission.map_ascii)
+	else:
+		_grid = Scenario.build_grid()
+
 	_turns = TurnOrder.new(_grid)
 	_build_views()
 	_enter_unit_selection()
 	_banner.announce("Your Turn", CombatAnimator.PLAYER_COLOR)
-
 	if OS.has_environment("SORTIE_SHOT"):
 		add_child(load("res://scenes/screenshot_probe.gd").new())
 
@@ -58,11 +69,32 @@ func _build_views() -> void:
 	_grid_view.position = MARGIN
 	add_child(_grid_view)
 
-	for unit in Scenario.populate(_grid):
-		var view := UnitView.new()
-		view.setup(unit)
-		_grid_view.add_child(view)
-		_views[unit] = view
+	if _mission != null:
+		for i in _mission.player_roster.size():
+			var data := _mission.player_roster[i]
+			var cell := _mission.player_spawns[i]
+			var unit := BattleUnit.new(data, cell)
+			_grid.place_unit(unit, cell)
+			var view := UnitView.new()
+			view.setup(unit)
+			_grid_view.add_child(view)
+			_views[unit] = view
+
+		for i in _mission.enemy_roster.size():
+			var data := _mission.enemy_roster[i]
+			var cell := _mission.enemy_spawns[i]
+			var unit := BattleUnit.new(data, cell)
+			_grid.place_unit(unit, cell)
+			var view := UnitView.new()
+			view.setup(unit)
+			_grid_view.add_child(view)
+			_views[unit] = view
+	else:
+		for unit in Scenario.populate(_grid):
+			var view := UnitView.new()
+			view.setup(unit)
+			_grid_view.add_child(view)
+			_views[unit] = view
 
 	_cursor = Cursor.new()
 	_cursor.bounds = _grid.size
