@@ -1,7 +1,8 @@
 class_name DialogueTree
 extends RefCounted
 
-## A directed graph of dialogue pages indexed by unique string identifiers.
+## Directed graph of dialogue pages indexed by unique string identifiers.
+## Deserializes from nested dictionaries to decouple dialogue authoring and content files from runtime node classes.
 
 var start_node_id: String = ""
 var nodes: Dictionary = {}

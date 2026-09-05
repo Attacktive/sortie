@@ -1,7 +1,8 @@
 class_name FieldNpc
 extends Node2D
 
-## An interactive character placed on the field map.
+## Interactive character on the field grid.
+## Maintains sprite facing, collision footprint, and conditional dialogue trees evaluated against WorldState on interaction.
 
 var npc_name: String = ""
 var dialogue: DialogueTree = null
@@ -19,6 +20,7 @@ func setup(sheet_path: String, p_name: String, p_dialogue: DialogueTree) -> void
 	dialogue = p_dialogue
 	queue_redraw()
 
+## Evaluates conditional dialogue trees in order against current world state, falling back to the default tree.
 func get_dialogue_for_state(state: WorldState) -> DialogueTree:
 	if state != null:
 		for entry in conditional_dialogues:

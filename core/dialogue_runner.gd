@@ -1,7 +1,8 @@
 class_name DialogueRunner
 extends RefCounted
 
-## State machine executing a DialogueTree graph.
+## Traverses a DialogueTree graph node by node, enforcing linear progression or choice branching.
+## Keeps dialogue execution pure and testable headless without tying graph traversal to UI timers, animations, or input events.
 
 var tree: DialogueTree = null
 var current_node_id: String = ""
@@ -25,6 +26,8 @@ func current_node() -> DialogueNode:
 func is_finished() -> bool:
 	return _finished
 
+## Advances to the next linear dialogue node; blocked if the current node has branching choices.
+## Reaching an empty or missing node id marks the runner finished.
 func advance() -> bool:
 	if _finished:
 		return false
@@ -48,6 +51,7 @@ func advance() -> bool:
 	current_node_id = node.next_id
 	return true
 
+## Branches dialogue to the node pointed to by the selected choice index.
 func select_choice(index: int) -> bool:
 	if _finished:
 		return false

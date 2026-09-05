@@ -1,7 +1,8 @@
 class_name EventAction
 extends RefCounted
 
-## An atomic operation executed when a trigger fires.
+## Encapsulates an atomic mutation or presentation step executed when an event trigger fires.
+## Pure data payload carrying its action type and parameters so field execution and domain state stay decoupled.
 
 enum Type { SET_FLAG, SHOW_DIALOGUE, MODIFY_TILE }
 

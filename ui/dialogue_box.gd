@@ -1,7 +1,8 @@
 class_name DialogueBox
 extends CanvasLayer
 
-## Presentation layer rendering speaker, text, and selectable choices.
+## Full-width dialogue overlay anchored to the bottom of the viewport.
+## Consumes UI accept and directional navigation while visible, restoring field input only once dialogue finishes.
 
 signal finished
 signal choice_selected(index: int)
@@ -153,6 +154,7 @@ func _style_choice(label: Label, choice: DialogueChoice, is_selected: bool) -> v
 	label.text = CHOICE_INDENT + choice.text
 	label.add_theme_color_override("font_color", CHOICE_COLOR)
 
+## Marks accepted and directional inputs as handled while active, preventing field movement or interactions underneath.
 func _unhandled_input(event: InputEvent) -> void:
 	if not visible:
 		return

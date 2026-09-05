@@ -1,7 +1,8 @@
 class_name DialogueNode
 extends RefCounted
 
-## A single page of dialogue containing speaker, message text, and navigation links.
+## Single page of dialogue with speaker identity, message text, and outbound links.
+## Transitions linearly via next_id if choices is empty, or pauses for player selection when choices are present.
 
 var id: String = ""
 var speaker: String = ""

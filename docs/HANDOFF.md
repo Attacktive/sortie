@@ -1,8 +1,8 @@
 # Sortie — Handoff
 
 **Updated:** 2026-08-31
-**Branch:** `main` — PRs #1 through #14 merged fast-forward; history is linear.
-**Status:** the battle is playable end to end, field mode is fully verified, interaction & dialogue (sub-project 2) is complete, and events & world state (sub-project 3) is complete across all six tasks — `godot scenes/field.tscn` boots a walkable world with trigger zones, map tile mutations, dialogue branching on world flags, and NPC state changes. 201 tests passing, exit 0, enforced by CI on every push and pull request.
+**Branch:** `main` — PRs #1 through #24 merged fast-forward; history is linear.
+**Status:** the battle is playable end to end, field mode is fully verified, interaction & dialogue (sub-project 2) is complete, and events & world state (sub-project 3) is complete across all six tasks — `godot scenes/field.tscn` boots a walkable world with trigger zones, map tile mutations, dialogue branching on world flags, and NPC state changes. 203 tests passing, exit 0, enforced by CI on every push and pull request.
 
 A grid-tactics RPG vertical slice in Godot 4.7.2 / GDScript.
 
@@ -33,6 +33,7 @@ SORTIE_SHOT=out.png SORTIE_FIELD_WALK=right SORTIE_WAIT=0.40 godot scenes/field.
 SORTIE_SHOT=out.png SORTIE_FIELD_WALK=right SORTIE_FIELD_TURN=down,0.40 SORTIE_WAIT=0.42 godot scenes/field.tscn --quit-after 600 # capture field turn
 SORTIE_SHOT=out.png SORTIE_FIELD_INTERACT=true SORTIE_WAIT=0.10 godot scenes/field.tscn --quit-after 300 # capture dialogue interaction
 SORTIE_SHOT=out.png SORTIE_FIELD_TRIGGER=true SORTIE_WAIT=0.10 godot scenes/field.tscn --quit-after 300 # capture trigger event execution
+```
 
 It lives in `scenes/screenshot_probe.gd`. It is a development affordance rather
 than a feature, and it stays: it is how every visual claim in this project was
@@ -160,7 +161,7 @@ World state flag/variable store, trigger engine (step and interaction triggers),
 | 5. Field step & interact event wiring | Done |
 | 6. Visual verification and handoff update | Done |
 
-201 tests passing.
+203 tests passing.
 
 **It runs.** Stepping onto trigger tiles fires configured actions (flag mutation, dialogue, tile alterations). Interacting with objects can update flags and mutate map terrain dynamically. NPCs evaluate world flags to offer branching dialogue trees or updated conversations based on story progress.
 

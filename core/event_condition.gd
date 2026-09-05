@@ -1,7 +1,8 @@
 class_name EventCondition
 extends RefCounted
 
-## Evaluates a comparison against a WorldState.
+## Boolean guard over WorldState flags and variables.
+## Supports equality and ordering comparisons without requiring world state to pre-populate every flag default.
 
 enum Op { EQUAL, NOT_EQUAL, LESS_THAN, LESS_EQUAL, GREATER_THAN, GREATER_EQUAL }
 
@@ -14,6 +15,9 @@ func _init(p_key: String = "", p_op: Op = Op.EQUAL, p_val: Variant = null) -> vo
 	op = p_op
 	target_value = p_val
 
+## Evaluates this condition against the provided world state.
+## An unset flag (null) evaluates as false for boolean equality comparisons, so flags default to false without explicit initialization.
+## Numeric order comparisons require an explicit non-null value in world state and evaluate to false if unset.
 func evaluate(state: WorldState) -> bool:
 	if state == null:
 		return false

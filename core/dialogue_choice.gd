@@ -1,7 +1,8 @@
 class_name DialogueChoice
 extends RefCounted
 
-## A selectable branching option within a dialogue page.
+## Selectable branching option within a dialogue page.
+## Stores display text, target node identifier, and an optional condition guard required for the choice to be offered.
 
 var text: String = ""
 var next_id: String = ""

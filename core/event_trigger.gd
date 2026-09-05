@@ -1,7 +1,8 @@
 class_name EventTrigger
 extends RefCounted
 
-## A spatial trigger listening for player movement or interaction at a cell.
+## Cell-bound trigger activated either by stepping onto the tile or by facing it and pressing interact.
+## Evaluates an optional condition before firing its actions, and tracks whether one-shot triggers have already fired.
 
 enum TriggerType { STEP, INTERACT }
 

@@ -3,6 +3,7 @@ extends Node2D
 
 ## The walkable world: the map, what draws it, who walks on it, and the camera that follows them.
 
+## Bigger than the viewport on both axes, so the camera has something to do.
 const MAP := [
 	"##################",
 	"#....F......F....#",
@@ -23,6 +24,7 @@ const NPC_CELL := Vector2i(5, 1)
 const PLAYER_SHEET := "res://assets/lpc/units/vanguard_walkcycle.png"
 const NPC_SHEET := "res://assets/lpc/units/mage_walkcycle.png"
 
+## A node's position is the top-left corner of its sprite, so a camera sitting at the player's origin centers the screen on that corner and leaves the character down and to the right of it.
 const CAMERA_OFFSET := Vector2(GridGeometry.CELL_SIZE, GridGeometry.CELL_SIZE) * 0.5
 
 var world_state: WorldState = null
@@ -50,6 +52,7 @@ func _ready() -> void:
 	_build_triggers()
 	_last_player_cell = GridGeometry.position_to_cell(FieldBody.box_for_sprite(_player.position).get_center())
 
+	## Dev affordance for visual verification harnesses; never instantiated during normal play.
 	if OS.has_environment("SORTIE_SHOT"):
 		add_child(load("res://scenes/screenshot_probe.gd").new())
 
@@ -58,6 +61,7 @@ func _build_view() -> void:
 	_view.map = _map
 	add_child(_view)
 
+## Added after the view, because siblings draw in tree order and the ground must be drawn before the characters standing on it.
 func _build_npc() -> void:
 	_npc = FieldNpc.new()
 	_npc.name = "FieldNpc"
@@ -104,6 +108,7 @@ func _build_npc() -> void:
 	_npc.position = GridGeometry.cell_to_position(NPC_CELL)
 	add_child(_npc)
 
+## Added after the view and NPC, keeping characters sorted on top of the ground map.
 func _build_player() -> void:
 	_player = FieldPlayer.new()
 	_player.name = "FieldPlayer"
@@ -112,6 +117,8 @@ func _build_player() -> void:
 	_player.setup(PLAYER_SHEET)
 	add_child(_player)
 
+## Parented to the player, so following costs nothing and can never lag a frame behind.
+## The limits are the map's own bounds: past them there is no world, only whatever the last frame left in the buffer.
 func _build_camera() -> void:
 	var bounds := _map.pixel_size()
 
@@ -125,6 +132,7 @@ func _build_camera() -> void:
 	_player.add_child(_camera)
 	_camera.make_current()
 
+## Added last so dialogue UI draws above the map and characters.
 func _build_dialogue_box() -> void:
 	_dialogue_box = DialogueBox.new()
 	_dialogue_box.name = "DialogueBox"
