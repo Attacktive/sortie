@@ -40,8 +40,10 @@ var _dialogue_box: DialogueBox = null
 var _last_player_cell: Vector2i = Vector2i(-1, -1)
 
 func _ready() -> void:
-	world_state = WorldState.new()
-	trigger_registry = TriggerRegistry.new()
+	if world_state == null:
+		world_state = WorldState.new()
+	if trigger_registry == null:
+		trigger_registry = TriggerRegistry.new()
 
 	_map = FieldMap.from_ascii(PackedStringArray(MAP))
 

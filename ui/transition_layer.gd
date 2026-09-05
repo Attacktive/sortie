@@ -34,7 +34,7 @@ func fade_out(duration: float = 0.25, color: Color = Color.BLACK) -> void:
 	_rect.color = Color(color.r, color.g, color.b, 0.0)
 	if duration <= 0.0 or DisplayServer.get_name() == "headless":
 		_rect.color = Color(color.r, color.g, color.b, 1.0)
-		fade_out_completed.emit()
+		fade_out_completed.emit.call_deferred()
 		return
 
 	_tween = create_tween()
@@ -50,7 +50,7 @@ func fade_in(duration: float = 0.25) -> void:
 
 	if duration <= 0.0 or DisplayServer.get_name() == "headless":
 		_rect.color = Color(_rect.color.r, _rect.color.g, _rect.color.b, 0.0)
-		fade_in_completed.emit()
+		fade_in_completed.emit.call_deferred()
 		return
 
 	_tween = create_tween()
