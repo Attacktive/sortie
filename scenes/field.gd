@@ -1,5 +1,6 @@
 class_name Field
 extends Node2D
+signal battle_requested(battle_id: String, restore_state: Dictionary)
 
 ## The walkable world: the map, what draws it, who walks on it, and the camera that follows them.
 
@@ -204,6 +205,15 @@ func _execute_action(action: EventAction) -> void:
 				_map.set_glyph(cell, glyph)
 				if _view != null:
 					_view.refresh()
+		EventAction.Type.START_BATTLE:
+			var battle_id: String = action.params.get("battle_id", "default")
+			if _player != null:
+				_player.frozen = true
+			var restore_state := {
+				"cell": GridGeometry.position_to_cell(FieldBody.box_for_sprite(_player.position).get_center()),
+				"facing": _player.facing,
+			}
+			battle_requested.emit(battle_id, restore_state)
 
 func _start_npc_dialogue(npc: FieldNpc) -> void:
 	_player.frozen = true
@@ -216,6 +226,26 @@ func _start_npc_dialogue(npc: FieldNpc) -> void:
 func _on_dialogue_finished() -> void:
 	if _player != null:
 		_player.frozen = false
+
+## Restores player position and facing direction when returning from battle.
+func restore(restore_state: Dictionary) -> void:
+	if _player == null or restore_state.is_empty():
+		return
+
+	var cell: Vector2i = restore_state.get("cell", START_CELL)
+	_player.position = GridGeometry.cell_to_position(cell)
+	_player.facing = restore_state.get("facing", Facing.Direction.DOWN)
+	_player.frozen = false
+	_last_player_cell = cell
+
+	if _camera != null and _map != null:
+		var bounds := _map.pixel_size()
+		_camera.limit_left = 0
+		_camera.limit_top = 0
+		_camera.limit_right = int(bounds.x)
+		_camera.limit_bottom = int(bounds.y)
+		_camera.position = CAMERA_OFFSET
+		_camera.reset_smoothing()
 
 func _build_triggers() -> void:
 	var step_dialogue := DialogueTree.from_dict({
