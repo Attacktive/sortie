@@ -1,8 +1,8 @@
 # Sortie — Handoff
 
 **Updated:** 2026-09-05
-**Branch:** `main` — PRs #1 through #28 merged fast-forward; history is linear.
-**Status:** the battle is playable end to end, field mode is fully verified, interaction & dialogue (sub-project 2) is complete, events & world state (sub-project 3) is complete, mode flow & battle handoff (sub-project 4) is complete, and save & load (sub-project 5) is complete across all eight tasks — `godot` boots into `scenes/game.tscn` showing a Title screen with New Game, Load Game, Quick Battle, and Quit; field pause menu allows saving and loading across 10 persistent slots with atomic disk writes; rehydrates player coordinates, facing, world flags, and dynamic map mutations. 249 tests passing, exit 0, enforced by CI on every push and pull request.
+**Branch:** `main` — PRs #1 through #29 merged fast-forward; history is linear.
+**Status:** the battle is playable end to end, field mode is fully verified, interaction & dialogue (sub-project 2) is complete, events & world state (sub-project 3) is complete, mode flow & battle handoff (sub-project 4) is complete, save & load (sub-project 5) is complete, and content & polish (sub-project 6) is complete across all eight tasks — `godot` boots into `scenes/game.tscn` showing a Title screen with New Game, Load Game, Quick Battle, and Quit; New Game enters Highspire Courtyard where Commander Sir Roderick briefs the squad on Mission M01 ("The Cabbage Trajectory"); launching the sortie enters tactical combat with Turn 1 banter, Catapult Zone area dialogue, victory/defeat debriefs, and reactive courtyard dialogue upon return. 260 tests passing, exit 0, enforced by CI on every push and pull request.
 
 A grid-tactics RPG vertical slice in Godot 4.7.2 / GDScript.
 
@@ -37,6 +37,8 @@ SORTIE_SHOT=out.png SORTIE_FIELD_INTERACT=true SORTIE_WAIT=0.10 godot scenes/fie
 SORTIE_SHOT=out.png SORTIE_FIELD_TRIGGER=true SORTIE_WAIT=0.10 godot scenes/field.tscn --quit-after 300 # capture trigger event execution
 SORTIE_SHOT=out.png SORTIE_FIELD_MENU=true godot scenes/game.tscn --quit-after 300 # capture field pause menu
 SORTIE_SHOT=out.png SORTIE_SAVE_MENU=true godot scenes/game.tscn --quit-after 300  # capture save slot selector
+SORTIE_SHOT=out.png SORTIE_MISSION_BRIEF=true godot scenes/game.tscn --quit-after 300 # capture Sir Roderick mission briefing
+SORTIE_SHOT=out.png SORTIE_BATTLE_BANTER=true godot scenes/game.tscn --quit-after 300 # capture Turn 1 combat banter
 ```
 
 It lives in `scenes/screenshot_probe.gd`. It is a development affordance rather
@@ -220,7 +222,31 @@ Disk persistence of WorldState, field restore snapshots, and 10-slot management.
 
 **It runs.** Pressing Escape (`ui_cancel`) while walking the field freezes the player and opens the Field Menu (`FieldMenu`) with Save, Load, Title, and Resume. Saving writes atomic JSON snapshots to `user://saves/slot_<id>.json` via `.tmp` rename to eliminate write-interruption risks. Loading from either the Field Menu or the Title Screen ("Load Game") rehydrates cumulative playtime, `WorldState` flags, player position, facing, camera boundaries, and dynamically modified map tiles. Corrupted or invalid save files are detected and rejected gracefully without crashing.
 
-Sub-project 6 of story mode — content — is the final piece of the story mode roadmap.
+Sub-project 6 of story mode — content & polish — delivers the first narrative sortie and concludes the vertical slice roadmap.
+
+---
+
+## Content & polish — done
+
+Narrative campaign sortie `M01_CABBAGE` ("The Cabbage Trajectory"), Highspire Courtyard home base, Commander Sir Roderick NPC, modal in-combat banter, catapult area trigger, and victory/defeat debriefs. **Content & polish is #6**, and all eight tasks are complete:
+
+- Spec: `docs/superpowers/specs/2026-09-05-sortie-content-and-polish-design.md`
+- Plan: `docs/superpowers/plans/2026-09-05-sortie-content-and-polish.md`
+
+| Task | State |
+| --- | --- |
+| 1. Core `MissionData` domain model | Done |
+| 2. Core `MissionRegistry` factory & `M01_CABBAGE` specification | Done |
+| 3. Battle parameterization & mission grid / roster initialization | Done |
+| 4. In-combat modal dialogue system (turn start & area triggers) | Done |
+| 5. Victory & defeat debrief sequences in battle | Done |
+| 6. Highspire Courtyard home base & Commander Sir Roderick NPC | Done |
+| 7. Game coordinator mission routing & end-to-end campaign flow | Done |
+| 8. Visual probe verification & handoff update | Done |
+
+260 tests passing.
+
+**It runs.** Starting "New Game" opens in the Highspire Courtyard. Speaking to Commander Sir Roderick near the gatehouse delivers the mission briefing detailing enemy siege engines launching rotten produce into the royal herb garden. Accepting `[Sortie!]` transitions the squad (Vanguard, Scout Pip, Brute, Raider) into combat against the catapult siege crew on the outer trench map. Turn 1 opens with Scout Pip and the Vanguard bantering about brassicas before player input begins. Marching into the Catapult Zone triggers the Brute's courteous declaration of siege engine dismantling. Wiping out the enemy forces triggers Raider's debrief regarding salvaged silver and hazard pay, returning to the courtyard where Sir Roderick celebrates the salvation of the King's rosemary and teases the upcoming ale run.
 
 ---
 
