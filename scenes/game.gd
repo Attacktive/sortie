@@ -78,10 +78,12 @@ func show_field(restore_data: Dictionary = {}) -> void:
 func start_battle(battle_id: String = "default", is_quick: bool = false) -> void:
 	current_mode = Mode.BATTLE
 	_current_battle_id = battle_id
-	_switch_scene(Battle.new(), func(battle: Battle) -> void:
-		battle.battle_completed.connect(_on_battle_completed)
-		battle.title_requested.connect(show_title)
-		battle.retry_requested.connect(func() -> void: pass)
+	var battle := Battle.new()
+	battle.mission_id = battle_id
+	_switch_scene(battle, func(b: Battle) -> void:
+		b.battle_completed.connect(_on_battle_completed)
+		b.title_requested.connect(show_title)
+		b.retry_requested.connect(func() -> void: pass)
 	)
 
 func _switch_scene(new_scene: Node, setup_fn: Callable = Callable()) -> void:
@@ -132,6 +134,10 @@ func _on_battle_completed(victory: bool) -> void:
 	if victory:
 		if not _current_battle_id.is_empty():
 			world_state.set_flag("defeated_" + _current_battle_id, true)
+			if _current_battle_id != "default" and _current_battle_id != "quick":
+				var mission := MissionRegistry.get_mission(_current_battle_id)
+				if mission != null and not mission.completion_flag.is_empty():
+					world_state.set_flag(mission.completion_flag, true)
 		if not field_restore_state.is_empty():
 			if _transition != null:
 				_transition.fade_out(0.25)
