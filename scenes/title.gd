@@ -5,9 +5,9 @@ extends Node2D
 ## Hosts the TitleMenu and forwards navigation signals to the coordinator.
 
 signal new_game_requested
+signal load_game_requested
 signal quick_battle_requested
 signal quit_requested
-
 var _menu: TitleMenu
 
 func _ready() -> void:
@@ -22,6 +22,7 @@ func _ready() -> void:
 	_menu = TitleMenu.new()
 	_menu.name = "TitleMenu"
 	_menu.new_game_requested.connect(func() -> void: new_game_requested.emit())
+	_menu.load_game_requested.connect(func() -> void: load_game_requested.emit())
 	_menu.quick_battle_requested.connect(func() -> void: quick_battle_requested.emit())
 	_menu.quit_requested.connect(func() -> void: quit_requested.emit())
 	canvas.add_child(_menu)

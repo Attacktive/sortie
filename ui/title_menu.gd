@@ -5,9 +5,9 @@ extends CenterContainer
 ## Emits request signals on selection, leaving scene swaps to the coordinator.
 
 signal new_game_requested
+signal load_game_requested
 signal quick_battle_requested
 signal quit_requested
-
 const TITLE_FONT_SIZE := 48
 const OPTION_FONT_SIZE := 18
 
@@ -20,6 +20,7 @@ const INDENT_PREFIX := "   "
 
 const OPTIONS := [
 	"New Game",
+	"Load Game",
 	"Quick Battle",
 	"Quit"
 ]
@@ -105,6 +106,8 @@ func _activate_selection() -> void:
 		0:
 			new_game_requested.emit()
 		1:
-			quick_battle_requested.emit()
+			load_game_requested.emit()
 		2:
+			quick_battle_requested.emit()
+		3:
 			quit_requested.emit()
