@@ -395,8 +395,22 @@ func _finish_if_resolved() -> bool:
 	_state = State.RESOLVED
 	_cursor.active = false
 	var victory: bool = _turns.phase == TurnOrder.Phase.VICTORY
-	_result_screen.show_result(victory)
-	battle_completed.emit(victory)
+
+	var debrief: DialogueTree = null
+	if _mission != null:
+		if victory and _mission.victory_debrief != null:
+			debrief = _mission.victory_debrief
+		elif not victory and _mission.defeat_debrief != null:
+			debrief = _mission.defeat_debrief
+
+	if debrief != null:
+		_play_modal_dialogue(debrief, func() -> void:
+			_result_screen.show_result(victory)
+			battle_completed.emit(victory)
+		)
+	else:
+		_result_screen.show_result(victory)
+		battle_completed.emit(victory)
 
 	return true
 
