@@ -93,5 +93,32 @@ func test_a_hitched_frame_cannot_tunnel_through_a_wall() -> void:
 func test_sub_stepping_does_not_change_an_ordinary_move() -> void:
 	var box := _box_at(Vector2(10, 200))
 	var moved := FieldBody.move(box, Vector2(96, 0), 1.0 / 60.0, _room())
-
 	assert_almost_eq(moved.position.x, 10.0 + 96.0 / 60.0, 0.001, "a normal frame is one step and lands exactly where the arithmetic says")
+
+
+func test_walking_into_an_obstacle_stops_flush_against_it() -> void:
+	var box := _box_at(Vector2(50, 100))
+	var obstacle := Rect2(100.0, 100.0, 32.0, 20.0)
+	var obstacles: Array[Rect2] = [obstacle]
+
+	var moved := FieldBody.move(box, Vector2(500, 0), 0.5, _room(), obstacles)
+	assert_almost_eq(moved.end.x, 100.0, 0.001, "movement stops flush against the obstacle")
+
+
+func test_a_diagonal_into_an_obstacle_slides_along_it() -> void:
+	var obstacle := Rect2(100.0, 100.0, 32.0, 20.0)
+	var obstacles: Array[Rect2] = [obstacle]
+	var flush := Rect2(100.0 - FieldBody.BOX_SIZE.x, 100.0, FieldBody.BOX_SIZE.x, FieldBody.BOX_SIZE.y)
+
+	var moved := FieldBody.move(flush, Vector2(100, 100), 0.2, _room(), obstacles)
+	assert_almost_eq(moved.position.x, flush.position.x, 0.001, "eastward movement is blocked by the obstacle")
+	assert_gt(moved.position.y, flush.position.y, "southward movement slides freely")
+
+
+func test_walking_away_from_an_obstacle_you_are_touching_works() -> void:
+	var obstacle := Rect2(100.0, 100.0, 32.0, 20.0)
+	var obstacles: Array[Rect2] = [obstacle]
+	var flush := Rect2(100.0 - FieldBody.BOX_SIZE.x, 100.0, FieldBody.BOX_SIZE.x, FieldBody.BOX_SIZE.y)
+
+	var moved := FieldBody.move(flush, Vector2(-100, 0), 0.2, _room(), obstacles)
+	assert_lt(moved.position.x, flush.position.x, "walking away from an obstacle you are touching has to move you")

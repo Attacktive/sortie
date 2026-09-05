@@ -30,7 +30,7 @@ static func sprite_position_for(box: Rect2) -> Vector2:
 ##
 ## The move is cut into sub-steps no longer than half a tile, because a sweep only inspects where the box lands and not what it passed over.
 ## At the design speed a frame moves 1.6 px and this never engages; it is here for the frame that hitches, where one step could otherwise carry the box clean through a wall.
-static func move(box: Rect2, velocity: Vector2, delta: float, map: FieldMap) -> Rect2:
+static func move(box: Rect2, velocity: Vector2, delta: float, map: FieldMap, obstacles: Array[Rect2] = []) -> Rect2:
 	var motion := velocity * delta
 	var longest := maxf(absf(motion.x), absf(motion.y))
 	var steps := maxi(1, ceili(longest / MAX_STEP))
@@ -39,33 +39,45 @@ static func move(box: Rect2, velocity: Vector2, delta: float, map: FieldMap) -> 
 	var moved := box
 
 	for i in steps:
-		moved = _sweep(moved, Vector2(slice.x, 0.0), map)
-		moved = _sweep(moved, Vector2(0.0, slice.y), map)
+		moved = _sweep(moved, Vector2(slice.x, 0.0), map, obstacles)
+		moved = _sweep(moved, Vector2(0.0, slice.y), map, obstacles)
 
 	return moved
 
+
 ## One axis, one step. `motion` has exactly one non-zero component.
-static func _sweep(box: Rect2, motion: Vector2, map: FieldMap) -> Rect2:
+static func _sweep(box: Rect2, motion: Vector2, map: FieldMap, obstacles: Array[Rect2] = []) -> Rect2:
 	if motion == Vector2.ZERO:
 		return box
 
 	var moved := Rect2(box.position + motion, box.size)
-	var blockers := map.solid_tiles_overlapping(moved)
-	if blockers.is_empty():
-		return moved
+	if map != null:
+		var blockers := map.solid_tiles_overlapping(moved)
+		var cell := float(GridGeometry.CELL_SIZE)
 
-	var cell := float(GridGeometry.CELL_SIZE)
+		for tile in blockers:
+			var solid := Rect2(Vector2(tile) * cell, Vector2(cell, cell))
 
-	for tile in blockers:
-		var solid := Rect2(Vector2(tile) * cell, Vector2(cell, cell))
+			if motion.x > 0.0:
+				moved.position.x = minf(moved.position.x, solid.position.x - box.size.x)
+			elif motion.x < 0.0:
+				moved.position.x = maxf(moved.position.x, solid.end.x)
+			elif motion.y > 0.0:
+				moved.position.y = minf(moved.position.y, solid.position.y - box.size.y)
+			else:
+				moved.position.y = maxf(moved.position.y, solid.end.y)
 
-		if motion.x > 0.0:
-			moved.position.x = minf(moved.position.x, solid.position.x - box.size.x)
-		elif motion.x < 0.0:
-			moved.position.x = maxf(moved.position.x, solid.end.x)
-		elif motion.y > 0.0:
-			moved.position.y = minf(moved.position.y, solid.position.y - box.size.y)
-		else:
-			moved.position.y = maxf(moved.position.y, solid.end.y)
+	for obstacle in obstacles:
+		if not moved.intersects(obstacle):
+			continue
+
+		if motion.x > 0.0 and box.position.x < obstacle.position.x:
+			moved.position.x = minf(moved.position.x, obstacle.position.x - box.size.x)
+		elif motion.x < 0.0 and box.end.x > obstacle.end.x:
+			moved.position.x = maxf(moved.position.x, obstacle.end.x)
+		elif motion.y > 0.0 and box.position.y < obstacle.position.y:
+			moved.position.y = minf(moved.position.y, obstacle.position.y - box.size.y)
+		elif motion.y < 0.0 and box.end.y > obstacle.end.y:
+			moved.position.y = maxf(moved.position.y, obstacle.end.y)
 
 	return moved

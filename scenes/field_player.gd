@@ -12,7 +12,8 @@ const WALK_LOOP_FIRST := 1
 var map: FieldMap = null
 var facing: Facing.Direction = Facing.Direction.DOWN
 var frozen: bool = false
-
+var obstacles: Array[Rect2] = []
+var obstacle_provider: Callable = Callable()
 var _sheet: Texture2D = null
 var _frame: int = 0
 var _elapsed: float = 0.0
@@ -40,9 +41,15 @@ func _step(direction: Vector2, delta: float) -> void:
 	if direction == Vector2.ZERO:
 		return
 
-	var box := FieldBody.box_for_sprite(position)
-	var moved := FieldBody.move(box, direction * FieldBody.SPEED, delta, map)
+	var active_obstacles := obstacles.duplicate()
+	if obstacle_provider.is_valid():
+		var extra: Array = obstacle_provider.call()
+		for box in extra:
+			if box is Rect2:
+				active_obstacles.append(box)
 
+	var box := FieldBody.box_for_sprite(position)
+	var moved := FieldBody.move(box, direction * FieldBody.SPEED, delta, map, active_obstacles)
 	position = FieldBody.sprite_position_for(moved)
 	_face(Facing.from_motion(direction, facing))
 

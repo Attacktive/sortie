@@ -38,3 +38,18 @@ func test_the_camera_is_centered_on_the_character() -> void:
 ## Later siblings draw over earlier ones, and a character behind the ground is a character nobody can see.
 func test_the_character_draws_over_the_ground() -> void:
 	assert_gt(_field._player.get_index(), _field._view.get_index(), "the ground goes down before the person standing on it")
+
+
+func test_player_collides_with_npcs_and_cannot_walk_through_them() -> void:
+	var roderick: FieldNpc = _field._roderick
+	var target_box := roderick.get_collision_box()
+	_field._player.position = FieldBody.sprite_position_for(Rect2(target_box.position.x - FieldBody.BOX_SIZE.x - 30.0, target_box.position.y, FieldBody.BOX_SIZE.x, FieldBody.BOX_SIZE.y))
+
+	_field._player._step(Vector2.RIGHT, 1.0)
+
+	var player_box := FieldBody.box_for_sprite(_field._player.position)
+	assert_almost_eq(player_box.end.x, target_box.position.x, 0.001, "player stops flush against Roderick's collision box")
+
+	_field._player.facing = Facing.Direction.RIGHT
+	_field._try_interact()
+	assert_true(_field._dialogue_box.visible, "interacting with NPC while flush against them opens dialogue")

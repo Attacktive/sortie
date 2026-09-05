@@ -62,18 +62,22 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not visible:
 		return
 
+	var action := ""
 	if event.is_action_pressed("ui_up"):
-		handle_input_action("ui_up")
-		get_viewport().set_input_as_handled()
+		action = "ui_up"
 	elif event.is_action_pressed("ui_down"):
-		handle_input_action("ui_down")
-		get_viewport().set_input_as_handled()
+		action = "ui_down"
 	elif event.is_action_pressed("ui_accept"):
-		handle_input_action("ui_accept")
-		get_viewport().set_input_as_handled()
+		action = "ui_accept"
 	elif event.is_action_pressed("ui_cancel"):
-		handle_input_action("ui_cancel")
-		get_viewport().set_input_as_handled()
+		action = "ui_cancel"
+
+	if not action.is_empty():
+		var vp := get_viewport()
+		if vp != null:
+			vp.set_input_as_handled()
+
+		handle_input_action(action)
 
 
 func _activate_option() -> void:

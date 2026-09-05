@@ -68,3 +68,16 @@ func test_field_opens_menu_on_ui_cancel_and_freezes_player() -> void:
 	field.get_field_menu().resume_requested.emit()
 	assert_false(player.frozen, "player unfrozen after resume")
 	assert_null(field.get_field_menu())
+
+
+func test_unhandled_input_accept_does_not_crash_if_handler_removes_from_tree() -> void:
+	_field_menu.title_requested.connect(func() -> void:
+		_field_menu.get_parent().remove_child(_field_menu)
+	)
+	_field_menu.selected_index = 2
+
+	var event := InputEventAction.new()
+	event.action = "ui_accept"
+	event.pressed = true
+	_field_menu._unhandled_input(event)
+	assert_false(_field_menu.is_inside_tree())

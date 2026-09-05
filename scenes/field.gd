@@ -187,9 +187,20 @@ func _build_player() -> void:
 	_player = FieldPlayer.new()
 	_player.name = "FieldPlayer"
 	_player.map = _map
+	_player.obstacle_provider = _get_obstacle_boxes
 	_player.position = GridGeometry.cell_to_position(START_CELL)
 	_player.setup(PLAYER_SHEET)
 	add_child(_player)
+
+
+func _get_obstacle_boxes() -> Array[Rect2]:
+	var boxes: Array[Rect2] = []
+	for child in get_children():
+		if child is FieldNpc:
+			boxes.append(child.get_collision_box())
+
+	return boxes
+
 
 ## Parented to the player, so following costs nothing and can never lag a frame behind.
 ## The limits are the map's own bounds: past them there is no world, only whatever the last frame left in the buffer.
