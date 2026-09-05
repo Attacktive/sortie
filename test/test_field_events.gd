@@ -25,7 +25,6 @@ func test_stepping_on_trigger_cell_fires_action() -> void:
 
 	assert_true(_field.world_state.get_flag("stepped_zone"), "stepping onto trigger cell fires action")
 
-
 func test_step_trigger_samples_center_of_feet_box() -> void:
 	var player: FieldPlayer = _field.get_node("FieldPlayer")
 	player.position = GridGeometry.cell_to_position(Vector2i(2, 1))
@@ -40,6 +39,7 @@ func test_step_trigger_samples_center_of_feet_box() -> void:
 	await get_tree().process_frame
 
 	assert_true(_field.world_state.get_flag("stepped_off_origin"), "step trigger fires when feet center enters trigger cell")
+
 func test_interacting_with_tile_trigger_modifies_map_and_sets_flag() -> void:
 	var player: FieldPlayer = _field.get_node("FieldPlayer")
 	var chest_cell := Vector2i(2, 2)
