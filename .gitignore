@@ -8,3 +8,6 @@ export_presets.cfg
 
 # macOS
 .DS_Store
+
+# Superpowers SDD workspace scratch
+.superpowers/sdd/
