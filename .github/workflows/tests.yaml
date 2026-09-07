@@ -24,6 +24,17 @@ jobs:
       - name: 'Check out the repository'
         uses: 'actions/checkout@v7'
 
+      - name: 'Check core boundary invariants'
+        run: |
+          if grep -rE '\bNode\b|get_tree\(|\bInput\b|preload\(|\.tscn' core/; then
+            echo 'Found forbidden Node/Scene/Input references in core/' >&2
+            exit 1
+          fi
+          if grep -rlE 'randf|randi|randomize' core/ | grep -v real_roll_source; then
+            echo 'Found un-injected randomness in core/' >&2
+            exit 1
+          fi
+
       - name: 'Install Godot'
         run: |
           build="Godot_v${GODOT_VERSION}-stable_linux.x86_64"
