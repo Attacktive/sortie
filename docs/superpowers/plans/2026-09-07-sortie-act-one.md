@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Implement the Act I content encompassing missions M02 through M05, including Sir Roderick's sequential briefing chain, Barnaby's static dialogue, and skirmisher archetype stats. Verify balance through the auto-battle harness.
+**Goal:** Implement the Act I content encompassing missions M02 through M05, including Sir Roderick's sequential briefing chain, Barnaby's static dialogue, skirmisher archetype stats, pure grid/unit builders, and auto-battle balance verification.
 
-**Architecture:** Following the two-layer architecture, missions exist purely as data structures returned by `MissionRegistry` in `core/`. `scenes/field.gd` maintains the sequential state logic for NPC interactions. The `test/test_full_battle.gd` harness runs headless auto-battles against core data to verify balance bands.
+**Architecture:** Following the two-layer architecture, missions exist purely as data structures returned by `MissionRegistry` in `core/`. `MissionRegistry` exposes pure static builders to construct and populate battle grids headlessly and for `scenes/battle.gd`. `scenes/field.gd` maintains the sequential state logic for NPC interactions. The `test/test_full_battle.gd` harness runs headless auto-battles against core data to verify balance bands.
 
 **Tech Stack:** Godot 4.7.2 stable, GDScript, GUT 9.7.1.
 
@@ -17,7 +17,7 @@ These apply to every task below:
 - **Indent with tabs.** Never spaces.
 - **Never hard-wrap for length.** One sentence per physical line, comments included.
 - **Single blank lines before and after lists, headings, and dividers.** (MD012 clean).
-- **Single blank line between functions in GDScript.**
+- **Match the surrounding file's function spacing in GDScript** (e.g., two blank lines in `core/mission_registry.gd`).
 - **Prefer `if` over the ternary operator.**
 - **American English** in prose, comments, and identifiers.
 - **`core/` stays free of the scene tree.** After every task touching `core/`, both invariants must produce no output:
@@ -34,51 +34,105 @@ These apply to every task below:
   ```
 
 - **A new `.gd` file needs its `.uid` committed.** Run `godot --headless --import` before `git add`.
-- **Commits use `feat`/`fix`/`test`/`docs`.** Add the trailer:
-  `Co-authored-by: Gemini 3.1 Pro <176961590+gemini-code-assist[bot]@users.noreply.github.com>`.
+- **Commits use `feat`/`fix`/`test`/`docs`.** Add the trailer naming your own model name and version from your runtime identity:
+  `Co-authored-by: <Model Name> <176961590+gemini-code-assist[bot]@users.noreply.github.com>` (or matching provider).
 
 ---
 
-### Task 1: Core Setup & Barnaby
+### Task 1a: Core Mission Builders & Harness Parameterization
 
-Extract the uniform player roster to a helper, parameterize the auto-battle harness, and update the courtyard mage to Barnaby.
+Implement the uniform player roster helper, pure static battle grid/unit builders in `MissionRegistry`, refactor `scenes/battle.gd` to use them, and parameterize the auto-battle harness.
 
-- [ ] **Step 1: Write failing tests:**
-  - Update `test/test_field.gd` (or relevant test) to assert the courtyard mage node is named `Barnaby` and has exactly three pages of sequential dialogue with no conditionals.
+**Files:**
+
+- Modify: `core/mission_registry.gd`
+- Modify: `scenes/battle.gd`
+- Modify: `test/test_full_battle.gd`
+
+- [ ] **Step 1: Write failing test in `test/test_full_battle.gd`:**
+  - Add `test_m01_cabbage_via_mission_harness`: runs `M01_CABBAGE` through `_play_mission()` across seeds 1 to 40.
+  - Asserts all 40 seeds resolve (`unresolved == 0`), both victory and defeat are reached, and prints the baseline tally with `gut.p()`.
 - [ ] **Step 2: Run test to verify it fails:**
 
   ```sh
-  godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_field.gd -gexit
+  godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_full_battle.gd -gexit
   ```
 
-- [ ] **Step 3: Implement core setup:**
-  - In `core/mission_registry.gd`, create `_get_player_roster() -> Array[UnitData]`.
-  - In `scenes/field.gd`, rename the mage to `Barnaby`, remove `felt_breeze` conditionals, and apply the 3-page sequential dialogue from the spec.
-  - In `test/test_full_battle.gd`, add a `mission_id` parameter to the harness, defaulting to M01.
+- [ ] **Step 3: Implement core builders and parameterization:**
+  - In `core/mission_registry.gd`, implement `static func _get_player_roster() -> Array[UnitData]` and use it in `_build_m01_cabbage()`.
+  - In `core/mission_registry.gd`, implement:
+    - `static func build_battle_grid(mission: MissionData) -> BattleGrid`
+    - `static func populate_units(grid: BattleGrid, mission: MissionData) -> Dictionary`
+  - In `scenes/battle.gd:79-98`, refactor battle initialization to call `MissionRegistry.build_battle_grid()` and `MissionRegistry.populate_units()`.
+  - In `test/test_full_battle.gd`, retain parameterless `_play()` calling `Scenario`, and add `_play_mission(mission: MissionData, seed_val: int) -> Dictionary`.
 - [ ] **Step 4: Run test to verify it passes:**
 
   ```sh
-  godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_field.gd -gexit
+  godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_full_battle.gd -gexit
   ```
 
 - [ ] **Step 5: Verify core invariants and commit:**
 
   ```sh
-  git add core/mission_registry.gd scenes/field.gd test/test_full_battle.gd
-  git commit -m "feat: extract player roster, update Barnaby, and parameterize auto-battle harness"
+  grep -rE '\bNode\b|get_tree\(|\bInput\b|preload\(|\.tscn' core/
+  grep -rlE 'randf|randi|randomize' core/ | grep -v real_roll_source
+  git add core/mission_registry.gd scenes/battle.gd test/test_full_battle.gd
+  git commit -m "feat: add core mission builders and parameterize battle harness"
+  ```
+
+---
+
+### Task 1b: Barnaby NPC & Sequential Dialogue
+
+Rename the courtyard mage NPC to Barnaby and replace its dialogue with the 3-page sequential tree without conditionals.
+
+**Files:**
+
+- Modify: `scenes/field.gd`
+- Modify: `test/test_highspire_courtyard.gd`
+
+- [ ] **Step 1: Write failing test in `test/test_highspire_courtyard.gd`:**
+  - Add `test_barnaby_dialogue_is_sequential_and_unconditional`: asserts node name is `Barnaby`, speaker label is `Barnaby`, dialogue has exactly 3 pages with expected text, and `conditional_dialogues` is empty.
+- [ ] **Step 2: Run test to verify it fails:**
+
+  ```sh
+  godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_highspire_courtyard.gd -gexit
+  ```
+
+- [ ] **Step 3: Implement Barnaby updates:**
+  - In `scenes/field.gd`, rename the mage node from `FieldNpc` to `Barnaby` and set speaker label to `Barnaby`.
+  - Replace dialogue tree with the 3-page sequential text from the story spec.
+  - Remove `felt_breeze` conditional tree while leaving the ambient breeze step trigger tile and text intact.
+- [ ] **Step 4: Run test to verify it passes:**
+
+  ```sh
+  godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_highspire_courtyard.gd -gexit
+  ```
+
+- [ ] **Step 5: Commit:**
+
+  ```sh
+  git add scenes/field.gd test/test_highspire_courtyard.gd
+  git commit -m "feat: rename courtyard mage to Barnaby and set sequential dialogue"
   ```
 
 ---
 
 ### Task 2: Mission M02_ALE_RUN
 
-Implement the M02 mission in the registry with its unique map, rosters, triggers, and debriefs.
+Implement the M02 mission in the registry with its unique map, rosters, triggers, debriefs, and skirmisher stats.
 
-- [ ] **Step 1: Write failing tests in `test/test_mission_registry.gd`:**
-  - `test_m02_ale_run_configuration`: Asserts 10x8 map, valid glyphs, correct spawn/roster counts, valid walkable triggers/spawns, and correct `completion_flag` (`mission_m02_completed`).
+**Files:**
+
+- Modify: `core/mission_registry.gd`
+- Modify: `test/test_mission_registry.gd`
+
+- [ ] **Step 1: Write failing test in `test/test_mission_registry.gd`:**
+  - `test_m02_ale_run_configuration`: Asserts 10x8 map, valid glyphs, correct spawn/roster counts, valid walkable triggers/spawns, no duplicate spawns, title "The Seasonal Ale Run", completion flag `mission_m02_completed`, and skirmisher evasion `0.30`.
 - [ ] **Step 2: Run test to verify it fails.**
 - [ ] **Step 3: Implement M02:**
   - Add `M02_ALE_RUN` branch in `MissionRegistry.get_mission(id)`.
+  - Pass `_get_player_roster()` for player roster.
   - Define skirmisher enemies with `evasion = 0.30` in `_make_unit()` arguments.
 - [ ] **Step 4: Run test to verify it passes.**
 - [ ] **Step 5: Verify core invariants and commit:**
@@ -94,11 +148,16 @@ Implement the M02 mission in the registry with its unique map, rosters, triggers
 
 Implement the M03 mission in the registry.
 
-- [ ] **Step 1: Write failing tests in `test/test_mission_registry.gd`:**
-  - `test_m03_silver_spoons_configuration` (same assertions as M02).
+**Files:**
+
+- Modify: `core/mission_registry.gd`
+- Modify: `test/test_mission_registry.gd`
+
+- [ ] **Step 1: Write failing test in `test/test_mission_registry.gd`:**
+  - `test_m03_silver_spoons_configuration`: Asserts 10x8 map, valid glyphs, correct counts, walkable spawns/triggers, title "The Royal Cutlery", and completion flag `mission_m03_completed`.
 - [ ] **Step 2: Run test to verify it fails.**
 - [ ] **Step 3: Implement M03:**
-  - Add `M03_SILVER_SPOONS` branch in `MissionRegistry`.
+  - Add `M03_SILVER_SPOONS` branch in `MissionRegistry.get_mission(id)`.
 - [ ] **Step 4: Run test to verify it passes.**
 - [ ] **Step 5: Verify core invariants and commit:**
 
@@ -113,11 +172,17 @@ Implement the M03 mission in the registry.
 
 Implement the M04 mission in the registry.
 
-- [ ] **Step 1: Write failing tests in `test/test_mission_registry.gd`:**
-  - `test_m04_field_oven_configuration` (same assertions as M02).
+**Files:**
+
+- Modify: `core/mission_registry.gd`
+- Modify: `test/test_mission_registry.gd`
+
+- [ ] **Step 1: Write failing test in `test/test_mission_registry.gd`:**
+  - `test_m04_field_oven_configuration`: Asserts 10x8 map, valid glyphs, correct counts, title "The Tactical Bakery", and completion flag `mission_m04_completed`.
 - [ ] **Step 2: Run test to verify it fails.**
 - [ ] **Step 3: Implement M04:**
-  - Add `M04_FIELD_OVEN` branch in `MissionRegistry`. Note 3 enemies spawn inside the area trigger rectangle per the brief.
+  - Add `M04_FIELD_OVEN` branch in `MissionRegistry.get_mission(id)`.
+  - Note 3 enemies spawn inside the area trigger rectangle per the brief, while cell `(6, 3)` remains free.
 - [ ] **Step 4: Run test to verify it passes.**
 - [ ] **Step 5: Verify core invariants and commit:**
 
@@ -132,11 +197,16 @@ Implement the M04 mission in the registry.
 
 Implement the M05 mission in the registry.
 
-- [ ] **Step 1: Write failing tests in `test/test_mission_registry.gd`:**
-  - `test_m05_spice_wars_configuration` (same assertions as M02).
+**Files:**
+
+- Modify: `core/mission_registry.gd`
+- Modify: `test/test_mission_registry.gd`
+
+- [ ] **Step 1: Write failing test in `test/test_mission_registry.gd`:**
+  - `test_m05_spice_wars_configuration`: Asserts 10x8 map, valid glyphs, correct counts, title "The Paprika Defense", completion flag `mission_m05_completed`, and General Malakor stats (40 HP, 12 Atk, Range 2).
 - [ ] **Step 2: Run test to verify it fails.**
 - [ ] **Step 3: Implement M05:**
-  - Add `M05_SPICE_WARS` branch in `MissionRegistry`. Set General Malakor to 40 HP, 12 Atk, Range 2.
+  - Add `M05_SPICE_WARS` branch in `MissionRegistry.get_mission(id)`.
 - [ ] **Step 4: Run test to verify it passes.**
 - [ ] **Step 5: Verify core invariants and commit:**
 
@@ -149,41 +219,62 @@ Implement the M05 mission in the registry.
 
 ### Task 6: Sir Roderick's Briefing Chain & E2E Flow
 
-Update the field sequence state machine and test the end-to-end flow.
+Update the field sequence state machine, screenshot probe hooks, and test the end-to-end flow.
+
+**Files:**
+
+- Modify: `scenes/field.gd`
+- Modify: `scenes/screenshot_probe.gd`
+- Modify: `README.md`
+- Modify: `test/test_highspire_courtyard.gd`
+- Modify: `test/test_story_mission_end_to_end.gd`
 
 - [ ] **Step 1: Write failing tests:**
-  - In `test/test_field.gd`: Test all six world-flag states of Sir Roderick's `conditional_dialogues`, checking for the correct first page and `start_battle` actions.
-  - In `test/test_story_flow.gd`: Extend the end-to-end flow test to complete M01, accept M02, drive M02 to victory, and assert `mission_m02_completed`.
+  - In `test/test_highspire_courtyard.gd`: Test all six world-flag states of Sir Roderick's `conditional_dialogues`, checking for correct first page, `start_battle` actions carrying expected mission IDs, and asserting that the terminal state has no choices.
+  - In `test/test_highspire_courtyard.gd`: Update `test_sir_roderick_updates_dialogue_after_mission_completion` to assert the M02 briefing starting node (`m02_briefing_ale`) instead of `post_victory`.
+  - In `test/test_story_mission_end_to_end.gd`: Extend end-to-end flow test to complete M01, accept M02, drive M02 to victory, and assert `mission_m02_completed`.
 - [ ] **Step 2: Run tests to verify they fail.**
-- [ ] **Step 3: Implement field state chain:**
+- [ ] **Step 3: Implement field state chain & probes:**
   - In `scenes/field.gd`, replace Roderick's conditional dialogues with the 5 sequential flag checks (`mission_m05_completed` down to `mission_m01_completed`).
-  - Add unique node IDs (e.g., `m01_node_1`) across all trees.
+  - Leave M01 node IDs intact; use descriptive, mission-prefixed node IDs for new trees (e.g., `m02_briefing_ale`, `m05_action_sortie`, `terminal_feast`).
   - Add new screenshot probe hooks for a new briefing and banter to `scenes/screenshot_probe.gd`, and update `README.md` to reflect them exactly.
 - [ ] **Step 4: Run tests to verify they pass.**
 - [ ] **Step 5: Commit:**
 
   ```sh
-  git add scenes/field.gd scenes/screenshot_probe.gd README.md test/test_field.gd test/test_story_flow.gd
-  git commit -m "feat: implement Sir Roderick's briefing chain and E2E flow"
+  git add scenes/field.gd scenes/screenshot_probe.gd README.md test/test_highspire_courtyard.gd test/test_story_mission_end_to_end.gd
+  git commit -m "feat: implement Sir Roderick's briefing chain and extend story flow"
   ```
 
 ---
 
 ### Task 7: Balance Gate
 
-Run the auto-battle harness for M02-M05 and adjust stats to hit the target win-rate bands.
+Run the auto-battle harness for M02-M05, adjust stats to hit target win-rate bands, and update documentation.
+
+**Files:**
+
+- Modify: `core/mission_registry.gd`
+- Modify: `test/test_full_battle.gd`
+- Modify: `docs/superpowers/specs/2026-09-07-sortie-act-one-design.md`
+- Modify: `docs/superpowers/specs/2026-09-07-sortie-act-one-story.md`
+- Modify: `docs/DESIGN-NOTES.md`
 
 - [ ] **Step 1: Write the balance gate test:**
-  - Add a test in `test/test_full_battle.gd` (or sibling) that iterates `["M02_ALE_RUN", "M03_SILVER_SPOONS", "M04_FIELD_OVEN", "M05_SPICE_WARS"]`, running 40 seeds each, and `assert_between()` on the victory count (24-34 for M02-M04; 18-28 for M05). Also assert both outcomes are reached at least once per mission.
+  - Add `test_act_one_missions_balance_bands` in `test/test_full_battle.gd` iterating `["M02_ALE_RUN", "M03_SILVER_SPOONS", "M04_FIELD_OVEN", "M05_SPICE_WARS"]`, running 40 seeds each.
+  - Assert `assert_between(victories, 24, 34)` for M02–M04, and `assert_between(victories, 18, 28)` for M05.
+  - Assert `assert_gt(victories, 0)`, `assert_gt(defeats, 0)`, and `assert_eq(unresolved, 0)` per mission.
+  - Print tally line using `gut.p("Mission %s: %d victories, %d defeats, %d unresolved" % [id, victories, defeats, unresolved])`.
 - [ ] **Step 2: Run the test to check initial balance.**
 - [ ] **Step 3: Adjust stats:**
   - If any mission fails the band, adjust enemy HP and Attack in steps of no more than 3 in `core/mission_registry.gd` until the test passes.
 - [ ] **Step 4: Update Documentation:**
   - Record the final HP/Atk numbers and the seed tally back into `docs/superpowers/specs/2026-09-07-sortie-act-one-design.md` and `docs/superpowers/specs/2026-09-07-sortie-act-one-story.md`.
+  - Record any decisions not covered in the brief in `docs/DESIGN-NOTES.md`.
 - [ ] **Step 5: Verify tests and commit:**
 
   ```sh
   godot --headless -s addons/gut/gut_cmdln.gd -gdir=res://test -gexit
-  git add core/mission_registry.gd test/test_full_battle.gd docs/superpowers/specs/
+  git add core/mission_registry.gd test/test_full_battle.gd docs/superpowers/specs/ docs/DESIGN-NOTES.md
   git commit -m "test: balance Act I missions against target win-rate bands"
   ```
