@@ -46,18 +46,23 @@ Extract the uniform player roster to a helper, parameterize the auto-battle harn
 - [ ] **Step 1: Write failing tests:**
   - Update `test/test_field.gd` (or relevant test) to assert the courtyard mage node is named `Barnaby` and has exactly three pages of sequential dialogue with no conditionals.
 - [ ] **Step 2: Run test to verify it fails:**
+
   ```sh
   godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_field.gd -gexit
   ```
+
 - [ ] **Step 3: Implement core setup:**
   - In `core/mission_registry.gd`, create `_get_player_roster() -> Array[UnitData]`.
   - In `scenes/field.gd`, rename the mage to `Barnaby`, remove `felt_breeze` conditionals, and apply the 3-page sequential dialogue from the spec.
   - In `test/test_full_battle.gd`, add a `mission_id` parameter to the harness, defaulting to M01.
 - [ ] **Step 4: Run test to verify it passes:**
+
   ```sh
   godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_field.gd -gexit
   ```
+
 - [ ] **Step 5: Verify core invariants and commit:**
+
   ```sh
   git add core/mission_registry.gd scenes/field.gd test/test_full_battle.gd
   git commit -m "feat: extract player roster, update Barnaby, and parameterize auto-battle harness"
@@ -77,6 +82,7 @@ Implement the M02 mission in the registry with its unique map, rosters, triggers
   - Define skirmisher enemies with `evasion = 0.30` in `_make_unit()` arguments.
 - [ ] **Step 4: Run test to verify it passes.**
 - [ ] **Step 5: Verify core invariants and commit:**
+
   ```sh
   git add core/mission_registry.gd test/test_mission_registry.gd
   git commit -m "feat: implement M02_ALE_RUN mission data"
@@ -95,6 +101,7 @@ Implement the M03 mission in the registry.
   - Add `M03_SILVER_SPOONS` branch in `MissionRegistry`.
 - [ ] **Step 4: Run test to verify it passes.**
 - [ ] **Step 5: Verify core invariants and commit:**
+
   ```sh
   git add core/mission_registry.gd test/test_mission_registry.gd
   git commit -m "feat: implement M03_SILVER_SPOONS mission data"
@@ -113,6 +120,7 @@ Implement the M04 mission in the registry.
   - Add `M04_FIELD_OVEN` branch in `MissionRegistry`. Note 3 enemies spawn inside the area trigger rectangle per the brief.
 - [ ] **Step 4: Run test to verify it passes.**
 - [ ] **Step 5: Verify core invariants and commit:**
+
   ```sh
   git add core/mission_registry.gd test/test_mission_registry.gd
   git commit -m "feat: implement M04_FIELD_OVEN mission data"
@@ -131,6 +139,7 @@ Implement the M05 mission in the registry.
   - Add `M05_SPICE_WARS` branch in `MissionRegistry`. Set General Malakor to 40 HP, 12 Atk, Range 2.
 - [ ] **Step 4: Run test to verify it passes.**
 - [ ] **Step 5: Verify core invariants and commit:**
+
   ```sh
   git add core/mission_registry.gd test/test_mission_registry.gd
   git commit -m "feat: implement M05_SPICE_WARS mission data"
@@ -152,6 +161,7 @@ Update the field sequence state machine and test the end-to-end flow.
   - Add new screenshot probe hooks for a new briefing and banter to `scenes/screenshot_probe.gd`, and update `README.md` to reflect them exactly.
 - [ ] **Step 4: Run tests to verify they pass.**
 - [ ] **Step 5: Commit:**
+
   ```sh
   git add scenes/field.gd scenes/screenshot_probe.gd README.md test/test_field.gd test/test_story_flow.gd
   git commit -m "feat: implement Sir Roderick's briefing chain and E2E flow"
@@ -171,6 +181,7 @@ Run the auto-battle harness for M02-M05 and adjust stats to hit the target win-r
 - [ ] **Step 4: Update Documentation:**
   - Record the final HP/Atk numbers and the seed tally back into `docs/superpowers/specs/2026-09-07-sortie-act-one-design.md` and `docs/superpowers/specs/2026-09-07-sortie-act-one-story.md`.
 - [ ] **Step 5: Verify tests and commit:**
+
   ```sh
   godot --headless -s addons/gut/gut_cmdln.gd -gdir=res://test -gexit
   git add core/mission_registry.gd test/test_full_battle.gd docs/superpowers/specs/

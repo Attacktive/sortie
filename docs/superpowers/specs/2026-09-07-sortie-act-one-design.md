@@ -37,6 +37,7 @@ The target win-rate band for M02, M03, and M04 is set to **24 to 34 victories ou
 ### 4.1. Mission Registry (`core/mission_registry.gd`)
 
 Four new missions added to `MissionRegistry.get_mission(id)`:
+
 - `M02_ALE_RUN`
 - `M03_SILVER_SPOONS`
 - `M04_FIELD_OVEN`
@@ -49,6 +50,7 @@ Skirmisher unit stats will be initialized directly in the registry via the `_mak
 ### 4.2. Field Updates (`scenes/field.gd`)
 
 Sir Roderick's `conditional_dialogues` will be updated to a prioritized list of five conditions mapping to the mission flags, ensuring the latest incomplete mission brief is presented:
+
 1. `EventCondition.is_true("mission_m05_completed")` -> Terminal post-victory dialogue.
 2. `EventCondition.is_true("mission_m04_completed")` -> M05 Briefing.
 3. `EventCondition.is_true("mission_m03_completed")` -> M04 Briefing.
