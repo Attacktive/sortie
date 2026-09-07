@@ -1,0 +1,55 @@
+# Sortie — Design Notes
+
+## Decisions worth not re-litigating
+
+- **Cell size is 64px** because an LPC character is exactly 64×64 and LPC terrain is exactly a 2×2 block of 32px tiles. Every pixel on screen is therefore the same size. Mixing scale factors is what makes pixel art look wrong.
+- **The Archer became a Mage.** No archer existed in the art; a wizard preserves the design intent exactly — fragile, strikes at range 2, cannot be countered by melee.
+- **Roll order is a contract**, not an implementation detail. Changing it invalidates every saved seed, so the tests pin it.
+- **The damage floor of 1 applies before the crit multiplier**, so a crit is always a clean 3× of the hit it replaces.
+- **No tuning pass was needed.** 9.3 team-turns is ~4.6 full rounds, inside the 4–6 target, and 75/25 means losing is possible without being likely.
+
+---
+
+## Known issues and risks
+
+| Issue | Detail |
+| --- | --- |
+| **Interactive coverage** | See "Not done" #1. The rules are provably correct; the wiring between input and rules is not. |
+| **Audio licence is not** | The three sounds are Kenney RPG Audio, CC0. Chosen so a second share-alike obligation was not taken on for three files. `assets/audio/CREDITS.md` records which original became which clip. |
+| **Art licence is share-alike** | LPC art is CC-BY-SA 3.0 / GPL 3.0. The OpenGameART page also lists OGA-BY, but the manifest *inside the download* names only the first two, so this project follows the stricter bundled manifest. Source code stays MIT; the share-alike obligation attaches to the artwork. `assets/lpc/ATTRIBUTION-tile-atlas.txt` must not be deleted. |
+| **`github-advanced-security` fails** | Not a finding. The Copilot-based scanner crashes with `CAPIError: 400 The requested model is not supported.` before analysing anything, so it reports failure without ever having looked at the code. Nothing in the repo can fix it. Codacy and CodeFactor both pass. |
+| **Dependabot watched an empty folder** | It was configured for `github-actions` with `directory: '/.github'`, but there were no workflows at all. Now `/`, which is what the ecosystem expects. |
+| **Codacy lints Markdown** | It flagged six markdownlint violations in this file — lists need a blank line above and below. Worth remembering when adding docs. |
+
+---
+
+## Bugs found during implementation
+
+Kept because the shapes recur, and each was patched back into the plan so it does not mislead the next reader.
+
+| Bug | Why it happened |
+| --- | --- |
+| A\* could never chase anyone | Opposing units are marked solid for the approach pathfind — including the chase target's own cell. A\* cannot path *onto* a solid cell, so every advance silently returned the origin. |
+| The action menu was a dead end | Three compounding causes: the cursor was fully deactivated so it never emitted a cancel, `_on_cancel` had no branch for that state, and nothing recorded where the unit started. |
+| `remove_unit` erased by cell alone | Could evict whoever had since moved onto a dead unit's old cell. Now identity-checked and idempotent. |
+| Death fade never played | `refresh()` hid dead units immediately, cutting off the animation before it started. |
+| Kenney sprites were the wrong *shape* | Their 16px characters are tokens — the opaque region is a rounded blob filling the tile with no negative space and no feet. Checking the sample sheet for *style* was not enough. |
+| The pine tree was invisible | Green tree on green grass; only its dark outline survived. Caught by looking at a screenshot rather than trusting the composite. |
+| The screenshot harness could save nothing | With a short `SORTIE_WAIT` the timer expired before the first frame was ever drawn, and the capture was written anyway — an all-black PNG, `mean=0 stddev=0`, reported as a successful verification. It now awaits `RenderingServer.frame_post_draw` first. A verification tool that fails silently is worse than none. |
+| `FUNDING.yaml` was silently ignored | GitHub reads `.github/FUNDING.yml` and nothing else. A `.yaml` sibling produces no error and no sponsor button — confirmed by fetching the repo page and finding no funding link at all. Renamed. The house style prefers `.yaml`, but this is the documented exception for tools that only accept `.yml`. |
+| The cursor ignored the event it was handed | Mouse motion called `get_local_mouse_position()` — a fresh query of the display server — rather than reading `event.position`. It works in a real window, so nothing was visibly broken, but it answers "where is the pointer now" instead of "where did this event happen", and it made the entire pointer path untestable: headless has no mouse, so it read `(0, 0)` forever and `Input.warp_mouse` did not help. Found the moment real events were pointed at it. |
+| A test that hung instead of failing | The first input tests awaited `walk_finished` and `animator.finished` bare. Unwire the thing that starts them and the await never returns, so a broken build hangs CI rather than reporting a failure. Both are now `wait_for_signal(..., seconds)` with the result asserted. |
+| A task boundary in the wrong place | The plan split `FieldBody` from its sub-stepping guard, on the theory that a working sweep came first and tunneling was a refinement on top. Six of the sweep's own tests failed until sub-stepping existed, because they walk into walls at 1000 px/s and a sweep only inspects where the box lands, not what it passed over. A task has to be the smallest unit that can pass its own tests. |
+| A test that was wrong while the code was right | The wall-slide test drove 1000 px north against 200 px east and expected the character pinned to the wall. It is not — it slides, clears the wall's eastern edge, and correctly continues north. The tempting fix is to change the code until the assertion goes green, which would have broken sliding to satisfy a carelessly posed question. It recurred one task later: a `FieldView` test asserted the grass under a wall at (2,0) matches the grass at (0,0), contradicting the per-cell variant hash the view exists to use. Twice now, so assume a third. |
+| A view that drew nothing and passed | `FieldView` first decided its grass-then-solid layering inside `_draw`. Deleting the solid layer outright — every wall and tree invisible, which is the worst failure this code has — passed every test. Nothing headless can see into `_draw`, so anything it alone decides is untested by construction. The decision moved out to `layers_for()` and `_draw` became a loop with no opinions. What is left inside `_draw` needs a screenshot, not a test. |
+| A test that depended on how fast the machine was | The planned wall test held a direction for 120 frames and asserted the character had not passed the wall. Measured in this harness, 120 frames is 0.844 s of summed delta, which at 96 px/s carries the character 81 px — and the wall is 80 px away. One percent faster and it never arrives, so the assertion passes having tested nothing. Travel is summed delta, not frame count, so every machine gives a different answer. It now walks until progress stops, with a frame budget as a stop rather than a schedule. |
+| An inequality where the exact number was the whole point | The same test asserted the character had not passed the wall. Passing `FieldBody` the raw sprite position instead of the collision box also stops the character at the wall — sixteen pixels inside it — and satisfies that inequality. Asserting the exact resting position is what catches it: the mutation run reports 96.0 against an expected 80.0, which is the offset itself. |
+| A planned test that could not have passed | It read the walk frame after a helper that releases the key, and releasing is exactly what restores the idle frame, so it would have asserted `0 > 0` against a correct implementation. Worth knowing that a plan's test code is a draft, not a fixture: five of this plan's tests have now been rewritten or dropped — one in Task 3, one in Task 5, three in Task 6 — and not one of them because the implementation was wrong. |
+| Two identical markdown headings failed CI | Codacy runs markdownlint, and MD024 rejects two headings with the same text anywhere in a file. Two task writeups both ended with "What changed from the plan as written, and why". Nothing local catches this — like the `FUNDING.yml` case above, the first evidence is a red check. Each writeup now names its task. |
+| The invariant caught a comment | `## Pure and Node-free on purpose`, in a `core/` file explaining that it does not depend on a Node, trips the Node-free grep. The comment gave way rather than the invariant: a grep blunt enough to be unfoolable beats one clever enough to be wrong. No `core/` file can use that word, even to disclaim it. |
+| A camera centered on a corner | A `Node2D`'s position is the top-left of its 64x64 sprite, so the planned field camera — parented at the player's origin — would have put *that corner* at screen center and left the character 32 px down and to the right of it. Permanently, in a game whose entire subject is the thing in the middle of the screen. The planned tests checked what the camera was parented to and what its limits were, never where it sat relative to the character. |
+| A scene whose tests could not see it | The rest of the field scene's planned coverage checked the pieces and skipped the relationships between them, which is the only thing a scene *is*. Nothing looked at the view's map, so a `FieldView` with a null map — a black screen with a perfectly functional invisible character walking around on it — would have passed all four. Nothing looked at draw order, so a ground layer painted over the character would have too. Neither was actually wrong in the planned code, unlike the camera above; both are asserted now. |
+| Variant type inference | Godot 4.7 treats inferring a type from a Variant value as an error, so `:=` fails on the flood fill's frontier variable. |
+| UI menus crashed on input when dismissing or switching scenes | In `ui/field_menu.gd`, `ui/dialogue_box.gd`, `ui/save_slot_menu.gd`, and `ui/title_menu.gd`, `handle_input_action()` was invoked before `get_viewport().set_input_as_handled()`. If an action removed the menu from the tree, `get_viewport()` evaluated to `null` and crashed. |
+| NPCs had no collision on the field | `FieldBody.move()` and `_sweep()` only collided against solid tiles in `FieldMap`. NPCs had collision boxes defined, but `FieldBody` had no mechanism to receive dynamic obstacle boxes, allowing the player to walk clean through them. |
+| Field characters drew in the wrong depth order | `Field` rendered children in flat tree order. Because `_player` was added after `_roderick` and `_npc`, the player was unconditionally drawn on top of all NPCs regardless of Y position, causing the player to overlap an NPC's head when standing north of them. |
