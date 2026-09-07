@@ -112,6 +112,7 @@ Two boundary invariants are enforced in CI by the `Check core boundary invariant
 | `test/` | GUT test suite covering rules, scene wiring, menus, audio, save/load, and real input events; `test_full_battle.gd` provides headless auto-battle simulation |
 | `docs/DESIGN-NOTES.md` | Non-re-litigated design decisions, known risks, and implementation bug postmortems |
 | `docs/superpowers/specs/` + `plans/` | Design specifications and implementation plans for each completed sub-project |
+| `AGENTS.md` | Instructions for coding agents: how work is divided between agents and where briefs and specs live |
 
 ---
 
