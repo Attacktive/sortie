@@ -14,12 +14,12 @@
 
 | Issue | Detail |
 | --- | --- |
-| **Interactive coverage** | See "Not done" #1. The rules are provably correct; the wiring between input and rules is not. |
+| **Interactive coverage** | See issue #33. The rules are provably correct; the wiring between input and rules is not. |
 | **Audio licence is not** | The three sounds are Kenney RPG Audio, CC0. Chosen so a second share-alike obligation was not taken on for three files. `assets/audio/CREDITS.md` records which original became which clip. |
 | **Art licence is share-alike** | LPC art is CC-BY-SA 3.0 / GPL 3.0. The OpenGameART page also lists OGA-BY, but the manifest *inside the download* names only the first two, so this project follows the stricter bundled manifest. Source code stays MIT; the share-alike obligation attaches to the artwork. `assets/lpc/ATTRIBUTION-tile-atlas.txt` must not be deleted. |
 | **`github-advanced-security` fails** | Not a finding. The Copilot-based scanner crashes with `CAPIError: 400 The requested model is not supported.` before analysing anything, so it reports failure without ever having looked at the code. Nothing in the repo can fix it. Codacy and CodeFactor both pass. |
 | **Dependabot watched an empty folder** | It was configured for `github-actions` with `directory: '/.github'`, but there were no workflows at all. Now `/`, which is what the ecosystem expects. |
-| **Codacy lints Markdown** | It flagged six markdownlint violations in this file — lists need a blank line above and below. Worth remembering when adding docs. |
+| **Codacy lints Markdown** | It flagged six markdownlint violations in the old handoff document — lists need a blank line above and below. Worth remembering when adding docs. |
 
 ---
 

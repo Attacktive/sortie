@@ -32,6 +32,8 @@ SORTIE_SHOT=out.png SORTIE_FIELD_MENU=true godot scenes/game.tscn --quit-after 3
 SORTIE_SHOT=out.png SORTIE_SAVE_MENU=true godot scenes/game.tscn --quit-after 300  # capture save slot selector
 SORTIE_SHOT=out.png SORTIE_MISSION_BRIEF=true godot scenes/game.tscn --quit-after 300 # capture Sir Roderick mission briefing
 SORTIE_SHOT=out.png SORTIE_BATTLE_BANTER=true godot scenes/game.tscn --quit-after 300 # capture Turn 1 combat banter
+SORTIE_SHOT=out.png SORTIE_NORTH_OF_NPC=true godot scenes/game.tscn --quit-after 300 # capture player north of Sir Roderick, drawn behind him
+SORTIE_SHOT=out.png SORTIE_SOUTH_OF_NPC=true godot scenes/game.tscn --quit-after 300 # capture player south of Sir Roderick, drawn in front
 ```
 
 It lives in `scenes/screenshot_probe.gd`. It is a development affordance rather than a feature, and it stays: it is how every visual claim in this project was verified instead of asserted. Vary `SORTIE_WAIT` across several runs and stack the results to inspect an animation frame by frame — a single capture proves a frame drew, not that a cycle plays.
