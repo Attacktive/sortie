@@ -1,0 +1,4 @@
+# CLAUDE.md is a symlink to AGENTS.md, so Claude Code reads the same instructions omp does.
+# Analyzed as its own file, it reports every instruction as a duplicate of itself.
+exclude_paths:
+  - 'CLAUDE.md'
