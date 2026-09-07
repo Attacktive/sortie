@@ -62,7 +62,7 @@ Implement the uniform player roster helper, pure static battle grid/unit builder
   - In `core/mission_registry.gd`, implement `static func _get_player_roster() -> Array[UnitData]` and use it in `_build_m01_cabbage()`.
   - In `core/mission_registry.gd`, implement:
     - `static func build_battle_grid(mission: MissionData) -> BattleGrid`
-    - `static func populate_units(grid: BattleGrid, mission: MissionData) -> Dictionary`
+    - `static func populate_units(grid: BattleGrid, mission: MissionData) -> Dictionary` placing each unit with `grid.place_unit()`.
   - In `scenes/battle.gd:79-98`, refactor battle initialization to call `MissionRegistry.build_battle_grid()` and `MissionRegistry.populate_units()`.
   - In `test/test_full_battle.gd`, retain parameterless `_play()` calling `Scenario`, and add `_play_mission(mission: MissionData, seed_val: int) -> Dictionary`.
 - [ ] **Step 4: Run test to verify it passes:**
@@ -125,20 +125,45 @@ Implement the M02 mission in the registry with its unique map, rosters, triggers
 **Files:**
 
 - Modify: `core/mission_registry.gd`
-- Modify: `test/test_mission_registry.gd`
+- Modify: `test/test_mission_data.gd`
 
-- [ ] **Step 1: Write failing test in `test/test_mission_registry.gd`:**
-  - `test_m02_ale_run_configuration`: Asserts 10x8 map, valid glyphs, correct spawn/roster counts, valid walkable triggers/spawns, no duplicate spawns, title "The Seasonal Ale Run", completion flag `mission_m02_completed`, and skirmisher evasion `0.30`.
-- [ ] **Step 2: Run test to verify it fails.**
+- [ ] **Step 1: Write failing test in `test/test_mission_data.gd`:**
+  - `test_m02_ale_run_configuration`: Asserts the full checklist required by section 6:
+    - Map is 10 columns by 8 rows (`map_ascii.size() == 8`, row lengths 10).
+    - Map uses only the three legal glyphs (`.`, `F`, `#`).
+    - Spawn count equals roster count on both sides (`player_spawns.size() == player_roster.size()` and `enemy_spawns.size() == enemy_roster.size()`).
+    - Every spawn cell is walkable (not `#`).
+    - Every trigger cell in the area trigger rectangle is walkable (not `#`).
+    - No spawn cell repeats (all player and enemy spawn coordinates are distinct).
+    - `completion_flag` is `"mission_m02_completed"`.
+    - Title is `"The Seasonal Ale Run"`.
+    - Turn-1 dialogue tree is non-null and opens with Scout.
+    - Area trigger tree is non-null and opens with Brute.
+    - Victory debrief is non-null and opens with Raider.
+    - Defeat debrief is non-null and opens with Vanguard.
+    - Skirmisher enemies have `evasion == 0.30`.
+- [ ] **Step 2: Run test to verify it fails:**
+
+  ```sh
+  godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_mission_data.gd -gexit
+  ```
+
 - [ ] **Step 3: Implement M02:**
   - Add `M02_ALE_RUN` branch in `MissionRegistry.get_mission(id)`.
   - Pass `_get_player_roster()` for player roster.
   - Define skirmisher enemies with `evasion = 0.30` in `_make_unit()` arguments.
-- [ ] **Step 4: Run test to verify it passes.**
+- [ ] **Step 4: Run test to verify it passes:**
+
+  ```sh
+  godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_mission_data.gd -gexit
+  ```
+
 - [ ] **Step 5: Verify core invariants and commit:**
 
   ```sh
-  git add core/mission_registry.gd test/test_mission_registry.gd
+  grep -rE '\bNode\b|get_tree\(|\bInput\b|preload\(|\.tscn' core/
+  grep -rlE 'randf|randi|randomize' core/ | grep -v real_roll_source
+  git add core/mission_registry.gd test/test_mission_data.gd
   git commit -m "feat: implement M02_ALE_RUN mission data"
   ```
 
@@ -151,18 +176,34 @@ Implement the M03 mission in the registry.
 **Files:**
 
 - Modify: `core/mission_registry.gd`
-- Modify: `test/test_mission_registry.gd`
+- Modify: `test/test_mission_data.gd`
 
-- [ ] **Step 1: Write failing test in `test/test_mission_registry.gd`:**
-  - `test_m03_silver_spoons_configuration`: Asserts 10x8 map, valid glyphs, correct counts, walkable spawns/triggers, title "The Royal Cutlery", and completion flag `mission_m03_completed`.
-- [ ] **Step 2: Run test to verify it fails.**
+- [ ] **Step 1: Write failing test in `test/test_mission_data.gd`:**
+  - `test_m03_silver_spoons_configuration`: Asserts the same full checklist as M02:
+    - 10x8 dimensions, only legal glyphs, spawn counts match rosters, all spawns and trigger cells walkable, no duplicate spawns.
+    - Title is `"The Royal Cutlery"`.
+    - `completion_flag` is `"mission_m03_completed"`.
+    - Turn-1 tree opens with Scout, area trigger tree opens with Brute, victory debrief opens with Raider, defeat debrief opens with Vanguard.
+- [ ] **Step 2: Run test to verify it fails:**
+
+  ```sh
+  godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_mission_data.gd -gexit
+  ```
+
 - [ ] **Step 3: Implement M03:**
   - Add `M03_SILVER_SPOONS` branch in `MissionRegistry.get_mission(id)`.
-- [ ] **Step 4: Run test to verify it passes.**
+- [ ] **Step 4: Run test to verify it passes:**
+
+  ```sh
+  godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_mission_data.gd -gexit
+  ```
+
 - [ ] **Step 5: Verify core invariants and commit:**
 
   ```sh
-  git add core/mission_registry.gd test/test_mission_registry.gd
+  grep -rE '\bNode\b|get_tree\(|\bInput\b|preload\(|\.tscn' core/
+  grep -rlE 'randf|randi|randomize' core/ | grep -v real_roll_source
+  git add core/mission_registry.gd test/test_mission_data.gd
   git commit -m "feat: implement M03_SILVER_SPOONS mission data"
   ```
 
@@ -175,19 +216,35 @@ Implement the M04 mission in the registry.
 **Files:**
 
 - Modify: `core/mission_registry.gd`
-- Modify: `test/test_mission_registry.gd`
+- Modify: `test/test_mission_data.gd`
 
-- [ ] **Step 1: Write failing test in `test/test_mission_registry.gd`:**
-  - `test_m04_field_oven_configuration`: Asserts 10x8 map, valid glyphs, correct counts, title "The Tactical Bakery", and completion flag `mission_m04_completed`.
-- [ ] **Step 2: Run test to verify it fails.**
+- [ ] **Step 1: Write failing test in `test/test_mission_data.gd`:**
+  - `test_m04_field_oven_configuration`: Asserts the same full checklist as M02:
+    - 10x8 dimensions, only legal glyphs, spawn counts match rosters, all spawns and trigger cells walkable, no duplicate spawns.
+    - Title is `"The Tactical Bakery"`.
+    - `completion_flag` is `"mission_m04_completed"`.
+    - Turn-1 tree opens with Scout, area trigger tree opens with Brute, victory debrief opens with Raider, defeat debrief opens with Vanguard.
+    - Asserts 3 enemies spawn inside area trigger rectangle per brief, while cell `(6, 3)` remains free for player triggering.
+- [ ] **Step 2: Run test to verify it fails:**
+
+  ```sh
+  godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_mission_data.gd -gexit
+  ```
+
 - [ ] **Step 3: Implement M04:**
   - Add `M04_FIELD_OVEN` branch in `MissionRegistry.get_mission(id)`.
-  - Note 3 enemies spawn inside the area trigger rectangle per the brief, while cell `(6, 3)` remains free.
-- [ ] **Step 4: Run test to verify it passes.**
+- [ ] **Step 4: Run test to verify it passes:**
+
+  ```sh
+  godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_mission_data.gd -gexit
+  ```
+
 - [ ] **Step 5: Verify core invariants and commit:**
 
   ```sh
-  git add core/mission_registry.gd test/test_mission_registry.gd
+  grep -rE '\bNode\b|get_tree\(|\bInput\b|preload\(|\.tscn' core/
+  grep -rlE 'randf|randi|randomize' core/ | grep -v real_roll_source
+  git add core/mission_registry.gd test/test_mission_data.gd
   git commit -m "feat: implement M04_FIELD_OVEN mission data"
   ```
 
@@ -200,18 +257,35 @@ Implement the M05 mission in the registry.
 **Files:**
 
 - Modify: `core/mission_registry.gd`
-- Modify: `test/test_mission_registry.gd`
+- Modify: `test/test_mission_data.gd`
 
-- [ ] **Step 1: Write failing test in `test/test_mission_registry.gd`:**
-  - `test_m05_spice_wars_configuration`: Asserts 10x8 map, valid glyphs, correct counts, title "The Paprika Defense", completion flag `mission_m05_completed`, and General Malakor stats (40 HP, 12 Atk, Range 2).
-- [ ] **Step 2: Run test to verify it fails.**
+- [ ] **Step 1: Write failing test in `test/test_mission_data.gd`:**
+  - `test_m05_spice_wars_configuration`: Asserts the same full checklist as M02:
+    - 10x8 dimensions, only legal glyphs, spawn counts match rosters, all spawns and trigger cells walkable, no duplicate spawns.
+    - Title is `"The Paprika Defense"`.
+    - `completion_flag` is `"mission_m05_completed"`.
+    - Turn-1 tree opens with Scout, area trigger tree opens with Brute, victory debrief opens with Raider, defeat debrief opens with Vanguard.
+    - General Malakor stats are explicitly verified: 40 HP, 12 Atk, Range 2.
+- [ ] **Step 2: Run test to verify it fails:**
+
+  ```sh
+  godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_mission_data.gd -gexit
+  ```
+
 - [ ] **Step 3: Implement M05:**
   - Add `M05_SPICE_WARS` branch in `MissionRegistry.get_mission(id)`.
-- [ ] **Step 4: Run test to verify it passes.**
+- [ ] **Step 4: Run test to verify it passes:**
+
+  ```sh
+  godot --headless -s addons/gut/gut_cmdln.gd -gtest=res://test/test_mission_data.gd -gexit
+  ```
+
 - [ ] **Step 5: Verify core invariants and commit:**
 
   ```sh
-  git add core/mission_registry.gd test/test_mission_registry.gd
+  grep -rE '\bNode\b|get_tree\(|\bInput\b|preload\(|\.tscn' core/
+  grep -rlE 'randf|randi|randomize' core/ | grep -v real_roll_source
+  git add core/mission_registry.gd test/test_mission_data.gd
   git commit -m "feat: implement M05_SPICE_WARS mission data"
   ```
 

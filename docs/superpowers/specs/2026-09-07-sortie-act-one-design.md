@@ -60,14 +60,23 @@ Skirmisher unit stats will be initialized directly in the registry via the `_mak
 
 Static domain builder methods will be exposed on `MissionRegistry`:
 
+<!-- markdownlint-disable MD010 -->
 ```gdscript
 static func build_battle_grid(mission: MissionData) -> BattleGrid:
-    return BattleGrid.from_ascii(mission.map_ascii)
+	return BattleGrid.from_ascii(mission.map_ascii)
 
 static func populate_units(grid: BattleGrid, mission: MissionData) -> Dictionary:
-    # Returns {"players": Array[BattleUnit], "enemies": Array[BattleUnit]}
-    # Pairs player_roster[i] with player_spawns[i] and enemy_roster[i] with enemy_spawns[i]
+	# Returns {"players": Array[BattleUnit], "enemies": Array[BattleUnit]}
+	# For each player unit i:
+	# 	constructs BattleUnit from mission.player_roster[i] and mission.player_spawns[i]
+	# 	places unit on grid with grid.place_unit(unit, mission.player_spawns[i])
+	# For each enemy unit i:
+	# 	constructs BattleUnit from mission.enemy_roster[i] and mission.enemy_spawns[i]
+	# 	places unit on grid with grid.place_unit(unit, mission.enemy_spawns[i])
 ```
+<!-- markdownlint-enable MD010 -->
+
+The returned dictionary uses exact string keys `"players"` and `"enemies"`. `populate_units()` places each unit on the grid via `grid.place_unit(unit, spawn_cell)` (matching `scenes/battle.gd:84`) rather than only constructing them.
 
 `scenes/battle.gd:79-98` will be refactored to call `build_battle_grid()` and `populate_units()`, then instantiate `UnitView` nodes for the placed units.
 
