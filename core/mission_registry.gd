@@ -22,18 +22,93 @@ static func get_mission(mission_id: String) -> MissionData:
 	return null
 
 
+static func build_battle_grid(mission: MissionData) -> BattleGrid:
+	return BattleGrid.from_ascii(mission.map_ascii)
+
+
+static func populate_units(grid: BattleGrid, mission: MissionData) -> Dictionary:
+	var players: Array[BattleUnit] = []
+	for i in mission.player_roster.size():
+		var unit := BattleUnit.new(mission.player_roster[i], mission.player_spawns[i])
+		grid.place_unit(unit, mission.player_spawns[i])
+		players.append(unit)
+
+	var enemies: Array[BattleUnit] = []
+	for i in mission.enemy_roster.size():
+		var unit := BattleUnit.new(mission.enemy_roster[i], mission.enemy_spawns[i])
+		grid.place_unit(unit, mission.enemy_spawns[i])
+		enemies.append(unit)
+
+	return {
+		"players": players,
+		"enemies": enemies,
+	}
+
+
+static func _get_player_roster() -> Array[UnitData]:
+	return [
+		_make_unit(
+			"Vanguard",
+			24,
+			9,
+			4,
+			0.90,
+			0.05,
+			0.05,
+			3,
+			1,
+			UnitData.Team.PLAYER,
+			"vanguard"
+		),
+		_make_unit(
+			"Scout",
+			14,
+			6,
+			0,
+			0.90,
+			0.25,
+			0.10,
+			5,
+			1,
+			UnitData.Team.PLAYER,
+			"scout"
+		),
+		_make_unit(
+			"Brute",
+			26,
+			10,
+			3,
+			0.85,
+			0.00,
+			0.05,
+			3,
+			1,
+			UnitData.Team.PLAYER,
+			"brute"
+		),
+		_make_unit(
+			"Raider",
+			18,
+			8,
+			1,
+			0.90,
+			0.10,
+			0.15,
+			4,
+			1,
+			UnitData.Team.PLAYER,
+			"raider"
+		),
+	]
+
+
 static func _build_m01_cabbage() -> MissionData:
 	var mission := MissionData.new()
 	mission.mission_id = "M01_CABBAGE"
 	mission.title = "The Cabbage Trajectory"
 	mission.map_ascii = PackedStringArray(M01_MAP)
 
-	mission.player_roster = [
-		_make_unit("Vanguard", 24, 9, 4, 0.90, 0.05, 0.05, 3, 1, UnitData.Team.PLAYER, "vanguard"),
-		_make_unit("Scout", 14, 6, 0, 0.90, 0.25, 0.10, 5, 1, UnitData.Team.PLAYER, "scout"),
-		_make_unit("Brute", 26, 10, 3, 0.85, 0.00, 0.05, 3, 1, UnitData.Team.PLAYER, "brute"),
-		_make_unit("Raider", 18, 8, 1, 0.90, 0.10, 0.15, 4, 1, UnitData.Team.PLAYER, "raider"),
-	]
+	mission.player_roster = _get_player_roster()
 	mission.player_spawns = [
 		Vector2i(0, 6),
 		Vector2i(1, 7),

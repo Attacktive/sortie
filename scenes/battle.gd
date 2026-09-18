@@ -53,7 +53,7 @@ func _start_battle() -> void:
 		_mission = MissionRegistry.get_mission(mission_id)
 
 	if _mission != null:
-		_grid = BattleGrid.from_ascii(_mission.map_ascii)
+		_grid = MissionRegistry.build_battle_grid(_mission)
 	else:
 		_grid = Scenario.build_grid()
 
@@ -77,31 +77,14 @@ func _build_views() -> void:
 	add_child(_grid_view)
 
 	if _mission != null:
-		for i in _mission.player_roster.size():
-			var data := _mission.player_roster[i]
-			var cell := _mission.player_spawns[i]
-			var unit := BattleUnit.new(data, cell)
-			_grid.place_unit(unit, cell)
-			var view := UnitView.new()
-			view.setup(unit)
-			_grid_view.add_child(view)
-			_views[unit] = view
-
-		for i in _mission.enemy_roster.size():
-			var data := _mission.enemy_roster[i]
-			var cell := _mission.enemy_spawns[i]
-			var unit := BattleUnit.new(data, cell)
-			_grid.place_unit(unit, cell)
-			var view := UnitView.new()
-			view.setup(unit)
-			_grid_view.add_child(view)
-			_views[unit] = view
+		var units := MissionRegistry.populate_units(_grid, _mission)
+		for unit: BattleUnit in units["players"]:
+			_add_unit_view(unit)
+		for unit: BattleUnit in units["enemies"]:
+			_add_unit_view(unit)
 	else:
 		for unit in Scenario.populate(_grid):
-			var view := UnitView.new()
-			view.setup(unit)
-			_grid_view.add_child(view)
-			_views[unit] = view
+			_add_unit_view(unit)
 
 	_cursor = Cursor.new()
 	_cursor.bounds = _grid.size
@@ -140,6 +123,13 @@ func _build_views() -> void:
 	_result_screen.restart_requested.connect(_start_battle)
 
 	_refresh_all()
+
+
+func _add_unit_view(unit: BattleUnit) -> void:
+	var view := UnitView.new()
+	view.setup(unit)
+	_grid_view.add_child(view)
+	_views[unit] = view
 
 func _refresh_all() -> void:
 	for view in _views.values():

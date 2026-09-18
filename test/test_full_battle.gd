@@ -22,10 +22,25 @@ func _act(grid: BattleGrid, unit: BattleUnit, rolls: RollSource) -> void:
 ## Rounds consumed by the most recent _play(), for tuning measurements.
 var _last_rounds: int = 0
 
-## Runs the scenario to completion with both sides on autopilot.
+## Runs the default scenario to completion with both sides on autopilot.
 func _play(seed_value: int) -> TurnOrder:
 	var grid := Scenario.build_grid()
 	Scenario.populate(grid)
+
+	return _play_grid(grid, seed_value)
+
+## Runs a narrative mission through the same headless battle path.
+func _play_mission(mission: MissionData, seed_value: int) -> Dictionary:
+	var grid := MissionRegistry.build_battle_grid(mission)
+	MissionRegistry.populate_units(grid, mission)
+	var turns := _play_grid(grid, seed_value)
+
+	return {
+		"turns": turns,
+		"rounds": _last_rounds,
+	}
+
+func _play_grid(grid: BattleGrid, seed_value: int) -> TurnOrder:
 	var turns := TurnOrder.new(grid)
 	var rolls := RealRollSource.new(seed_value)
 	var rounds := 0
@@ -80,7 +95,6 @@ func test_both_endings_are_reachable_across_seeds() -> void:
 	assert_eq(unresolved, 0, "every battle must terminate")
 	assert_gt(victories, 0, "victory must be reachable")
 	assert_gt(defeats, 0, "defeat must be reachable")
-
 
 func test_m01_cabbage_via_mission_harness() -> void:
 	var mission := MissionRegistry.get_mission("M01_CABBAGE")
