@@ -81,6 +81,31 @@ func test_both_endings_are_reachable_across_seeds() -> void:
 	assert_gt(victories, 0, "victory must be reachable")
 	assert_gt(defeats, 0, "defeat must be reachable")
 
+
+func test_m01_cabbage_via_mission_harness() -> void:
+	var mission := MissionRegistry.get_mission("M01_CABBAGE")
+	var victories := 0
+	var defeats := 0
+	var unresolved := 0
+
+	for seed_value in range(1, 41):
+		var result := _play_mission(mission, seed_value)
+		var turns: TurnOrder = result["turns"]
+
+		match turns.phase:
+			TurnOrder.Phase.VICTORY:
+				victories += 1
+			TurnOrder.Phase.DEFEAT:
+				defeats += 1
+			_:
+				unresolved += 1
+
+	gut.p("M01_CABBAGE: %d victories, %d defeats, %d unresolved" % [victories, defeats, unresolved])
+
+	assert_eq(unresolved, 0, "every M01 battle must terminate")
+	assert_gt(victories, 0, "M01 victory must be reachable")
+	assert_gt(defeats, 0, "M01 defeat must be reachable")
+
 func test_the_same_seed_replays_identically() -> void:
 	var first := _play(777)
 	var second := _play(777)
