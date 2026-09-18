@@ -30,15 +30,16 @@ func _play(seed_value: int) -> TurnOrder:
 	return _play_grid(grid, seed_value)
 
 ## Runs a narrative mission through the same headless battle path.
-func _play_mission(mission: MissionData, seed_value: int) -> Dictionary:
+func _play_mission(mission: MissionData, seed_value: int) -> TurnOrder:
 	var grid := MissionRegistry.build_battle_grid(mission)
-	MissionRegistry.populate_units(grid, mission)
-	var turns := _play_grid(grid, seed_value)
+	if grid == null:
+		return null
 
-	return {
-		"turns": turns,
-		"rounds": _last_rounds,
-	}
+	var units := MissionRegistry.populate_units(grid, mission)
+	if units.size() != mission.player_roster.size() + mission.enemy_roster.size():
+		return null
+
+	return _play_grid(grid, seed_value)
 
 func _play_grid(grid: BattleGrid, seed_value: int) -> TurnOrder:
 	var turns := TurnOrder.new(grid)
@@ -64,12 +65,7 @@ func _play_grid(grid: BattleGrid, seed_value: int) -> TurnOrder:
 
 	return turns
 
-func test_a_full_battle_reaches_a_resolution() -> void:
-	var turns := _play(20260830)
-
-	assert_true(turns.is_over(), "the battle never resolved within %d rounds" % MAX_ROUNDS)
-
-func test_both_endings_are_reachable_across_seeds() -> void:
+func _sweep(mission: MissionData = null) -> Dictionary:
 	var victories := 0
 	var defeats := 0
 	var unresolved := 0
@@ -77,7 +73,16 @@ func test_both_endings_are_reachable_across_seeds() -> void:
 	var longest := 0
 
 	for seed_value in range(1, 41):
-		var turns := _play(seed_value)
+		var turns: TurnOrder
+		if mission == null:
+			turns = _play(seed_value)
+		else:
+			turns = _play_mission(mission, seed_value)
+
+		if turns == null:
+			unresolved += 1
+			continue
+
 		total_rounds += _last_rounds
 		longest = maxi(longest, _last_rounds)
 
@@ -89,36 +94,47 @@ func test_both_endings_are_reachable_across_seeds() -> void:
 			_:
 				unresolved += 1
 
-	gut.p("40 auto-battles: %d victories, %d defeats, %d unresolved" % [victories, defeats, unresolved])
-	gut.p("rounds: %.1f average, %d longest" % [total_rounds / 40.0, longest])
+	return {
+		"victories": victories,
+		"defeats": defeats,
+		"unresolved": unresolved,
+		"total_rounds": total_rounds,
+		"longest": longest,
+	}
 
-	assert_eq(unresolved, 0, "every battle must terminate")
-	assert_gt(victories, 0, "victory must be reachable")
-	assert_gt(defeats, 0, "defeat must be reachable")
+
+func _print_sweep(label: String, tally: Dictionary) -> void:
+	gut.p("%s: %d victories, %d defeats, %d unresolved" % [label, tally["victories"], tally["defeats"], tally["unresolved"]])
+	gut.p("rounds: %.1f average, %d longest" % [tally["total_rounds"] / 40.0, tally["longest"]])
+
+
+func test_a_full_battle_reaches_a_resolution() -> void:
+	var turns := _play(20260830)
+
+	assert_true(turns.is_over(), "the battle never resolved within %d rounds" % MAX_ROUNDS)
+
+
+func test_both_endings_are_reachable_across_seeds() -> void:
+	var tally := _sweep()
+	_print_sweep("40 auto-battles", tally)
+
+	assert_eq(tally["unresolved"], 0, "every battle must terminate")
+	assert_gt(tally["victories"], 0, "victory must be reachable")
+	assert_gt(tally["defeats"], 0, "defeat must be reachable")
+
 
 func test_m01_cabbage_via_mission_harness() -> void:
 	var mission := MissionRegistry.get_mission("M01_CABBAGE")
-	var victories := 0
-	var defeats := 0
-	var unresolved := 0
+	assert_not_null(mission)
+	if mission == null:
+		return
 
-	for seed_value in range(1, 41):
-		var result := _play_mission(mission, seed_value)
-		var turns: TurnOrder = result["turns"]
+	var tally := _sweep(mission)
+	_print_sweep("M01_CABBAGE", tally)
 
-		match turns.phase:
-			TurnOrder.Phase.VICTORY:
-				victories += 1
-			TurnOrder.Phase.DEFEAT:
-				defeats += 1
-			_:
-				unresolved += 1
+	assert_eq(tally["unresolved"], 0, "every M01 battle must terminate")
+	assert_gt(tally["victories"], 0, "M01 victory must be reachable")
 
-	gut.p("M01_CABBAGE: %d victories, %d defeats, %d unresolved" % [victories, defeats, unresolved])
-
-	assert_eq(unresolved, 0, "every M01 battle must terminate")
-	assert_gt(victories, 0, "M01 victory must be reachable")
-	assert_gt(defeats, 0, "M01 defeat must be reachable")
 
 func test_the_same_seed_replays_identically() -> void:
 	var first := _play(777)

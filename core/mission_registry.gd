@@ -23,26 +23,74 @@ static func get_mission(mission_id: String) -> MissionData:
 
 
 static func build_battle_grid(mission: MissionData) -> BattleGrid:
+	if mission == null:
+		_push_mission_error(null, "cannot build a battle grid from a null mission")
+		return null
+
 	return BattleGrid.from_ascii(mission.map_ascii)
 
 
-static func populate_units(grid: BattleGrid, mission: MissionData) -> Dictionary:
-	var players: Array[BattleUnit] = []
+static func populate_units(grid: BattleGrid, mission: MissionData) -> Array[BattleUnit]:
+	var units: Array[BattleUnit] = []
+	if mission == null:
+		_push_mission_error(null, "cannot populate units from a null mission")
+		return units
+	if grid == null:
+		_push_mission_error(mission, "cannot populate units without a battle grid")
+		return units
+
+	var occupied: Dictionary[Vector2i, bool] = {}
+	if not _validate_spawns(grid, mission, mission.player_roster, mission.player_spawns, "player", occupied):
+		return units
+	if not _validate_spawns(grid, mission, mission.enemy_roster, mission.enemy_spawns, "enemy", occupied):
+		return units
+
 	for i in mission.player_roster.size():
 		var unit := BattleUnit.new(mission.player_roster[i], mission.player_spawns[i])
 		grid.place_unit(unit, mission.player_spawns[i])
-		players.append(unit)
+		units.append(unit)
 
-	var enemies: Array[BattleUnit] = []
 	for i in mission.enemy_roster.size():
 		var unit := BattleUnit.new(mission.enemy_roster[i], mission.enemy_spawns[i])
 		grid.place_unit(unit, mission.enemy_spawns[i])
-		enemies.append(unit)
+		units.append(unit)
 
-	return {
-		"players": players,
-		"enemies": enemies,
-	}
+	return units
+
+
+static func _validate_spawns(
+	grid: BattleGrid,
+	mission: MissionData,
+	roster: Array[UnitData],
+	spawns: Array[Vector2i],
+	team_label: String,
+	occupied: Dictionary[Vector2i, bool]
+) -> bool:
+	if roster.size() != spawns.size():
+		return _push_mission_error(mission, "%s roster has %d units but %d spawn cells" % [team_label, roster.size(), spawns.size()])
+
+	for cell in spawns:
+		if not grid.is_in_bounds(cell):
+			return _push_mission_error(mission, "%s spawn %s is out of bounds" % [team_label, cell])
+		if not Terrain.is_passable(grid.terrain_at(cell)):
+			return _push_mission_error(mission, "%s spawn %s is on impassable terrain" % [team_label, cell])
+		if occupied.has(cell):
+			return _push_mission_error(mission, "spawn %s is used more than once" % cell)
+		if grid.unit_at(cell) != null:
+			return _push_mission_error(mission, "spawn %s is already occupied" % cell)
+
+		occupied[cell] = true
+
+	return true
+
+
+static func _push_mission_error(mission: MissionData, detail: String) -> bool:
+	var mission_id := "<null>"
+	if mission != null and not mission.mission_id.is_empty():
+		mission_id = mission.mission_id
+
+	push_error("Mission %s: %s" % [mission_id, detail])
+	return false
 
 
 static func _get_player_roster() -> Array[UnitData]:
@@ -113,14 +161,62 @@ static func _build_m01_cabbage() -> MissionData:
 		Vector2i(0, 6),
 		Vector2i(1, 7),
 		Vector2i(0, 7),
-		Vector2i(1, 6),
+		Vector2i(1, 5),
 	]
 
 	mission.enemy_roster = [
-		_make_unit("Siege Vanguard", 22, 8, 3, 0.90, 0.05, 0.05, 3, 1, UnitData.Team.ENEMY, "vanguard"),
-		_make_unit("Catapult Guard", 24, 9, 2, 0.85, 0.00, 0.05, 3, 1, UnitData.Team.ENEMY, "brute"),
-		_make_unit("Slinger", 14, 6, 0, 0.90, 0.25, 0.10, 5, 1, UnitData.Team.ENEMY, "scout"),
-		_make_unit("Artillery Raider", 16, 7, 1, 0.90, 0.10, 0.15, 4, 1, UnitData.Team.ENEMY, "raider"),
+		_make_unit(
+			"Siege Vanguard",
+			22,
+			8,
+			3,
+			0.90,
+			0.05,
+			0.05,
+			3,
+			1,
+			UnitData.Team.ENEMY,
+			"vanguard"
+		),
+		_make_unit(
+			"Catapult Guard",
+			24,
+			9,
+			2,
+			0.85,
+			0.00,
+			0.05,
+			3,
+			1,
+			UnitData.Team.ENEMY,
+			"brute"
+		),
+		_make_unit(
+			"Slinger",
+			14,
+			6,
+			0,
+			0.90,
+			0.25,
+			0.10,
+			5,
+			1,
+			UnitData.Team.ENEMY,
+			"scout"
+		),
+		_make_unit(
+			"Artillery Raider",
+			16,
+			7,
+			1,
+			0.90,
+			0.10,
+			0.15,
+			4,
+			1,
+			UnitData.Team.ENEMY,
+			"raider"
+		),
 	]
 	mission.enemy_spawns = [
 		Vector2i(8, 2),

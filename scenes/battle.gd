@@ -49,22 +49,34 @@ func _start_battle() -> void:
 	_turn_count = 1
 	_consumed_area_triggers.clear()
 	_played_turn_triggers.clear()
+	_mission = null
+
+	var units: Array[BattleUnit] = []
 	if mission_id != "default":
 		_mission = MissionRegistry.get_mission(mission_id)
+		if _mission == null:
+			push_error("Unknown mission id: %s" % mission_id)
+			return
 
-	if _mission != null:
 		_grid = MissionRegistry.build_battle_grid(_mission)
+		if _grid == null:
+			return
+
+		units = MissionRegistry.populate_units(_grid, _mission)
+		if units.size() != _mission.player_roster.size() + _mission.enemy_roster.size():
+			return
 	else:
 		_grid = Scenario.build_grid()
+		units = Scenario.populate(_grid)
 
 	_turns = TurnOrder.new(_grid)
-	_build_views()
+	_build_views(units)
 	_enter_unit_selection()
 	_banner.announce("Your Turn", CombatAnimator.PLAYER_COLOR)
 	if OS.has_environment("SORTIE_SHOT"):
 		add_child(load("res://scenes/screenshot_probe.gd").new())
 
-func _build_views() -> void:
+func _build_views(units: Array[BattleUnit]) -> void:
 	for child in get_children():
 		remove_child(child)
 		child.queue_free()
@@ -76,15 +88,8 @@ func _build_views() -> void:
 	_grid_view.position = MARGIN
 	add_child(_grid_view)
 
-	if _mission != null:
-		var units := MissionRegistry.populate_units(_grid, _mission)
-		for unit: BattleUnit in units["players"]:
-			_add_unit_view(unit)
-		for unit: BattleUnit in units["enemies"]:
-			_add_unit_view(unit)
-	else:
-		for unit in Scenario.populate(_grid):
-			_add_unit_view(unit)
+	for unit in units:
+		_add_unit_view(unit)
 
 	_cursor = Cursor.new()
 	_cursor.bounds = _grid.size
