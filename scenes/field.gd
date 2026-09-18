@@ -77,50 +77,31 @@ func _build_view() -> void:
 ## Added after the view, because siblings draw in tree order and the ground must be drawn before the characters standing on it.
 func _build_npc() -> void:
 	_npc = FieldNpc.new()
-	_npc.name = "FieldNpc"
+	_npc.name = "Barnaby"
 
-	var default_dialogue := DialogueTree.from_dict({
-		"start": "greet",
+	var barnaby_dialogue := DialogueTree.from_dict({
+		"start": "barnaby_pressure",
 		"nodes": {
-			"greet": {
-				"speaker": "Mage",
-				"text": "Greetings, traveler. If you walk east past the clearing, you will feel the mountain wind.",
-				"choices": [
-					{ "text": "I will explore.", "next": "explore" },
-					{ "text": "Who are you?", "next": "who" }
-				]
+			"barnaby_pressure": {
+				"speaker": "Barnaby",
+				"text": "The barometric pressure is plummeting, which is dreadful for my arthritis.",
+				"next": "barnaby_scry",
 			},
-			"explore": {
-				"speaker": "Mage",
-				"text": "Watch your step along the stone ruins.",
-				"next": ""
+			"barnaby_scry": {
+				"speaker": "Barnaby",
+				"text": "I am attempting to scry the kingdom's weather, if this infernal siege would just quiet down.",
+				"next": "barnaby_eastern_wind",
 			},
-			"who": {
-				"speaker": "Mage",
-				"text": "I watch over these ruins.",
-				"next": ""
-			}
-		}
+			"barnaby_eastern_wind": {
+				"speaker": "Barnaby",
+				"text": "The eastern wind brings the scent of treason, and lightly toasted garlic.",
+			},
+		},
 	})
 
-	var post_breeze_dialogue := DialogueTree.from_dict({
-		"start": "greet2",
-		"nodes": {
-			"greet2": {
-				"speaker": "Mage",
-				"text": "You felt that chill from the east, didn't you? Something stirs in the forest.",
-				"next": ""
-			}
-		}
-	})
-
-	_npc.setup(NPC_SHEET, "Mage", default_dialogue)
-	_npc.conditional_dialogues = [
-		{ "condition": EventCondition.is_true("felt_breeze"), "dialogue": post_breeze_dialogue }
-	]
+	_npc.setup(NPC_SHEET, "Barnaby", barnaby_dialogue)
 	_npc.position = GridGeometry.cell_to_position(NPC_CELL)
 	add_child(_npc)
-
 
 func _build_roderick() -> void:
 	_roderick = FieldNpc.new()
