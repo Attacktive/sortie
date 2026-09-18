@@ -202,7 +202,7 @@ static func _build_m01_cabbage() -> MissionData:
         Vector2i(0, 6),
         Vector2i(1, 7),
         Vector2i(0, 7),
-        Vector2i(1, 6),
+        Vector2i(1, 5),
     ]
 
     mission.enemy_roster = [
