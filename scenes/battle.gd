@@ -54,10 +54,8 @@ func _start_battle() -> void:
 	var units: Array[BattleUnit] = []
 	if mission_id != "default":
 		_mission = MissionRegistry.get_mission(mission_id)
-		if _mission == null:
-			push_error("Unknown mission id: %s" % mission_id)
-			return
 
+	if _mission != null:
 		_grid = MissionRegistry.build_battle_grid(_mission)
 		if _grid == null:
 			return
