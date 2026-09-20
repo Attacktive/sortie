@@ -137,8 +137,10 @@ func test_m02_ale_run_configuration() -> void:
 
 	var ale_gap := Rect2i(Vector2i(4, 1), Vector2i(2, 1))
 	assert_true(mission.area_dialogue_triggers.has(ale_gap))
-	for cell in ale_gap:
-		assert_true(Terrain.is_passable(grid.terrain_at(cell)), "M02 area trigger cell %s must be walkable" % cell)
+	for x in range(ale_gap.position.x, ale_gap.end.x):
+		for y in range(ale_gap.position.y, ale_gap.end.y):
+			var cell := Vector2i(x, y)
+			assert_true(Terrain.is_passable(grid.terrain_at(cell)), "M02 area trigger cell %s must be walkable" % cell)
 
 	var area_tree: DialogueTree = mission.area_dialogue_triggers.get(ale_gap)
 	assert_not_null(area_tree)
