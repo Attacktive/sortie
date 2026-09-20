@@ -167,5 +167,83 @@ func test_m02_ale_run_configuration() -> void:
 	assert_eq(mission.enemy_roster[3].attack_range, 2)
 
 
+func test_m03_silver_spoons_configuration() -> void:
+	var mission := MissionRegistry.get_mission("M03_SILVER_SPOONS")
+	assert_not_null(mission)
+	if mission == null:
+		return
+
+	assert_eq(mission.title, "The Royal Cutlery")
+	assert_eq(mission.completion_flag, "mission_m03_completed")
+	assert_eq(mission.map_ascii, PackedStringArray([
+		".##....##.",
+		".F......F.",
+		"..........",
+		"####..####",
+		"..........",
+		"..........",
+		".F......F.",
+		"..........",
+	]))
+	assert_eq(mission.player_spawns, [
+		Vector2i(4, 7),
+		Vector2i(5, 7),
+		Vector2i(4, 6),
+		Vector2i(5, 6),
+	])
+	assert_eq(mission.enemy_spawns, [
+		Vector2i(4, 1),
+		Vector2i(3, 2),
+		Vector2i(6, 2),
+		Vector2i(3, 0),
+		Vector2i(6, 0),
+	])
+
+	var grid := MissionRegistry.build_battle_grid(mission)
+	assert_not_null(grid)
+	if grid == null:
+		return
+
+	var units := MissionRegistry.populate_units(grid, mission)
+	assert_eq(units.size(), 9)
+
+	var turn_tree: DialogueTree = mission.turn_dialogue_triggers.get(1)
+	assert_not_null(turn_tree)
+	if turn_tree != null:
+		assert_eq(turn_tree.get_node(turn_tree.start_node_id).speaker, "Scout")
+
+	var center_gap := Rect2i(Vector2i(4, 3), Vector2i(2, 1))
+	assert_true(mission.area_dialogue_triggers.has(center_gap))
+	for x in range(center_gap.position.x, center_gap.end.x):
+		for y in range(center_gap.position.y, center_gap.end.y):
+			var cell := Vector2i(x, y)
+			assert_true(Terrain.is_passable(grid.terrain_at(cell)), "M03 area trigger cell %s must be walkable" % cell)
+
+	var area_tree: DialogueTree = mission.area_dialogue_triggers.get(center_gap)
+	assert_not_null(area_tree)
+	if area_tree != null:
+		assert_eq(area_tree.get_node(area_tree.start_node_id).speaker, "Brute")
+
+	assert_not_null(mission.victory_debrief)
+	if mission.victory_debrief != null:
+		assert_eq(mission.victory_debrief.get_node(mission.victory_debrief.start_node_id).speaker, "Raider")
+
+	assert_not_null(mission.defeat_debrief)
+	if mission.defeat_debrief != null:
+		assert_eq(mission.defeat_debrief.get_node(mission.defeat_debrief.start_node_id).speaker, "Vanguard")
+
+	assert_eq(mission.enemy_roster.size(), 5)
+	assert_eq(mission.enemy_roster[0].unit_name, "Cutlery Guard")
+	assert_eq(mission.enemy_roster[1].unit_name, "Fork Pilferer")
+	assert_eq(mission.enemy_roster[1].accuracy, 0.90)
+	assert_eq(mission.enemy_roster[1].evasion, 0.30)
+	assert_eq(mission.enemy_roster[1].crit_rate, 0.10)
+	assert_eq(mission.enemy_roster[2].unit_name, "Spoon Pilferer")
+	assert_eq(mission.enemy_roster[2].evasion, 0.30)
+	assert_eq(mission.enemy_roster[3].unit_name, "Camp Lookout")
+	assert_eq(mission.enemy_roster[4].unit_name, "Silver Smuggler")
+	assert_eq(mission.enemy_roster[4].attack_range, 2)
+
+
 func test_mission_registry_unknown_returns_null() -> void:
 	assert_null(MissionRegistry.get_mission("NON_EXISTENT"))
