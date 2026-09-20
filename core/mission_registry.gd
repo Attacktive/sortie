@@ -27,11 +27,25 @@ const M02_MAP := [
 ]
 
 
+const M03_MAP := [
+	".##....##.",
+	".F......F.",
+	"..........",
+	"####..####",
+	"..........",
+	"..........",
+	".F......F.",
+	"..........",
+]
+
+
 static func get_mission(mission_id: String) -> MissionData:
 	if mission_id == "M01_CABBAGE":
 		return _build_m01_cabbage()
 	if mission_id == "M02_ALE_RUN":
 		return _build_m02_ale_run()
+	if mission_id == "M03_SILVER_SPOONS":
+		return _build_m03_silver_spoons()
 
 	return null
 
@@ -421,6 +435,150 @@ static func _build_m02_ale_run() -> MissionData:
 	})
 
 	mission.completion_flag = "mission_m02_completed"
+	return mission
+
+
+static func _build_m03_silver_spoons() -> MissionData:
+	var mission := MissionData.new()
+	mission.mission_id = "M03_SILVER_SPOONS"
+	mission.title = "The Royal Cutlery"
+	mission.map_ascii = PackedStringArray(M03_MAP)
+
+	mission.player_roster = _get_player_roster()
+	mission.player_spawns = [
+		Vector2i(4, 7),
+		Vector2i(5, 7),
+		Vector2i(4, 6),
+		Vector2i(5, 6),
+	]
+
+	mission.enemy_roster = [
+		_make_unit(
+			"Cutlery Guard",
+			22,
+			7,
+			3,
+			0.90,
+			0.05,
+			0.05,
+			3,
+			1,
+			UnitData.Team.ENEMY,
+			"vanguard"
+		),
+		_make_unit(
+			"Fork Pilferer",
+			16,
+			8,
+			1,
+			0.90,
+			0.30,
+			0.10,
+			5,
+			1,
+			UnitData.Team.ENEMY,
+			"skirmisher"
+		),
+		_make_unit(
+			"Spoon Pilferer",
+			16,
+			8,
+			1,
+			0.90,
+			0.30,
+			0.10,
+			5,
+			1,
+			UnitData.Team.ENEMY,
+			"skirmisher"
+		),
+		_make_unit(
+			"Camp Lookout",
+			14,
+			6,
+			0,
+			0.90,
+			0.25,
+			0.10,
+			5,
+			1,
+			UnitData.Team.ENEMY,
+			"scout"
+		),
+		_make_unit(
+			"Silver Smuggler",
+			18,
+			7,
+			1,
+			0.90,
+			0.10,
+			0.15,
+			4,
+			2,
+			UnitData.Team.ENEMY,
+			"raider"
+		),
+	]
+	mission.enemy_spawns = [
+		Vector2i(4, 1),
+		Vector2i(3, 2),
+		Vector2i(6, 2),
+		Vector2i(3, 0),
+		Vector2i(6, 0),
+	]
+
+	mission.turn_dialogue_triggers[1] = DialogueTree.from_dict({
+		"start": "m03_scout_spoons",
+		"nodes": {
+			"m03_scout_spoons": {
+				"speaker": "Scout",
+				"text": "Are we seriously fighting a pitched battle over soup spoons?",
+				"next": "m03_vanguard_forks",
+			},
+			"m03_vanguard_forks": {
+				"speaker": "Vanguard",
+				"text": "They are salad forks, Pip! Show some respect for the implements of the realm!",
+			},
+		},
+	})
+
+	var center_gap := Rect2i(Vector2i(4, 3), Vector2i(2, 1))
+	mission.area_dialogue_triggers[center_gap] = DialogueTree.from_dict({
+		"start": "m03_brute_utensils",
+		"nodes": {
+			"m03_brute_utensils": {
+				"speaker": "Brute",
+				"text": "Excuse me! I will be gently retrieving those utensils now, please do not trip over the logs.",
+			},
+		},
+	})
+
+	mission.victory_debrief = DialogueTree.from_dict({
+		"start": "m03_raider_forks",
+		"nodes": {
+			"m03_raider_forks": {
+				"speaker": "Raider",
+				"text": "Forks acquired, boss. I also found twenty silver coins in their velvet case.",
+				"next": "m03_raider_fee",
+			},
+			"m03_raider_fee": {
+				"speaker": "Raider",
+				"text": "I am keeping them as an anti-tarnish consultation fee.",
+			},
+		},
+	})
+
+	mission.defeat_debrief = DialogueTree.from_dict({
+		"start": "m03_vanguard_retreat",
+		"nodes": {
+			"m03_vanguard_retreat": {
+				"speaker": "Vanguard",
+				"text": "Fall back! We are out-forked and out-maneuvered!",
+			},
+		},
+	})
+
+	mission.completion_flag = "mission_m03_completed"
 	return mission
 
 
