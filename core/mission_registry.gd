@@ -15,9 +15,23 @@ const M01_MAP := [
 ]
 
 
+const M02_MAP := [
+	"F.F....F.F",
+	"..##..##..",
+	"..........",
+	"..F....F..",
+	"..........",
+	"F.##..##.F",
+	"..........",
+	"..........",
+]
+
+
 static func get_mission(mission_id: String) -> MissionData:
 	if mission_id == "M01_CABBAGE":
 		return _build_m01_cabbage()
+	if mission_id == "M02_ALE_RUN":
+		return _build_m02_ale_run()
 
 	return null
 
@@ -277,6 +291,136 @@ static func _build_m01_cabbage() -> MissionData:
 	})
 
 	mission.completion_flag = "mission_m01_completed"
+	return mission
+
+
+static func _build_m02_ale_run() -> MissionData:
+	var mission := MissionData.new()
+	mission.mission_id = "M02_ALE_RUN"
+	mission.title = "The Seasonal Ale Run"
+	mission.map_ascii = PackedStringArray(M02_MAP)
+
+	mission.player_roster = _get_player_roster()
+	mission.player_spawns = [
+		Vector2i(4, 7),
+		Vector2i(5, 7),
+		Vector2i(3, 7),
+		Vector2i(6, 7),
+	]
+
+	mission.enemy_roster = [
+		_make_unit(
+			"Agile Thug",
+			16,
+			8,
+			1,
+			0.90,
+			0.30,
+			0.10,
+			5,
+			1,
+			UnitData.Team.ENEMY,
+			"skirmisher"
+		),
+		_make_unit(
+			"Agile Rogue",
+			16,
+			8,
+			1,
+			0.90,
+			0.30,
+			0.10,
+			5,
+			1,
+			UnitData.Team.ENEMY,
+			"skirmisher"
+		),
+		_make_unit(
+			"Thirsty Bruiser",
+			26,
+			9,
+			2,
+			0.85,
+			0.00,
+			0.05,
+			3,
+			1,
+			UnitData.Team.ENEMY,
+			"brute"
+		),
+		_make_unit(
+			"Keg Thief",
+			18,
+			7,
+			1,
+			0.90,
+			0.10,
+			0.15,
+			4,
+			2,
+			UnitData.Team.ENEMY,
+			"raider"
+		),
+	]
+	mission.enemy_spawns = [
+		Vector2i(3, 2),
+		Vector2i(6, 2),
+		Vector2i(4, 0),
+		Vector2i(5, 0),
+	]
+
+	mission.turn_dialogue_triggers[1] = DialogueTree.from_dict({
+		"start": "m02_scout_water",
+		"nodes": {
+			"m02_scout_water": {
+				"speaker": "Scout",
+				"text": "We are risking our necks for beer? Can't the guards just drink water for one night?",
+				"next": "m02_vanguard_fermentation",
+			},
+			"m02_vanguard_fermentation": {
+				"speaker": "Vanguard",
+				"text": "Morale is the armor of the soul, Pip! We fight for the King's fermentation!",
+			},
+		},
+	})
+
+	var ale_gap := Rect2i(Vector2i(4, 1), Vector2i(2, 1))
+	mission.area_dialogue_triggers[ale_gap] = DialogueTree.from_dict({
+		"start": "m02_brute_beverages",
+		"nodes": {
+			"m02_brute_beverages": {
+				"speaker": "Brute",
+				"text": "Pardon my intrusion, gentlemen. I am going to have to ask you to step away from the beverages.",
+			},
+		},
+	})
+
+	mission.victory_debrief = DialogueTree.from_dict({
+		"start": "m02_raider_kegs",
+		"nodes": {
+			"m02_raider_kegs": {
+				"speaker": "Raider",
+				"text": "Kegs are secure, boss. And I found fourteen silver coins taped to the bottom of this barrel.",
+				"next": "m02_raider_fee",
+			},
+			"m02_raider_fee": {
+				"speaker": "Raider",
+				"text": "Consider it a liquid asset recovery fee.",
+			},
+		},
+	})
+
+	mission.defeat_debrief = DialogueTree.from_dict({
+		"start": "m02_vanguard_retreat",
+		"nodes": {
+			"m02_vanguard_retreat": {
+				"speaker": "Vanguard",
+				"text": "A tactical withdrawal! We must regroup before the stout goes completely flat!",
+			},
+		},
+	})
+
+	mission.completion_flag = "mission_m02_completed"
 	return mission
 
 
