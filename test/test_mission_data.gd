@@ -173,6 +173,7 @@ func test_m03_silver_spoons_configuration() -> void:
 	if mission == null:
 		return
 
+	assert_eq(mission.mission_id, "M03_SILVER_SPOONS")
 	assert_eq(mission.title, "The Royal Cutlery")
 	assert_eq(mission.completion_flag, "mission_m03_completed")
 	assert_eq(mission.map_ascii, PackedStringArray([
