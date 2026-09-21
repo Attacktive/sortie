@@ -39,6 +39,18 @@ const M03_MAP := [
 ]
 
 
+const M04_MAP := [
+	"...####...",
+	"..F####F..",
+	"...####...",
+	"..........",
+	"F........F",
+	"..........",
+	".##....##.",
+	"..........",
+]
+
+
 static func get_mission(mission_id: String) -> MissionData:
 	if mission_id == "M01_CABBAGE":
 		return _build_m01_cabbage()
@@ -46,6 +58,8 @@ static func get_mission(mission_id: String) -> MissionData:
 		return _build_m02_ale_run()
 	if mission_id == "M03_SILVER_SPOONS":
 		return _build_m03_silver_spoons()
+	if mission_id == "M04_FIELD_OVEN":
+		return _build_m04_field_oven()
 
 	return null
 
@@ -579,6 +593,150 @@ static func _build_m03_silver_spoons() -> MissionData:
 	})
 
 	mission.completion_flag = "mission_m03_completed"
+	return mission
+
+
+static func _build_m04_field_oven() -> MissionData:
+	var mission := MissionData.new()
+	mission.mission_id = "M04_FIELD_OVEN"
+	mission.title = "The Tactical Bakery"
+	mission.map_ascii = PackedStringArray(M04_MAP)
+
+	mission.player_roster = _get_player_roster()
+	mission.player_spawns = [
+		Vector2i(3, 7),
+		Vector2i(4, 7),
+		Vector2i(5, 7),
+		Vector2i(6, 7),
+	]
+
+	mission.enemy_roster = [
+		_make_unit(
+			"Dough Sentinel",
+			24,
+			8,
+			3,
+			0.90,
+			0.05,
+			0.05,
+			3,
+			1,
+			UnitData.Team.ENEMY,
+			"vanguard"
+		),
+		_make_unit(
+			"Dough Sentinel",
+			24,
+			8,
+			3,
+			0.90,
+			0.05,
+			0.05,
+			3,
+			1,
+			UnitData.Team.ENEMY,
+			"vanguard"
+		),
+		_make_unit(
+			"Pastry Enforcer",
+			26,
+			10,
+			2,
+			0.85,
+			0.00,
+			0.05,
+			3,
+			1,
+			UnitData.Team.ENEMY,
+			"brute"
+		),
+		_make_unit(
+			"Oven Stoker",
+			16,
+			9,
+			0,
+			0.85,
+			0.10,
+			0.15,
+			3,
+			2,
+			UnitData.Team.ENEMY,
+			"mage"
+		),
+		_make_unit(
+			"Flour Scout",
+			14,
+			6,
+			0,
+			0.90,
+			0.25,
+			0.10,
+			5,
+			1,
+			UnitData.Team.ENEMY,
+			"scout"
+		),
+	]
+	mission.enemy_spawns = [
+		Vector2i(2, 1),
+		Vector2i(7, 1),
+		Vector2i(4, 3),
+		Vector2i(5, 3),
+		Vector2i(3, 3),
+	]
+
+	mission.turn_dialogue_triggers[1] = DialogueTree.from_dict({
+		"start": "m04_scout_bake",
+		"nodes": {
+			"m04_scout_bake": {
+				"speaker": "Scout",
+				"text": "Can we just let them bake? It smells amazing out here.",
+				"next": "m04_vanguard_treason",
+			},
+			"m04_vanguard_treason": {
+				"speaker": "Vanguard",
+				"text": "Treason always smells sweet, Pip! Cover your nose and charge!",
+			},
+		},
+	})
+
+	var oven_front := Rect2i(Vector2i(3, 3), Vector2i(4, 1))
+	mission.area_dialogue_triggers[oven_front] = DialogueTree.from_dict({
+		"start": "m04_brute_brickwork",
+		"nodes": {
+			"m04_brute_brickwork": {
+				"speaker": "Brute",
+				"text": "I apologize for the mess, but I am legally obligated to smash your brickwork.",
+			},
+		},
+	})
+
+	mission.victory_debrief = DialogueTree.from_dict({
+		"start": "m04_raider_oven",
+		"nodes": {
+			"m04_raider_oven": {
+				"speaker": "Raider",
+				"text": "Oven is cold, boss. I found thirty silver coins baked into a loaf of bread.",
+				"next": "m04_raider_fee",
+			},
+			"m04_raider_fee": {
+				"speaker": "Raider",
+				"text": "Do not ask questions. I am taking my carbohydrate processing fee.",
+			},
+		},
+	})
+
+	mission.defeat_debrief = DialogueTree.from_dict({
+		"start": "m04_vanguard_retreat",
+		"nodes": {
+			"m04_vanguard_retreat": {
+				"speaker": "Vanguard",
+				"text": "The heat is too intense! A glorious retreat from the baked goods!",
+			},
+		},
+	})
+
+	mission.completion_flag = "mission_m04_completed"
 	return mission
 
 
