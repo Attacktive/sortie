@@ -7,6 +7,15 @@ Read these before changing anything:
 
 This file covers only what neither of them does: how work is divided between agents, and where the documents they exchange live.
 
+## GitHub writes
+
+Before every GitHub mutation, check the current `Attacktive/agent-broker` README or implementation to determine whether the broker supports that operation.
+
+- When the broker supports the operation, use it instead of the corresponding direct GitHub write.
+- If a broker request fails, leave that mutation unapplied and report the failure. It may be retried through the broker later, and unrelated work may continue when it does not depend on the failed mutation. Do not fall back to the personal `Attacktive` account for the same mutation.
+- After a broker request succeeds, verify the target-repository result is authored by `attacktive-gremlin[bot]` when GitHub records an author for that action; for ref-only operations, verify the exact resulting ref and commit state.
+- Use a direct GitHub write only when the current broker does not support the required operation.
+
 ## How work is divided
 
 Three agents work on this repository. The owner merges every pull request; no agent ever does.
