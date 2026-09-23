@@ -12,7 +12,9 @@ This file covers only what neither of them does: how work is divided between age
 Before every GitHub mutation, check the current `Attacktive/agent-broker` README or implementation to determine whether the broker supports that operation.
 
 - When the broker supports the operation, use it instead of the corresponding direct GitHub write.
-- If a broker request fails, leave that mutation unapplied and escalate the failure to the owner. Retry through the broker later; unrelated work may continue when it does not depend on the failed mutation. The exception applies only to continuing unrelated work, never to bypassing the broker with the personal `Attacktive` account.
+- If a broker request fails, leave that mutation unapplied and escalate the failure to the owner.
+- Retry the same mutation through the broker later. Unrelated work may continue when it does not depend on the failed mutation.
+- The failure exception permits only unrelated work to continue. It does not permit bypassing the broker with the personal `Attacktive` account.
 - After a broker request succeeds, verify the target-repository result is authored by `attacktive-gremlin[bot]` when GitHub records an author for that action; for ref-only operations, verify the exact resulting ref and commit state.
 - Exception for direct writes: use one only when the current broker does not support the required operation.
 
