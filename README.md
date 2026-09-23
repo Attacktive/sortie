@@ -14,7 +14,7 @@ godot scenes/battle.tscn    # play battle standalone
 godot --headless -s addons/gut/gut_cmdln.gd -gdir=res://test -gexit   # test
 ```
 
-The first and the last of those are what `.github/workflows/tests.yaml` runs on a fresh Ubuntu runner against a pinned Godot 4.7.2, so the workflow doubles as executable documentation for the setup. GUT exits non-zero on any failure, so the build breaks on its own.
+The first and the last of those are what `.github/workflows/tests.yaml` runs on a fresh Ubuntu runner against a pinned Godot 4.7.2, so the workflow doubles as executable documentation for the setup. GUT's non-zero exit still fails the step, and CI also rejects test-script load failures or skips because GUT can otherwise finish successfully after discarding a broken test script.
 
 There is also a screenshot harness, gated on environment variables so it never runs in normal play:
 

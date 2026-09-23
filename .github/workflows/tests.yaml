@@ -52,4 +52,11 @@ jobs:
         run: godot --headless --import
 
       - name: 'Run the test suite'
-        run: godot --headless -s addons/gut/gut_cmdln.gd -gdir=res://test -gexit
+        run: |
+          set -o pipefail
+          log="$RUNNER_TEMP/gut.log"
+          godot --headless -s addons/gut/gut_cmdln.gd -gdir=res://test -gexit 2>&1 | tee "$log"
+          if grep -E 'Failed to load script "res://test/[^"]+" with error|Ignoring script res://test/[^ ]+ because it does not extend GutTest' "$log"; then
+            echo 'A test script failed to load or was skipped by GUT.' >&2
+            exit 1
+          fi
