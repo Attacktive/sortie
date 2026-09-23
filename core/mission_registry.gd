@@ -51,6 +51,18 @@ const M04_MAP := [
 ]
 
 
+const M05_MAP := [
+	".########.",
+	".F......F.",
+	"...####...",
+	"...####...",
+	"..........",
+	"F........F",
+	"..##..##..",
+	"..........",
+]
+
+
 static func get_mission(mission_id: String) -> MissionData:
 	if mission_id == "M01_CABBAGE":
 		return _build_m01_cabbage()
@@ -60,6 +72,8 @@ static func get_mission(mission_id: String) -> MissionData:
 		return _build_m03_silver_spoons()
 	if mission_id == "M04_FIELD_OVEN":
 		return _build_m04_field_oven()
+	if mission_id == "M05_SPICE_WARS":
+		return _build_m05_spice_wars()
 
 	return null
 
@@ -737,6 +751,164 @@ static func _build_m04_field_oven() -> MissionData:
 	})
 
 	mission.completion_flag = "mission_m04_completed"
+	return mission
+
+
+static func _build_m05_spice_wars() -> MissionData:
+	var mission := MissionData.new()
+	mission.mission_id = "M05_SPICE_WARS"
+	mission.title = "The Paprika Defense"
+	mission.map_ascii = PackedStringArray(M05_MAP)
+
+	mission.player_roster = _get_player_roster()
+	mission.player_spawns = [
+		Vector2i(4, 7),
+		Vector2i(5, 7),
+		Vector2i(3, 7),
+		Vector2i(6, 7),
+	]
+
+	mission.enemy_roster = [
+		_make_unit(
+			"General Malakor",
+			40,
+			12,
+			2,
+			0.85,
+			0.10,
+			0.15,
+			3,
+			2,
+			UnitData.Team.ENEMY,
+			"mage"
+		),
+		_make_unit(
+			"Elite Guard",
+			25,
+			8,
+			4,
+			0.90,
+			0.05,
+			0.05,
+			3,
+			1,
+			UnitData.Team.ENEMY,
+			"vanguard"
+		),
+		_make_unit(
+			"Elite Guard",
+			25,
+			8,
+			4,
+			0.90,
+			0.05,
+			0.05,
+			3,
+			1,
+			UnitData.Team.ENEMY,
+			"vanguard"
+		),
+		_make_unit(
+			"Spice Runner",
+			18,
+			9,
+			1,
+			0.90,
+			0.30,
+			0.10,
+			5,
+			1,
+			UnitData.Team.ENEMY,
+			"skirmisher"
+		),
+		_make_unit(
+			"Spice Runner",
+			18,
+			9,
+			1,
+			0.90,
+			0.30,
+			0.10,
+			5,
+			1,
+			UnitData.Team.ENEMY,
+			"skirmisher"
+		),
+		_make_unit(
+			"Siege Breaker",
+			28,
+			10,
+			3,
+			0.85,
+			0.00,
+			0.05,
+			3,
+			1,
+			UnitData.Team.ENEMY,
+			"brute"
+		),
+	]
+	mission.enemy_spawns = [
+		Vector2i(4, 1),
+		Vector2i(2, 2),
+		Vector2i(7, 2),
+		Vector2i(2, 4),
+		Vector2i(7, 4),
+		Vector2i(5, 1),
+	]
+
+	mission.turn_dialogue_triggers[1] = DialogueTree.from_dict({
+		"start": "m05_scout_recipe",
+		"nodes": {
+			"m05_scout_recipe": {
+				"speaker": "Scout",
+				"text": "So this whole war was just about a mutton recipe?",
+				"next": "m05_vanguard_seasoning",
+			},
+			"m05_vanguard_seasoning": {
+				"speaker": "Vanguard",
+				"text": "It is about honor, Pip! And perfectly balanced seasoning! To victory!",
+			},
+		},
+	})
+
+	var cellar_front := Rect2i(Vector2i(3, 4), Vector2i(4, 1))
+	mission.area_dialogue_triggers[cellar_front] = DialogueTree.from_dict({
+		"start": "m05_brute_guest_list",
+		"nodes": {
+			"m05_brute_guest_list": {
+				"speaker": "Brute",
+				"text": "General, I am terribly sorry, but you are not on the guest list for dinner tonight.",
+			},
+		},
+	})
+
+	mission.victory_debrief = DialogueTree.from_dict({
+		"start": "m05_raider_spice_pouch",
+		"nodes": {
+			"m05_raider_spice_pouch": {
+				"speaker": "Raider",
+				"text": "Malakor is down, boss. He had fifty silver coins in his spice pouch.",
+				"next": "m05_raider_severance",
+			},
+			"m05_raider_severance": {
+				"speaker": "Raider",
+				"text": "I am keeping them as an executive severance package.",
+			},
+		},
+	})
+
+	mission.defeat_debrief = DialogueTree.from_dict({
+		"start": "m05_vanguard_paprika",
+		"nodes": {
+			"m05_vanguard_paprika": {
+				"speaker": "Vanguard",
+				"text": "The paprika is falling! Fall back and protect the salt!",
+			},
+		},
+	})
+
+	mission.completion_flag = "mission_m05_completed"
 	return mission
 
 

@@ -329,5 +329,100 @@ func test_m04_field_oven_configuration() -> void:
 	assert_eq(mission.enemy_roster[4].unit_name, "Flour Scout")
 
 
+func test_m05_spice_wars_configuration() -> void:
+	var mission := MissionRegistry.get_mission("M05_SPICE_WARS")
+	assert_not_null(mission)
+	if mission == null:
+		return
+
+	assert_eq(mission.mission_id, "M05_SPICE_WARS")
+	assert_eq(mission.title, "The Paprika Defense")
+	assert_eq(mission.completion_flag, "mission_m05_completed")
+	assert_eq(mission.map_ascii, PackedStringArray([
+		".########.",
+		".F......F.",
+		"...####...",
+		"...####...",
+		"..........",
+		"F........F",
+		"..##..##..",
+		"..........",
+	]))
+	assert_eq(mission.map_ascii.size(), 8)
+	for row in mission.map_ascii:
+		assert_eq(row.length(), 10)
+		for x in row.length():
+			assert_true([".", "F", "#"].has(row.substr(x, 1)), "M05 map glyph at x=%d must be legal" % x)
+
+	assert_eq(mission.player_spawns, [
+		Vector2i(4, 7),
+		Vector2i(5, 7),
+		Vector2i(3, 7),
+		Vector2i(6, 7),
+	])
+	assert_eq(mission.enemy_spawns, [
+		Vector2i(4, 1),
+		Vector2i(2, 2),
+		Vector2i(7, 2),
+		Vector2i(2, 4),
+		Vector2i(7, 4),
+		Vector2i(5, 1),
+	])
+	assert_eq(mission.player_spawns.size(), mission.player_roster.size())
+	assert_eq(mission.enemy_spawns.size(), mission.enemy_roster.size())
+
+	var grid := MissionRegistry.build_battle_grid(mission)
+	assert_not_null(grid)
+	if grid == null:
+		return
+
+	var units := MissionRegistry.populate_units(grid, mission)
+	assert_eq(units.size(), 10)
+
+	var spawn_cells: Dictionary[Vector2i, bool] = {}
+	for spawn in mission.player_spawns + mission.enemy_spawns:
+		assert_true(Terrain.is_passable(grid.terrain_at(spawn)), "M05 spawn cell %s must be walkable" % spawn)
+		assert_false(spawn_cells.has(spawn), "M05 spawn cell %s must be unique" % spawn)
+		spawn_cells[spawn] = true
+
+	var turn_tree: DialogueTree = mission.turn_dialogue_triggers.get(1)
+	assert_not_null(turn_tree)
+	if turn_tree != null:
+		assert_eq(turn_tree.get_node(turn_tree.start_node_id).speaker, "Scout")
+
+	var cellar_front := Rect2i(Vector2i(3, 4), Vector2i(4, 1))
+	assert_true(mission.area_dialogue_triggers.has(cellar_front))
+	for x in range(cellar_front.position.x, cellar_front.end.x):
+		for y in range(cellar_front.position.y, cellar_front.end.y):
+			var cell := Vector2i(x, y)
+			assert_true(Terrain.is_passable(grid.terrain_at(cell)), "M05 area trigger cell %s must be walkable" % cell)
+
+	var area_tree: DialogueTree = mission.area_dialogue_triggers.get(cellar_front)
+	assert_not_null(area_tree)
+	if area_tree != null:
+		assert_eq(area_tree.get_node(area_tree.start_node_id).speaker, "Brute")
+
+	assert_not_null(mission.victory_debrief)
+	if mission.victory_debrief != null:
+		assert_eq(mission.victory_debrief.get_node(mission.victory_debrief.start_node_id).speaker, "Raider")
+
+	assert_not_null(mission.defeat_debrief)
+	if mission.defeat_debrief != null:
+		assert_eq(mission.defeat_debrief.get_node(mission.defeat_debrief.start_node_id).speaker, "Vanguard")
+
+	assert_eq(mission.enemy_roster.size(), 6)
+	assert_eq(mission.enemy_roster[0].unit_name, "General Malakor")
+	assert_eq(mission.enemy_roster[0].max_hp, 40)
+	assert_eq(mission.enemy_roster[0].attack, 12)
+	assert_eq(mission.enemy_roster[0].attack_range, 2)
+	assert_eq(mission.enemy_roster[1].unit_name, "Elite Guard")
+	assert_eq(mission.enemy_roster[2].unit_name, "Elite Guard")
+	assert_eq(mission.enemy_roster[3].unit_name, "Spice Runner")
+	assert_eq(mission.enemy_roster[3].evasion, 0.30)
+	assert_eq(mission.enemy_roster[4].unit_name, "Spice Runner")
+	assert_eq(mission.enemy_roster[4].evasion, 0.30)
+	assert_eq(mission.enemy_roster[5].unit_name, "Siege Breaker")
+
+
 func test_mission_registry_unknown_returns_null() -> void:
 	assert_null(MissionRegistry.get_mission("NON_EXISTENT"))
