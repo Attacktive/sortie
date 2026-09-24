@@ -62,10 +62,12 @@ func _ready() -> void:
 			host.start_new_game()
 			await get_tree().process_frame
 			var field: Field = host.get_active_scene()
-			if field != null and field._roderick != null:
-				field._player.position = field._roderick.position + Vector2(0.0, GridGeometry.CELL_SIZE * 0.5)
-				field._player.facing = Facing.Direction.UP
-				field._start_npc_dialogue(field._roderick)
+			if field != null:
+				var roderick := field.get_npc("Sir Roderick")
+				if roderick != null:
+					field._player.position = roderick.position + Vector2(0.0, GridGeometry.CELL_SIZE * 0.5)
+					field._player.facing = Facing.Direction.UP
+					field._start_npc_dialogue(roderick)
 
 	if OS.has_environment("SORTIE_M02_MISSION_BRIEF"):
 		await get_tree().process_frame
@@ -74,10 +76,12 @@ func _ready() -> void:
 			host.world_state.set_flag("mission_m01_completed", true)
 			await get_tree().process_frame
 			var field: Field = host.get_active_scene()
-			if field != null and field._roderick != null:
-				field._player.position = field._roderick.position + Vector2(0.0, GridGeometry.CELL_SIZE * 0.5)
-				field._player.facing = Facing.Direction.UP
-				field._start_npc_dialogue(field._roderick)
+			if field != null:
+				var roderick := field.get_npc("Sir Roderick")
+				if roderick != null:
+					field._player.position = roderick.position + Vector2(0.0, GridGeometry.CELL_SIZE * 0.5)
+					field._player.facing = Facing.Direction.UP
+					field._start_npc_dialogue(roderick)
 
 	if OS.has_environment("SORTIE_NORTH_OF_NPC"):
 		await get_tree().process_frame
@@ -85,9 +89,11 @@ func _ready() -> void:
 			host.start_new_game()
 			await get_tree().process_frame
 			var field: Field = host.get_active_scene()
-			if field != null and field._roderick != null:
-				field._player.position = field._roderick.position - Vector2(0.0, 30.0)
-				field._player.facing = Facing.Direction.DOWN
+			if field != null:
+				var roderick := field.get_npc("Sir Roderick")
+				if roderick != null:
+					field._player.position = roderick.position - Vector2(0.0, 30.0)
+					field._player.facing = Facing.Direction.DOWN
 
 	if OS.has_environment("SORTIE_SOUTH_OF_NPC"):
 		await get_tree().process_frame
@@ -95,9 +101,11 @@ func _ready() -> void:
 			host.start_new_game()
 			await get_tree().process_frame
 			var field: Field = host.get_active_scene()
-			if field != null and field._roderick != null:
-				field._player.position = field._roderick.position + Vector2(0.0, 30.0)
-				field._player.facing = Facing.Direction.UP
+			if field != null:
+				var roderick := field.get_npc("Sir Roderick")
+				if roderick != null:
+					field._player.position = roderick.position + Vector2(0.0, 30.0)
+					field._player.facing = Facing.Direction.UP
 
 	if OS.has_environment("SORTIE_BATTLE_BANTER"):
 		await get_tree().process_frame
@@ -203,7 +211,7 @@ func _stage_walk(battle: Node, parts: PackedStringArray) -> void:
 ## Positions the player directly west of the NPC facing right, and triggers interaction.
 func _stage_field_interact(field: Node) -> void:
 	var player: FieldPlayer = field.get("_player")
-	var npc: FieldNpc = field.get("_npc")
+	var npc: FieldNpc = field.call("get_npc", "Barnaby")
 	if player != null and npc != null:
 		player.position = npc.position - Vector2(GridGeometry.CELL_SIZE * 0.5, 0.0)
 		player.facing = Facing.Direction.RIGHT

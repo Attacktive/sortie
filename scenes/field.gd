@@ -24,9 +24,9 @@ const MAP := [
 ]
 
 const START_CELL := Vector2i(2, 1)
-const NPC_CELL := Vector2i(5, 1)
+const BARNABY_CELL := Vector2i(5, 1)
 const PLAYER_SHEET := "res://assets/lpc/units/vanguard_walkcycle.png"
-const NPC_SHEET := "res://assets/lpc/units/mage_walkcycle.png"
+const BARNABY_SHEET := "res://assets/lpc/units/mage_walkcycle.png"
 const RODERICK_CELL := Vector2i(8, 2)
 const RODERICK_SHEET := "res://assets/lpc/units/brute_walkcycle.png"
 ## A node's position is the top-left corner of its sprite, so a camera sitting at the player's origin centers the screen on that corner and leaves the character down and to the right of it.
@@ -39,8 +39,7 @@ var _map: FieldMap = null
 var _view: FieldView = null
 var _player: FieldPlayer = null
 var _camera: Camera2D = null
-var _npc: FieldNpc = null
-var _roderick: FieldNpc = null
+var _npcs: Array[FieldNpc] = []
 var _dialogue_box: DialogueBox = null
 var _field_menu: FieldMenu = null
 var _last_player_cell: Vector2i = Vector2i(-1, -1)
@@ -56,7 +55,7 @@ func _ready() -> void:
 	_map = FieldMap.from_ascii(PackedStringArray(MAP))
 
 	_build_view()
-	_build_npc()
+	_build_barnaby()
 	_build_roderick()
 	_build_player()
 	_build_camera()
@@ -75,9 +74,9 @@ func _build_view() -> void:
 	add_child(_view)
 
 ## Added after the view, because siblings draw in tree order and the ground must be drawn before the characters standing on it.
-func _build_npc() -> void:
-	_npc = FieldNpc.new()
-	_npc.name = "Barnaby"
+func _build_barnaby() -> void:
+	barnaby = FieldNpc.new()
+	barnaby.name = "Barnaby"
 
 	var barnaby_dialogue := DialogueTree.from_dict({
 		"start": "barnaby_pressure",
@@ -99,13 +98,13 @@ func _build_npc() -> void:
 		},
 	})
 
-	_npc.setup(NPC_SHEET, "Barnaby", barnaby_dialogue)
-	_npc.position = GridGeometry.cell_to_position(NPC_CELL)
-	add_child(_npc)
+	barnaby.setup(BARNABY_SHEET, "Barnaby", barnaby_dialogue)
+	barnaby.position = GridGeometry.cell_to_position(BARNABY_CELL)
+	register_npc(barnaby)
 
-func _build_roderick() -> void:
-	_roderick = FieldNpc.new()
-	_roderick.name = "SirRoderick"
+func _buildroderick() -> void:
+	roderick = FieldNpc.new()
+	roderick.name = "SirRoderick"
 
 	var briefing := DialogueTree.from_dict({
 		"start": "briefing_dishonor",
@@ -307,8 +306,8 @@ func _build_roderick() -> void:
 		},
 	})
 
-	_roderick.setup(RODERICK_SHEET, "Sir Roderick", briefing)
-	_roderick.conditional_dialogues = [
+	roderick.setup(RODERICK_SHEET, "Sir Roderick", briefing)
+	roderick.conditional_dialogues = [
 		{
 			"condition": EventCondition.is_true("mission_m05_completed"),
 			"dialogue": terminal_dialogue,
@@ -331,8 +330,8 @@ func _build_roderick() -> void:
 		},
 	]
 
-	_roderick.position = GridGeometry.cell_to_position(RODERICK_CELL)
-	add_child(_roderick)
+	roderick.position = GridGeometry.cell_to_position(RODERICK_CELL)
+	register_npc(roderick)
 
 func _build_player() -> void:
 	_player = FieldPlayer.new()
@@ -344,11 +343,41 @@ func _build_player() -> void:
 	add_child(_player)
 
 
+func register_npc(npc: FieldNpc) -> void:
+	if npc == null or _npcs.has(npc):
+		return
+
+	var parent := npc.get_parent()
+	if parent != null and parent != self:
+		push_error("Field NPC %s already belongs to another parent" % npc.name)
+		return
+
+	_npcs.append(npc)
+	if parent == null:
+		add_child(npc)
+		if _player != null:
+			move_child(npc, _player.get_index())
+
+	npc.tree_exiting.connect(_unregister_npc.bind(npc), CONNECT_ONE_SHOT)
+
+
+func get_npc(npc_name: String) -> FieldNpc:
+	for npc in _npcs:
+		if is_instance_valid(npc) and npc.npc_name == npc_name:
+			return npc
+
+	return null
+
+
+func _unregister_npc(npc: FieldNpc) -> void:
+	_npcs.erase(npc)
+
+
 func _get_obstacle_boxes() -> Array[Rect2]:
 	var boxes: Array[Rect2] = []
-	for child in get_children():
-		if child is FieldNpc:
-			boxes.append(child.get_collision_box())
+	for npc in _npcs:
+		if is_instance_valid(npc):
+			boxes.append(npc.get_collision_box())
 
 	return boxes
 
@@ -404,13 +433,10 @@ func _try_interact() -> void:
 
 	var probe := Interaction.probe_box(FieldBody.box_for_sprite(_player.position), _player.facing)
 
-	if _npc != null and probe.intersects(_npc.get_collision_box()):
-		_start_npc_dialogue(_npc)
-		return
-
-	if _roderick != null and probe.intersects(_roderick.get_collision_box()):
-		_start_npc_dialogue(_roderick)
-		return
+	for npc in _npcs:
+		if is_instance_valid(npc) and probe.intersects(npc.get_collision_box()):
+			_start_npc_dialogue(npc)
+			return
 
 	if _map != null and trigger_registry != null:
 		var cells := _map.cells_in_box(probe)
