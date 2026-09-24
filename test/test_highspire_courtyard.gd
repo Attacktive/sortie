@@ -71,31 +71,37 @@ func test_sir_roderick_briefing_chain_matches_campaign_state() -> void:
 		{
 			"completed_flags": [],
 			"start_node_id": "briefing_dishonor",
+			"first_text": "Men, today Highspire faces its gravest dishonor.",
 			"battle_id": "M01_CABBAGE",
 		},
 		{
 			"completed_flags": ["mission_m01_completed"],
 			"start_node_id": "m02_briefing_ale",
+			"first_text": "Splendid work out there! The royal herb garden is safe. The scout reports the remaining cabbage hurled over the ramparts was surprisingly edible in soup.",
 			"battle_id": "M02_ALE_RUN",
 		},
 		{
 			"completed_flags": ["mission_m01_completed", "mission_m02_completed"],
 			"start_node_id": "m03_briefing_cutlery",
+			"first_text": "The ale flows, and morale is secure. However, a tragedy has struck the royal scullery!",
 			"battle_id": "M03_SILVER_SPOONS",
 		},
 		{
 			"completed_flags": ["mission_m01_completed", "mission_m02_completed", "mission_m03_completed"],
 			"start_node_id": "m04_briefing_oven",
+			"first_text": "The forks are polished and returned to their velvet case. But smell the air, Pip!",
 			"battle_id": "M04_FIELD_OVEN",
 		},
 		{
 			"completed_flags": ["mission_m01_completed", "mission_m02_completed", "mission_m03_completed", "mission_m04_completed"],
 			"start_node_id": "m05_briefing_paprika",
+			"first_text": "The rogue oven is cold, and the King's pastry monopoly is safe.",
 			"battle_id": "M05_SPICE_WARS",
 		},
 		{
 			"completed_flags": ["mission_m01_completed", "mission_m02_completed", "mission_m03_completed", "mission_m04_completed", "mission_m05_completed"],
 			"start_node_id": "terminal_paprika_safe",
+			"first_text": "The paprika is safe, and Malakor has been routed! You have saved the realm's palate!",
 			"battle_id": "",
 		},
 	]
@@ -112,8 +118,15 @@ func test_sir_roderick_briefing_chain_matches_campaign_state() -> void:
 			continue
 
 		var expected_start_id := str(case.get("start_node_id", ""))
+		var expected_first_text := str(case.get("first_text", ""))
 		var expected_battle_id := str(case.get("battle_id", ""))
 		assert_eq(dialogue.start_node_id, expected_start_id)
+
+		var first_node := dialogue.get_node(dialogue.start_node_id)
+		assert_not_null(first_node)
+		if first_node != null:
+			assert_eq(first_node.text, expected_first_text)
+
 		assert_eq(_find_sortie_battle_id(dialogue), expected_battle_id)
 
 		if expected_battle_id.is_empty():
