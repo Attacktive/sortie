@@ -136,6 +136,51 @@ func test_m01_cabbage_via_mission_harness() -> void:
 	assert_gt(tally["victories"], 0, "M01 victory must be reachable")
 
 
+func test_act_one_missions_balance_bands() -> void:
+	var cases := [
+		{
+			"mission_id": "M02_ALE_RUN",
+			"min_victories": 24,
+			"max_victories": 34,
+		},
+		{
+			"mission_id": "M03_SILVER_SPOONS",
+			"min_victories": 24,
+			"max_victories": 34,
+		},
+		{
+			"mission_id": "M04_FIELD_OVEN",
+			"min_victories": 24,
+			"max_victories": 34,
+		},
+		{
+			"mission_id": "M05_SPICE_WARS",
+			"min_victories": 18,
+			"max_victories": 28,
+		},
+	]
+
+	for case in cases:
+		var mission_id := str(case.get("mission_id", ""))
+		var mission := MissionRegistry.get_mission(mission_id)
+		assert_not_null(mission)
+		if mission == null:
+			continue
+
+		var tally := _sweep(mission)
+		_print_sweep(mission_id, tally)
+
+		var min_victories := int(case.get("min_victories", 0))
+		var max_victories := int(case.get("max_victories", 40))
+		assert_eq(tally["unresolved"], 0, "%s must resolve all 40 seeds" % mission_id)
+		assert_gt(tally["victories"], 0, "%s victory must be reachable" % mission_id)
+		assert_gt(tally["defeats"], 0, "%s defeat must be reachable" % mission_id)
+		assert_true(
+			tally["victories"] >= min_victories and tally["victories"] <= max_victories,
+			"%s must land within %d..%d victories, got %d" % [mission_id, min_victories, max_victories, tally["victories"]]
+		)
+
+
 func test_the_same_seed_replays_identically() -> void:
 	var first := _play(777)
 	var second := _play(777)
