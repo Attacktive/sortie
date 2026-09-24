@@ -26,22 +26,25 @@ Implement Act I of Sortie, encompassing missions M02 through M05. This adds the 
 
 ## 3. Mission Balance & Target Win-Rates
 
-Resolving the open question from the story spec regarding M05 Boss Balance:
-
-General Malakor is designed as an unbalanced Range 2 threat (40 HP, 12 Atk) that the melee-heavy squad cannot counter at range. To ensure he is properly balanced, the target win-rate band for M05 in the auto-battle harness is set to **18 to 28 victories out of 40 seeds**.
-
-The target win-rate band for M02, M03, and M04 is set to **24 to 34 victories out of 40 seeds**.
-
+The target win-rate band for M02, M03, and M04 is **24 to 34 victories out of 40 seeds**.
+The target band for M05 is **18 to 28 victories out of 40 seeds**.
 Every mission must also reach both outcomes at least once and leave zero battles unresolved.
 
-*Note: Enemy HP and Attack will be adjusted in steps of no more than 3 to fit these bands during implementation. The final numbers and seed tallies will be recorded here.*
+Balance tuning changed enemy HP and Attack only, with each tuning step changing either stat by no more than 3 points.
+The initial mission sheets were too difficult under the deterministic auto-battle harness, especially M05, whose original 40 HP / 12 Atk General Malakor profile produced zero victories across seeds 1 through 40.
+The final tuned values are recorded in the story specification's enemy-roster tables.
 
-| Mission | Target Victories (out of 40) | Actual Victories |
-| --- | --- | --- |
-| M02_ALE_RUN | 24 to 34 | TBD |
-| M03_SILVER_SPOONS | 24 to 34 | TBD |
-| M04_FIELD_OVEN | 24 to 34 | TBD |
-| M05_SPICE_WARS | 18 to 28 | TBD |
+Final seeds 1 through 40 results:
+
+| Mission | Victories | Defeats | Unresolved | Target Victories |
+| --- | ---: | ---: | ---: | ---: |
+| M02_ALE_RUN | 33 | 7 | 0 | 24 to 34 |
+| M03_SILVER_SPOONS | 30 | 10 | 0 | 24 to 34 |
+| M04_FIELD_OVEN | 25 | 15 | 0 | 24 to 34 |
+| M05_SPICE_WARS | 28 | 12 | 0 | 18 to 28 |
+
+All four missions reach both outcomes and resolve every seed.
+General Malakor finishes at 35 HP / 7 Atk / Range 2.
 
 ## 4. Components & Contracts
 

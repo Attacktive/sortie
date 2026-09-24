@@ -412,8 +412,8 @@ func test_m05_spice_wars_configuration() -> void:
 
 	assert_eq(mission.enemy_roster.size(), 6)
 	assert_eq(mission.enemy_roster[0].unit_name, "General Malakor")
-	assert_eq(mission.enemy_roster[0].max_hp, 40)
-	assert_eq(mission.enemy_roster[0].attack, 12)
+	assert_eq(mission.enemy_roster[0].max_hp, 35)
+	assert_eq(mission.enemy_roster[0].attack, 7)
 	assert_eq(mission.enemy_roster[0].attack_range, 2)
 	assert_eq(mission.enemy_roster[1].unit_name, "Elite Guard")
 	assert_eq(mission.enemy_roster[2].unit_name, "Elite Guard")

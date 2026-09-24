@@ -7,6 +7,7 @@
 - **Roll order is a contract**, not an implementation detail. Changing it invalidates every saved seed, so the tests pin it.
 - **The damage floor of 1 applies before the crit multiplier**, so a crit is always a clean 3× of the hit it replaces.
 - **No tuning pass was needed.** 9.3 team-turns is ~4.6 full rounds, inside the 4–6 target, and 75/25 means losing is possible without being likely.
+- **Act I balance is pinned to seeds 1 through 40.** M02, M03, and M04 target 24 to 34 victories, while M05 targets 18 to 28. Final tallies are 33/7, 30/10, 25/15, and 28/12 respectively, all with zero unresolved battles. Tuning changed enemy HP and Attack only; the final mission tables in the Act I story spec are the source of truth.
 
 ---
 

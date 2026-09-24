@@ -104,10 +104,10 @@ F.##..##.F
 
 | Name | Sprite | Cell | HP | Atk | Def | Move | Range | Role (Flavor) |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Agile Thug | `skirmisher` | (3, 2) | 16 | 8 | 1 | 5 | 1 | High evasion blocker |
-| Agile Rogue | `skirmisher` | (6, 2) | 16 | 8 | 1 | 5 | 1 | Flanker |
-| Thirsty Bruiser | `brute` | (4, 0) | 26 | 9 | 2 | 3 | 1 | Heavy hitter |
-| Keg Thief | `raider` | (5, 0) | 18 | 7 | 1 | 4 | 2 | Ranged annoyance |
+| Agile Thug | `skirmisher` | (3, 2) | 15 | 7 | 1 | 5 | 1 | High evasion blocker |
+| Agile Rogue | `skirmisher` | (6, 2) | 15 | 7 | 1 | 5 | 1 | Flanker |
+| Thirsty Bruiser | `brute` | (4, 0) | 25 | 8 | 2 | 3 | 1 | Heavy hitter |
+| Keg Thief | `raider` | (5, 0) | 17 | 6 | 1 | 4 | 2 | Ranged annoyance |
 
 **Turn 1 Banter:**
 
@@ -171,11 +171,11 @@ F.##..##.F
 
 | Name | Sprite | Cell | HP | Atk | Def | Move | Range | Role (Flavor) |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Cutlery Guard | `vanguard` | (4, 1) | 22 | 7 | 3 | 3 | 1 | Armored defender |
-| Fork Pilferer | `skirmisher` | (3, 2) | 16 | 8 | 1 | 5 | 1 | High evasion attacker |
-| Spoon Pilferer | `skirmisher` | (6, 2) | 16 | 8 | 1 | 5 | 1 | High evasion attacker |
-| Camp Lookout | `scout` | (3, 0) | 14 | 6 | 0 | 5 | 1 | Fast mover |
-| Silver Smuggler | `raider` | (6, 0) | 18 | 7 | 1 | 4 | 2 | Ranged attacker |
+| Cutlery Guard | `vanguard` | (4, 1) | 21 | 6 | 3 | 3 | 1 | Armored defender |
+| Fork Pilferer | `skirmisher` | (3, 2) | 15 | 7 | 1 | 5 | 1 | High evasion attacker |
+| Spoon Pilferer | `skirmisher` | (6, 2) | 15 | 7 | 1 | 5 | 1 | High evasion attacker |
+| Camp Lookout | `scout` | (3, 0) | 13 | 5 | 0 | 5 | 1 | Fast mover |
+| Silver Smuggler | `raider` | (6, 0) | 17 | 6 | 1 | 4 | 2 | Ranged attacker |
 
 **Turn 1 Banter:**
 
@@ -239,11 +239,11 @@ F........F
 
 | Name | Sprite | Cell | HP | Atk | Def | Move | Range | Role (Flavor) |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Dough Sentinel | `vanguard` | (2, 1) | 24 | 8 | 3 | 3 | 1 | Heavy defender |
-| Dough Sentinel | `vanguard` | (7, 1) | 24 | 8 | 3 | 3 | 1 | Heavy defender |
-| Pastry Enforcer | `brute` | (4, 3) | 26 | 10 | 2 | 3 | 1 | High damage |
-| Oven Stoker | `mage` | (5, 3) | 16 | 9 | 0 | 3 | 2 | Ranged magic |
-| Flour Scout | `scout` | (3, 3) | 14 | 6 | 0 | 5 | 1 | Fast mover |
+| Dough Sentinel | `vanguard` | (2, 1) | 23 | 8 | 3 | 3 | 1 | Heavy defender |
+| Dough Sentinel | `vanguard` | (7, 1) | 23 | 8 | 3 | 3 | 1 | Heavy defender |
+| Pastry Enforcer | `brute` | (4, 3) | 25 | 10 | 2 | 3 | 1 | High damage |
+| Oven Stoker | `mage` | (5, 3) | 15 | 9 | 0 | 3 | 2 | Ranged magic |
+| Flour Scout | `scout` | (3, 3) | 13 | 6 | 0 | 5 | 1 | Fast mover |
 
 **Turn 1 Banter:**
 
@@ -307,12 +307,12 @@ F........F
 
 | Name | Sprite | Cell | HP | Atk | Def | Move | Range | Role (Flavor) |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| General Malakor | `mage` | (4, 1) | 40 | 12 | 2 | 3 | 2 | The boss |
-| Elite Guard | `vanguard` | (2, 2) | 25 | 8 | 4 | 3 | 1 | Heavy armor |
-| Elite Guard | `vanguard` | (7, 2) | 25 | 8 | 4 | 3 | 1 | Heavy armor |
-| Spice Runner | `skirmisher` | (2, 4) | 18 | 9 | 1 | 5 | 1 | High evasion |
-| Spice Runner | `skirmisher` | (7, 4) | 18 | 9 | 1 | 5 | 1 | High evasion |
-| Siege Breaker | `brute` | (5, 1) | 28 | 10 | 3 | 3 | 1 | Wall crusher |
+| General Malakor | `mage` | (4, 1) | 35 | 7 | 2 | 3 | 2 | The boss |
+| Elite Guard | `vanguard` | (2, 2) | 20 | 3 | 4 | 3 | 1 | Heavy armor |
+| Elite Guard | `vanguard` | (7, 2) | 20 | 3 | 4 | 3 | 1 | Heavy armor |
+| Spice Runner | `skirmisher` | (2, 4) | 13 | 4 | 1 | 5 | 1 | High evasion |
+| Spice Runner | `skirmisher` | (7, 4) | 13 | 4 | 1 | 5 | 1 | High evasion |
+| Siege Breaker | `brute` | (5, 1) | 23 | 5 | 3 | 3 | 1 | Wall crusher |
 
 **Turn 1 Banter:**
 
@@ -352,6 +352,6 @@ F........F
 
 - **Skirmisher Archetype Implementation**: Needs an Evasion baseline stat added to the engine's archetype derived sheet (recommended `30`).
 
-## 6. Open Questions
+## 6. Resolved Questions
 
-- **M05 Boss Balance**: General Malakor boasts 40 HP and 12 Atk at Range 2. Since the player squad cannot easily counter him at range, what is the target win-rate band for M05 in the auto-battle harness to ensure he is properly balanced before shipping?
+- **M05 Boss Balance**: The 40-seed gate targets 18 to 28 victories. Final tuning sets General Malakor to 35 HP / 7 Atk / Range 2, and seeds 1 through 40 produce 28 victories, 12 defeats, and zero unresolved battles.
