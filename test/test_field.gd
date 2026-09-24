@@ -41,7 +41,10 @@ func test_the_character_draws_over_the_ground() -> void:
 
 
 func test_player_collides_with_npcs_and_cannot_walk_through_them() -> void:
-	var roderick: FieldNpc = _field._roderick
+	var roderick := _field.get_npc("Sir Roderick")
+	assert_not_null(roderick)
+	if roderick == null:
+		return
 	var target_box := roderick.get_collision_box()
 	_field._player.position = FieldBody.sprite_position_for(Rect2(target_box.position.x - FieldBody.BOX_SIZE.x - 30.0, target_box.position.y, FieldBody.BOX_SIZE.x, FieldBody.BOX_SIZE.y))
 
@@ -53,6 +56,38 @@ func test_player_collides_with_npcs_and_cannot_walk_through_them() -> void:
 	_field._player.facing = Facing.Direction.RIGHT
 	_field._try_interact()
 	assert_true(_field._dialogue_box.visible, "interacting with NPC while flush against them opens dialogue")
+
+
+func test_registered_npc_automatically_collides_and_interacts() -> void:
+	var dialogue := DialogueTree.from_dict({
+		"start": "hello",
+		"nodes": {
+			"hello": {
+				"speaker": "Visitor",
+				"text": "Registration works.",
+			},
+		},
+	})
+	var visitor := FieldNpc.new()
+	visitor.name = "Visitor"
+	visitor.setup(Field.BARNABY_SHEET, "Visitor", dialogue)
+	visitor.position = GridGeometry.cell_to_position(Vector2i(4, 9))
+	_field.register_npc(visitor)
+
+	assert_same(_field.get_npc("Visitor"), visitor)
+
+	var target_box := visitor.get_collision_box()
+	_field._player.position = FieldBody.sprite_position_for(Rect2(target_box.position.x - FieldBody.BOX_SIZE.x - 30.0, target_box.position.y, FieldBody.BOX_SIZE.x, FieldBody.BOX_SIZE.y))
+	_field._player._step(Vector2.RIGHT, 1.0)
+
+	var player_box := FieldBody.box_for_sprite(_field._player.position)
+	assert_almost_eq(player_box.end.x, target_box.position.x, 0.001, "registered NPC automatically participates in collision")
+
+	_field._player.facing = Facing.Direction.RIGHT
+	_field._try_interact()
+
+	assert_true(_field._dialogue_box.visible, "registered NPC automatically participates in interaction")
+	assert_eq(visitor.facing, Facing.Direction.LEFT)
 
 
 func test_y_sort_is_enabled_for_depth_sorting() -> void:
