@@ -31,7 +31,9 @@ SORTIE_SHOT=out.png SORTIE_FIELD_TRIGGER=true SORTIE_WAIT=0.10 godot scenes/fiel
 SORTIE_SHOT=out.png SORTIE_FIELD_MENU=true godot scenes/game.tscn --quit-after 300 # capture field pause menu
 SORTIE_SHOT=out.png SORTIE_SAVE_MENU=true godot scenes/game.tscn --quit-after 300  # capture save slot selector
 SORTIE_SHOT=out.png SORTIE_MISSION_BRIEF=true godot scenes/game.tscn --quit-after 300 # capture Sir Roderick mission briefing
+SORTIE_SHOT=out.png SORTIE_M02_MISSION_BRIEF=true godot scenes/game.tscn --quit-after 300 # capture Sir Roderick M02 mission briefing
 SORTIE_SHOT=out.png SORTIE_BATTLE_BANTER=true godot scenes/game.tscn --quit-after 300 # capture Turn 1 combat banter
+SORTIE_SHOT=out.png SORTIE_M02_BATTLE_BANTER=true godot scenes/game.tscn --quit-after 300 # capture M02 Turn 1 combat banter
 SORTIE_SHOT=out.png SORTIE_NORTH_OF_NPC=true godot scenes/game.tscn --quit-after 300 # capture player north of Sir Roderick, drawn behind him
 SORTIE_SHOT=out.png SORTIE_SOUTH_OF_NPC=true godot scenes/game.tscn --quit-after 300 # capture player south of Sir Roderick, drawn in front
 ```

@@ -140,17 +140,169 @@ func _build_roderick() -> void:
 		},
 	})
 
-	var victory_debrief := DialogueTree.from_dict({
-		"start": "post_victory",
+	var m02_briefing := DialogueTree.from_dict({
+		"start": "m02_briefing_ale",
 		"nodes": {
-			"post_victory": {
+			"m02_briefing_ale": {
 				"speaker": "Sir Roderick",
 				"text": "Splendid work out there! The royal herb garden is safe. The scout reports the remaining cabbage hurled over the ramparts was surprisingly edible in soup.",
-				"next": "post_tease",
+				"next": "m02_briefing_shipment",
 			},
-			"post_tease": {
+			"m02_briefing_shipment": {
 				"speaker": "Sir Roderick",
 				"text": "Catch your breath—word has it our ale shipment down south has run into trouble.",
+				"next": "m02_briefing_morale",
+			},
+			"m02_briefing_morale": {
+				"speaker": "Sir Roderick",
+				"text": "A kingdom cannot march on parched throats. The morale of the entire garrison is at stake!",
+				"next": "m02_briefing_sortie",
+			},
+			"m02_briefing_sortie": {
+				"speaker": "Sir Roderick",
+				"text": "Sortie immediately and retrieve those barrels.",
+				"choices": [
+					{"text": "[Sortie!]", "next": "m02_action_sortie"},
+					{"text": "[Prepare]", "next": "m02_action_prepare"},
+				],
+			},
+			"m02_action_sortie": {
+				"speaker": "Sir Roderick",
+				"text": "Sound the charge!",
+				"action": EventAction.start_battle("M02_ALE_RUN"),
+			},
+			"m02_action_prepare": {
+				"speaker": "Sir Roderick",
+				"text": "Hurry, Pip. A warm stout is a crime against the crown.",
+			},
+		},
+	})
+
+	var m03_briefing := DialogueTree.from_dict({
+		"start": "m03_briefing_cutlery",
+		"nodes": {
+			"m03_briefing_cutlery": {
+				"speaker": "Sir Roderick",
+				"text": "The ale flows, and morale is secure. However, a tragedy has struck the royal scullery!",
+				"next": "m03_briefing_line",
+			},
+			"m03_briefing_line": {
+				"speaker": "Sir Roderick",
+				"text": "Men, the Gastronomic Brotherhood has crossed a line that cannot be uncrossed.",
+				"next": "m03_briefing_malakor",
+			},
+			"m03_briefing_malakor": {
+				"speaker": "Sir Roderick",
+				"text": "Their leader, General Malakor, personally ordered the theft of the royal dining forks.",
+				"next": "m03_briefing_sortie",
+			},
+			"m03_briefing_sortie": {
+				"speaker": "Sir Roderick",
+				"text": "How is the King expected to enjoy his evening roast? With his hands? Sortie and recover the silver!",
+				"choices": [
+					{"text": "[Sortie!]", "next": "m03_action_sortie"},
+					{"text": "[Prepare]", "next": "m03_action_prepare"},
+				],
+			},
+			"m03_action_sortie": {
+				"speaker": "Sir Roderick",
+				"text": "Sound the charge!",
+				"action": EventAction.start_battle("M03_SILVER_SPOONS"),
+			},
+			"m03_action_prepare": {
+				"speaker": "Sir Roderick",
+				"text": "Hurry, Pip. Every second we tarry is another scratch on the royal silver.",
+			},
+		},
+	})
+
+	var m04_briefing := DialogueTree.from_dict({
+		"start": "m04_briefing_oven",
+		"nodes": {
+			"m04_briefing_oven": {
+				"speaker": "Sir Roderick",
+				"text": "The forks are polished and returned to their velvet case. But smell the air, Pip!",
+				"next": "m04_briefing_enemy_oven",
+			},
+			"m04_briefing_enemy_oven": {
+				"speaker": "Sir Roderick",
+				"text": "The enemy has erected a tactical field oven just beyond the perimeter.",
+				"next": "m04_briefing_yeast",
+			},
+			"m04_briefing_yeast": {
+				"speaker": "Sir Roderick",
+				"text": "The sheer volume of their yeast production threatens to overshadow the King's pastry monopoly.",
+				"next": "m04_briefing_sortie",
+			},
+			"m04_briefing_sortie": {
+				"speaker": "Sir Roderick",
+				"text": "Sortie to the ridge and dismantle that blasphemous bakery!",
+				"choices": [
+					{"text": "[Sortie!]", "next": "m04_action_sortie"},
+					{"text": "[Prepare]", "next": "m04_action_prepare"},
+				],
+			},
+			"m04_action_sortie": {
+				"speaker": "Sir Roderick",
+				"text": "Sound the charge!",
+				"action": EventAction.start_battle("M04_FIELD_OVEN"),
+			},
+			"m04_action_prepare": {
+				"speaker": "Sir Roderick",
+				"text": "Hurry, Pip. If their croissants finish baking, Highspire is doomed.",
+			},
+		},
+	})
+
+	var m05_briefing := DialogueTree.from_dict({
+		"start": "m05_briefing_paprika",
+		"nodes": {
+			"m05_briefing_paprika": {
+				"speaker": "Sir Roderick",
+				"text": "The rogue oven is cold, and the King's pastry monopoly is safe.",
+				"next": "m05_briefing_malakor",
+			},
+			"m05_briefing_malakor": {
+				"speaker": "Sir Roderick",
+				"text": "But General Malakor himself is massing forces to breach the royal paprika reserves!",
+				"next": "m05_briefing_recipe",
+			},
+			"m05_briefing_recipe": {
+				"speaker": "Sir Roderick",
+				"text": "If he breaches the doors and takes the paprika, the Rosemary Mutton recipe is compromised.",
+				"next": "m05_briefing_sortie",
+			},
+			"m05_briefing_sortie": {
+				"speaker": "Sir Roderick",
+				"text": "Sortie out there and end this culinary nightmare once and for all!",
+				"choices": [
+					{"text": "[Sortie!]", "next": "m05_action_sortie"},
+					{"text": "[Prepare]", "next": "m05_action_prepare"},
+				],
+			},
+			"m05_action_sortie": {
+				"speaker": "Sir Roderick",
+				"text": "Sound the charge!",
+				"action": EventAction.start_battle("M05_SPICE_WARS"),
+			},
+			"m05_action_prepare": {
+				"speaker": "Sir Roderick",
+				"text": "Hurry, Pip. The fate of the kingdom's flavor rests on your shoulders.",
+			},
+		},
+	})
+
+	var terminal_dialogue := DialogueTree.from_dict({
+		"start": "terminal_paprika_safe",
+		"nodes": {
+			"terminal_paprika_safe": {
+				"speaker": "Sir Roderick",
+				"text": "The paprika is safe, and Malakor has been routed! You have saved the realm's palate!",
+				"next": "terminal_feast",
+			},
+			"terminal_feast": {
+				"speaker": "Sir Roderick",
+				"text": "Tonight, Highspire feasts in total victory. Dismissed, men!",
 			},
 		},
 	})
@@ -158,8 +310,24 @@ func _build_roderick() -> void:
 	_roderick.setup(RODERICK_SHEET, "Sir Roderick", briefing)
 	_roderick.conditional_dialogues = [
 		{
+			"condition": EventCondition.is_true("mission_m05_completed"),
+			"dialogue": terminal_dialogue,
+		},
+		{
+			"condition": EventCondition.is_true("mission_m04_completed"),
+			"dialogue": m05_briefing,
+		},
+		{
+			"condition": EventCondition.is_true("mission_m03_completed"),
+			"dialogue": m04_briefing,
+		},
+		{
+			"condition": EventCondition.is_true("mission_m02_completed"),
+			"dialogue": m03_briefing,
+		},
+		{
 			"condition": EventCondition.is_true("mission_m01_completed"),
-			"dialogue": victory_debrief,
+			"dialogue": m02_briefing,
 		},
 	]
 

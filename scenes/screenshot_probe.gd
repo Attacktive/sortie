@@ -67,6 +67,18 @@ func _ready() -> void:
 				field._player.facing = Facing.Direction.UP
 				field._start_npc_dialogue(field._roderick)
 
+	if OS.has_environment("SORTIE_M02_MISSION_BRIEF"):
+		await get_tree().process_frame
+		if host is Game:
+			host.start_new_game()
+			host.world_state.set_flag("mission_m01_completed", true)
+			await get_tree().process_frame
+			var field: Field = host.get_active_scene()
+			if field != null and field._roderick != null:
+				field._player.position = field._roderick.position + Vector2(0.0, GridGeometry.CELL_SIZE * 0.5)
+				field._player.facing = Facing.Direction.UP
+				field._start_npc_dialogue(field._roderick)
+
 	if OS.has_environment("SORTIE_NORTH_OF_NPC"):
 		await get_tree().process_frame
 		if host is Game:
@@ -91,6 +103,11 @@ func _ready() -> void:
 		await get_tree().process_frame
 		if host is Game:
 			host.start_battle("M01_CABBAGE", false)
+
+	if OS.has_environment("SORTIE_M02_BATTLE_BANTER"):
+		await get_tree().process_frame
+		if host is Game:
+			host.start_battle("M02_ALE_RUN", false)
 	var wait := float(OS.get_environment("SORTIE_WAIT")) if OS.has_environment("SORTIE_WAIT") else 0.0
 	if wait > 0.0:
 		await get_tree().create_timer(wait).timeout
