@@ -353,8 +353,8 @@ static func _build_m02_ale_run() -> MissionData:
 	mission.enemy_roster = [
 		_make_unit(
 			"Agile Thug",
-			16,
-			8,
+			14,
+			7,
 			1,
 			0.90,
 			0.30,
@@ -366,8 +366,8 @@ static func _build_m02_ale_run() -> MissionData:
 		),
 		_make_unit(
 			"Agile Rogue",
-			16,
-			8,
+			14,
+			7,
 			1,
 			0.90,
 			0.30,
@@ -379,8 +379,8 @@ static func _build_m02_ale_run() -> MissionData:
 		),
 		_make_unit(
 			"Thirsty Bruiser",
-			26,
-			9,
+			24,
+			8,
 			2,
 			0.85,
 			0.00,
@@ -392,8 +392,8 @@ static func _build_m02_ale_run() -> MissionData:
 		),
 		_make_unit(
 			"Keg Thief",
-			18,
-			7,
+			16,
+			6,
 			1,
 			0.90,
 			0.10,
@@ -483,8 +483,8 @@ static func _build_m03_silver_spoons() -> MissionData:
 	mission.enemy_roster = [
 		_make_unit(
 			"Cutlery Guard",
-			22,
-			7,
+			19,
+			5,
 			3,
 			0.90,
 			0.05,
@@ -496,8 +496,8 @@ static func _build_m03_silver_spoons() -> MissionData:
 		),
 		_make_unit(
 			"Fork Pilferer",
-			16,
-			8,
+			13,
+			6,
 			1,
 			0.90,
 			0.30,
@@ -509,8 +509,8 @@ static func _build_m03_silver_spoons() -> MissionData:
 		),
 		_make_unit(
 			"Spoon Pilferer",
-			16,
-			8,
+			13,
+			6,
 			1,
 			0.90,
 			0.30,
@@ -522,8 +522,8 @@ static func _build_m03_silver_spoons() -> MissionData:
 		),
 		_make_unit(
 			"Camp Lookout",
-			14,
-			6,
+			11,
+			4,
 			0,
 			0.90,
 			0.25,
@@ -535,8 +535,8 @@ static func _build_m03_silver_spoons() -> MissionData:
 		),
 		_make_unit(
 			"Silver Smuggler",
-			18,
-			7,
+			15,
+			5,
 			1,
 			0.90,
 			0.10,
@@ -627,7 +627,7 @@ static func _build_m04_field_oven() -> MissionData:
 	mission.enemy_roster = [
 		_make_unit(
 			"Dough Sentinel",
-			24,
+			23,
 			8,
 			3,
 			0.90,
@@ -640,7 +640,7 @@ static func _build_m04_field_oven() -> MissionData:
 		),
 		_make_unit(
 			"Dough Sentinel",
-			24,
+			23,
 			8,
 			3,
 			0.90,
@@ -653,7 +653,7 @@ static func _build_m04_field_oven() -> MissionData:
 		),
 		_make_unit(
 			"Pastry Enforcer",
-			26,
+			25,
 			10,
 			2,
 			0.85,
@@ -666,7 +666,7 @@ static func _build_m04_field_oven() -> MissionData:
 		),
 		_make_unit(
 			"Oven Stoker",
-			16,
+			15,
 			9,
 			0,
 			0.85,
@@ -679,7 +679,7 @@ static func _build_m04_field_oven() -> MissionData:
 		),
 		_make_unit(
 			"Flour Scout",
-			14,
+			13,
 			6,
 			0,
 			0.90,
@@ -771,8 +771,8 @@ static func _build_m05_spice_wars() -> MissionData:
 	mission.enemy_roster = [
 		_make_unit(
 			"General Malakor",
-			40,
-			12,
+			37,
+			9,
 			2,
 			0.85,
 			0.10,
@@ -784,8 +784,8 @@ static func _build_m05_spice_wars() -> MissionData:
 		),
 		_make_unit(
 			"Elite Guard",
-			25,
-			8,
+			22,
+			5,
 			4,
 			0.90,
 			0.05,
@@ -797,8 +797,8 @@ static func _build_m05_spice_wars() -> MissionData:
 		),
 		_make_unit(
 			"Elite Guard",
-			25,
-			8,
+			22,
+			5,
 			4,
 			0.90,
 			0.05,
@@ -810,8 +810,8 @@ static func _build_m05_spice_wars() -> MissionData:
 		),
 		_make_unit(
 			"Spice Runner",
-			18,
-			9,
+			15,
+			6,
 			1,
 			0.90,
 			0.30,
@@ -823,8 +823,8 @@ static func _build_m05_spice_wars() -> MissionData:
 		),
 		_make_unit(
 			"Spice Runner",
-			18,
-			9,
+			15,
+			6,
 			1,
 			0.90,
 			0.30,
@@ -836,8 +836,8 @@ static func _build_m05_spice_wars() -> MissionData:
 		),
 		_make_unit(
 			"Siege Breaker",
-			28,
-			10,
+			25,
+			7,
 			3,
 			0.85,
 			0.00,
