@@ -771,8 +771,8 @@ static func _build_m05_spice_wars() -> MissionData:
 	mission.enemy_roster = [
 		_make_unit(
 			"General Malakor",
-			36,
-			8,
+			35,
+			7,
 			2,
 			0.85,
 			0.10,
@@ -784,8 +784,8 @@ static func _build_m05_spice_wars() -> MissionData:
 		),
 		_make_unit(
 			"Elite Guard",
-			21,
-			4,
+			20,
+			3,
 			4,
 			0.90,
 			0.05,
@@ -797,8 +797,8 @@ static func _build_m05_spice_wars() -> MissionData:
 		),
 		_make_unit(
 			"Elite Guard",
-			21,
-			4,
+			20,
+			3,
 			4,
 			0.90,
 			0.05,
@@ -810,8 +810,8 @@ static func _build_m05_spice_wars() -> MissionData:
 		),
 		_make_unit(
 			"Spice Runner",
-			14,
-			5,
+			13,
+			4,
 			1,
 			0.90,
 			0.30,
@@ -823,8 +823,8 @@ static func _build_m05_spice_wars() -> MissionData:
 		),
 		_make_unit(
 			"Spice Runner",
-			14,
-			5,
+			13,
+			4,
 			1,
 			0.90,
 			0.30,
@@ -836,8 +836,8 @@ static func _build_m05_spice_wars() -> MissionData:
 		),
 		_make_unit(
 			"Siege Breaker",
-			24,
-			6,
+			23,
+			5,
 			3,
 			0.85,
 			0.00,
