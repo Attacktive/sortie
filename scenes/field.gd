@@ -75,7 +75,7 @@ func _build_view() -> void:
 
 ## Added after the view, because siblings draw in tree order and the ground must be drawn before the characters standing on it.
 func _build_barnaby() -> void:
-	barnaby = FieldNpc.new()
+	var barnaby := FieldNpc.new()
 	barnaby.name = "Barnaby"
 
 	var barnaby_dialogue := DialogueTree.from_dict({
@@ -102,8 +102,8 @@ func _build_barnaby() -> void:
 	barnaby.position = GridGeometry.cell_to_position(BARNABY_CELL)
 	register_npc(barnaby)
 
-func _buildroderick() -> void:
-	roderick = FieldNpc.new()
+func _build_roderick() -> void:
+	var roderick := FieldNpc.new()
 	roderick.name = "SirRoderick"
 
 	var briefing := DialogueTree.from_dict({
