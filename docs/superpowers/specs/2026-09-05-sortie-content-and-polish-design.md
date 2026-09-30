@@ -169,14 +169,12 @@ A 10x8 tactical battlefield depicting the outer siege perimeter:
   - `Vanguard` (HP 24, Atk 9, Def 4, Move 3) at `(0, 6)`
   - `Scout` ("Pip", HP 14, Atk 6, Def 0, Move 5) at `(1, 7)`
   - `Brute` (HP 26, Atk 10, Def 3, Move 3) at `(0, 7)`
-  - `Raider` (HP 18, Atk 8, Def 1, Move 4) at `(1, 5)`
+  - `Raider` (HP 18, Atk 8, Def 1, Move 4) at `(1, 6)`
 - **Enemy Siege Squad**:
-  - `Siege Vanguard` (HP 20, Atk 7, Def 3, Move 3) at `(8, 2)`
-  - `Catapult Guard Brute` (HP 22, Atk 8, Def 2, Move 3) at `(9, 3)`
-  - `Slinger Scout` (HP 12, Atk 5, Def 0, Move 5) at `(8, 5)`
-  - `Artillery Raider` (HP 14, Atk 6, Def 1, Move 4) at `(9, 4)`
-
-The opening mission is deliberately tuned as an onboarding battle rather than a peer to the later Act I sorties. Before the easing pass, seeds 1 through 40 produced 37 victories and 3 defeats under the deterministic auto-battle harness, while manual playtesting still found the mission too punishing. Reducing every enemy by 2 HP and 1 Attack moves the fixed sweep to 40 victories and 0 defeats; the regression band is 39 to 40 victories.
+  - `Siege Vanguard` (HP 22, Atk 8, Def 3, Move 3) at `(8, 2)`
+  - `Catapult Guard Brute` (HP 24, Atk 9, Def 2, Move 3) at `(9, 3)`
+  - `Slinger Scout` (HP 14, Atk 6, Def 0, Move 5) at `(8, 5)`
+  - `Artillery Raider` (HP 16, Atk 7, Def 1, Move 4) at `(9, 4)`
 
 ---
 
