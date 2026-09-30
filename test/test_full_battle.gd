@@ -134,6 +134,11 @@ func test_m01_cabbage_via_mission_harness() -> void:
 
 	assert_eq(tally["unresolved"], 0, "every M01 battle must terminate")
 	assert_gt(tally["victories"], 0, "M01 victory must be reachable")
+	assert_gt(tally["defeats"], 0, "M01 defeat must remain reachable")
+	assert_true(
+		tally["victories"] >= 32 and tally["victories"] <= 38,
+		"M01 must land within 32..38 victories, got %d" % tally["victories"]
+	)
 
 
 func test_act_one_missions_balance_bands() -> void:
