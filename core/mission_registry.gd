@@ -223,8 +223,8 @@ static func _build_m01_cabbage() -> MissionData:
 	mission.enemy_roster = [
 		_make_unit(
 			"Siege Vanguard",
-			22,
-			8,
+			20,
+			7,
 			3,
 			0.90,
 			0.05,
@@ -236,8 +236,8 @@ static func _build_m01_cabbage() -> MissionData:
 		),
 		_make_unit(
 			"Catapult Guard",
-			24,
-			9,
+			22,
+			8,
 			2,
 			0.85,
 			0.00,
@@ -249,8 +249,8 @@ static func _build_m01_cabbage() -> MissionData:
 		),
 		_make_unit(
 			"Slinger",
-			14,
-			6,
+			12,
+			5,
 			0,
 			0.90,
 			0.25,
@@ -262,8 +262,8 @@ static func _build_m01_cabbage() -> MissionData:
 		),
 		_make_unit(
 			"Artillery Raider",
-			16,
-			7,
+			14,
+			6,
 			1,
 			0.90,
 			0.10,
