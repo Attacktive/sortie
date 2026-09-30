@@ -8,7 +8,7 @@
 - **The damage floor of 1 applies before the crit multiplier**, so a crit is always a clean 3× of the hit it replaces.
 - **The default quick-battle scenario needed no tuning pass.** 9.3 team-turns is ~4.6 full rounds, inside the 4–6 target, and 75/25 means losing is possible without being likely.
 - **M01 is intentionally easier than the later campaign missions.** Manual playtesting found the opening sortie too punishing even though the deterministic auto-battle harness already produced 37 victories and 3 defeats. Each M01 enemy therefore lost 2 HP and 1 Attack; seeds 1 through 40 now produce 40 victories and 0 defeats, and the regression gate requires 39 to 40 victories. The auto-battle result is a regression proxy, not a claimed human win rate.
-- **Act I balance is pinned to seeds 1 through 40.** M01 targets 39 to 40 victories, M02, M03, and M04 target 24 to 34, and M05 targets 18 to 28. Final tallies are 40/0, 33/7, 30/10, 25/15, and 28/12 respectively, all with zero unresolved battles. Tuning changed enemy HP and Attack only; M01's final values live in the Content & Polish spec and M02–M05 live in the Act I story spec.
+- **Act I balance is pinned to seeds 1 through 40.** M01 targets 39 to 40 victories, M02, M03, and M04 target 24 to 34, and M05 targets 18 to 28. Final tallies are 40/0, 33/7, 30/10, 25/15, and 28/12 respectively, all with zero unresolved battles. Tuning changed enemy HP and Attack only; M01's final values live in `core/mission_registry.gd` and are pinned in `test/test_mission_data.gd`, while M02–M05 live in the Act I story spec.
 
 ---
 
