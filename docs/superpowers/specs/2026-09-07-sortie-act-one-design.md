@@ -26,24 +26,28 @@ Implement Act I of Sortie, encompassing missions M02 through M05. This adds the 
 
 ## 3. Mission Balance & Target Win-Rates
 
+The opening M01 onboarding target is **39 to 40 victories out of 40 seeds**.
 The target win-rate band for M02, M03, and M04 is **24 to 34 victories out of 40 seeds**.
 The target band for M05 is **18 to 28 victories out of 40 seeds**.
-Every mission must also reach both outcomes at least once and leave zero battles unresolved.
+Every mission must leave zero battles unresolved; M02 through M05 must also reach both outcomes at least once.
 
 Balance tuning changed enemy HP and Attack only, with each tuning step changing either stat by no more than 3 points.
-The initial mission sheets were too difficult under the deterministic auto-battle harness, especially M05, whose original 40 HP / 12 Atk General Malakor profile produced zero victories across seeds 1 through 40.
-The final tuned values are recorded in the story specification's enemy-roster tables.
+M01 originally produced 37 victories and 3 defeats under the deterministic harness but remained too punishing in manual play, so every M01 enemy lost 2 HP and 1 Attack.
+The initial M02 through M05 mission sheets were also too difficult under the deterministic auto-battle harness, especially M05, whose original 40 HP / 12 Atk General Malakor profile produced zero victories across seeds 1 through 40.
+M01's final tuned values are recorded in the Content & Polish spec; M02 through M05 are recorded in the Act I story specification.
 
 Final seeds 1 through 40 results:
 
 | Mission | Victories | Defeats | Unresolved | Target Victories |
 | --- | ---: | ---: | ---: | ---: |
+| M01_CABBAGE | 40 | 0 | 0 | 39 to 40 |
 | M02_ALE_RUN | 33 | 7 | 0 | 24 to 34 |
 | M03_SILVER_SPOONS | 30 | 10 | 0 | 24 to 34 |
 | M04_FIELD_OVEN | 25 | 15 | 0 | 24 to 34 |
 | M05_SPICE_WARS | 28 | 12 | 0 | 18 to 28 |
 
-All four missions reach both outcomes and resolve every seed.
+All five missions resolve every seed.
+M02 through M05 reach both outcomes; M01 is intentionally one-sided under this fixed auto-battle sweep.
 General Malakor finishes at 35 HP / 7 Atk / Range 2.
 
 ## 4. Components & Contracts
@@ -105,7 +109,7 @@ A new test method `_play_mission(mission: MissionData, seed_val: int) -> Diction
 
 The balance gate test will run 40 seeds for each mission, asserting:
 
-- Victories within target bands (24–34 for M02–M04, 18–28 for M05).
-- Both victory and defeat reached at least once (`victories > 0` and `defeats > 0`).
-- Zero unresolved battles (`unresolved == 0`).
+- M01 lands within 39–40 victories, while M02–M04 remain within 24–34 and M05 within 18–28.
+- M02 through M05 reach both victory and defeat at least once (`victories > 0` and `defeats > 0`).
+- Every mission has zero unresolved battles (`unresolved == 0`).
 - A `gut.p()` tally line printed per mission for recording in documentation.

@@ -33,6 +33,18 @@ func test_mission_registry_builds_m01_cabbage() -> void:
 	assert_not_null(mission.victory_debrief)
 	assert_not_null(mission.defeat_debrief)
 	assert_eq(mission.completion_flag, "mission_m01_completed")
+	assert_eq(mission.enemy_roster[0].unit_name, "Siege Vanguard")
+	assert_eq(mission.enemy_roster[0].max_hp, 20)
+	assert_eq(mission.enemy_roster[0].attack, 7)
+	assert_eq(mission.enemy_roster[1].unit_name, "Catapult Guard")
+	assert_eq(mission.enemy_roster[1].max_hp, 22)
+	assert_eq(mission.enemy_roster[1].attack, 8)
+	assert_eq(mission.enemy_roster[2].unit_name, "Slinger")
+	assert_eq(mission.enemy_roster[2].max_hp, 12)
+	assert_eq(mission.enemy_roster[2].attack, 5)
+	assert_eq(mission.enemy_roster[3].unit_name, "Artillery Raider")
+	assert_eq(mission.enemy_roster[3].max_hp, 14)
+	assert_eq(mission.enemy_roster[3].attack, 6)
 
 
 func test_m01_spawns_are_walkable_and_unique() -> void:
